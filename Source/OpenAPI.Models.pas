@@ -31,7 +31,8 @@ uses
   OpenAPI.Nullables,
   OpenAPI.Schema,
   OpenAPI.Expressions,
-  OpenAPI.Reference;
+  OpenAPI.Reference,
+  OpenAPI.Serializer;
 
 type
   /// <summary>
@@ -101,7 +102,7 @@ type
     OAuth2,
 
     /// <summary>
-    /// Use OAuth2 with OpenId Connect URL to discover OAuth2 configuration value.
+    /// Use OAuth2 with OpenId Connect Url to discover OAuth2 configuration value.
     /// </summary>
     OpenIdConnect
   );
@@ -109,7 +110,7 @@ type
   [NeonEnumNames('query, header, path, cookie')]
   TParameterLocation = (
     /// <summary>
-    /// Parameters that are appended to the URL.
+    /// Parameters that are appended to the Url.
     /// </summary>
     Query,
 
@@ -120,7 +121,7 @@ type
 
     /// <summary>
     /// Used together with Path Templating,
-    /// where the parameter value is actually part of the operation's URL
+    /// where the parameter value is actually part of the operation's Url
     /// </summary>
     Path,
 
@@ -180,7 +181,7 @@ type
   TOpenAPIContact = class(TOpenAPIModel)
   private
     FName: NullString;
-    FURL: NullString;
+    FUrl: NullString;
     FEmail: NullString;
   public
     /// <summary>
@@ -189,9 +190,9 @@ type
     property Name: NullString read FName write FName;
 
     /// <summary>
-    /// The URL pointing to the contact information. MUST be in the format of a URL.
+    /// The Url pointing to the contact information. MUST be in the format of a Url.
     /// </summary>
-    property URL: NullString read FURL write FURL;
+    property Url: NullString read FUrl write FUrl;
 
     /// <summary>
     /// The email address of the contact person/organization.
@@ -206,7 +207,7 @@ type
   TOpenAPILicense = class(TOpenAPIModel)
   private
     FName: string;
-    FURL: NullString;
+    FUrl: NullString;
   public
     /// <summary>
     /// REQUIRED. The license name used for the API.
@@ -214,9 +215,9 @@ type
     property Name: string read FName write FName;
 
     /// <summary>
-    /// The URL pointing to the contact information. MUST be in the format of a URL.
+    /// The Url pointing to the contact information. MUST be in the format of a Url.
     /// </summary>
-    property URL: NullString read FURL write FURL;
+    property Url: NullString read FUrl write FUrl;
   end;
 
   /// <summary>
@@ -225,7 +226,7 @@ type
   TOpenAPIExternalDocumentation = class
   private
     FDescription: NullString;
-    FURL: string;
+    FUrl: string;
   public
     /// <summary>
     /// A short description of the target documentation.
@@ -233,9 +234,9 @@ type
     property Description: NullString read FDescription write FDescription;
 
     /// <summary>
-    /// REQUIRED. The URL for the target documentation. Value MUST be in the format of a URL.
+    /// REQUIRED. The Url for the target documentation. Value MUST be in the format of a Url.
     /// </summary>
-    property URL: string read FURL write FURL;
+    property Url: string read FUrl write FUrl;
   end;
 
   /// <summary>
@@ -294,6 +295,9 @@ type
     property AllowEmptyValue: NullBoolean read FAllowEmptyValue write FAllowEmptyValue;
   end;
 
+  TOpenAPIParameters = class(TObjectList<TOpenAPIParameter>)
+  end;
+
   TOpenAPIParameterMap = class(TObjectDictionary<string, TOpenAPIParameter>)
   public
     constructor Create;
@@ -329,7 +333,7 @@ type
     //property Value: IAny IOpenApiAny Value { get; set; }
 
     /// <summary>
-    /// A URL that points to the literal example.
+    /// A Url that points to the literal example.
     /// This provides the capability to reference examples that cannot easily be
     /// included in JSON or YAML documents.
     /// The value field and externalValue field are mutually exclusive.
@@ -386,7 +390,7 @@ type
     /// A map between a property name and its encoding information.
     /// The key, being the property name, MUST exist in the schema as a property.
     /// The encoding object SHALL only apply to requestBody objects
-    /// when the media type is multipart or application/x-www-form-urlencoded.
+    /// when the media type is multipart or application/x-www-form-Urlencoded.
     /// </summary>
     property Encoding: TOpenApiEncodingMap read FEncoding write FEncoding;
 
@@ -401,6 +405,8 @@ type
   end;
   
   TOpenAPIMediaTypeMap = class(TObjectDictionary<string, TOpenAPIMediaType>)
+  public
+    constructor Create;
   end;
 
   /// <summary>
@@ -502,6 +508,8 @@ type
   end;
   
   TOpenAPIHeaderMap = class(TObjectDictionary<string, TOpenAPIHeader>)
+  public
+    constructor Create;
   end;
   
   TOpenAPIEncoding = class(TOpenAPIModel)
@@ -534,7 +542,7 @@ type
     /// for each value of the array, or key-value-pair of the map. For other types of properties
     /// this property has no effect. When style is form, the default value is true.
     /// For all other styles, the default value is false.
-    /// This property SHALL be ignored if the request body media type is not application/x-www-form-urlencoded.
+    /// This property SHALL be ignored if the request body media type is not application/x-www-form-Urlencoded.
     /// </summary>
     property Explode: NullBoolean read FExplode write FExplode;
 
@@ -542,7 +550,7 @@ type
     /// Determines whether the parameter value SHOULD allow reserved characters,
     /// as defined by RFC3986 :/?#[]@!$&amp;'()*+,;= to be included without percent-encoding.
     /// The default value is false. This property SHALL be ignored
-    /// if the request body media type is not application/x-www-form-urlencoded.
+    /// if the request body media type is not application/x-www-form-Urlencoded.
     /// </summary>
     property AllowReserved: NullBoolean read FAllowReserved write FAllowReserved;
 
@@ -569,7 +577,7 @@ type
     property Description: NullString read FDescription write FDescription;
 
     /// <summary>
-    /// REQUIRED. The URL for the target documentation. Value MUST be in the format of a URL.
+    /// REQUIRED. The Url for the target documentation. Value MUST be in the format of a Url.
     /// </summary>
     property Url: string read FUrl write FUrl;
 
@@ -618,6 +626,11 @@ type
     property Reference: TOpenApiReference read FReference write FReference;
   end;
 
+  TOpenAPITags = class(TObjectList<TOpenAPITag>)
+  public
+    constructor Create;
+  end;
+
   TOpenApiRequestBody = class(TOpenAPIModel)
   private
     FUnresolvedReference: NullBoolean;
@@ -660,7 +673,7 @@ type
   end;
 
   /// <summary>
-  ///   An object representing a Server Variable for server URL template substitution
+  ///   An object representing a Server Variable for server Url template substitution
   /// </summary>
   TOpenAPIServerVariable = class
   private
@@ -697,30 +710,38 @@ type
   private
     FDescription: NullString;
     FVariables: TOpenAPIServerVariableMap;
-    FURL: string;
+    FUrl: string;
   public
     constructor Create;
     destructor Destroy; override;
   public
     /// <summary>
-    /// An optional string describing the host designated by the URL. CommonMark syntax MAY be used for rich text representation.
+    /// An optional string describing the host designated by the Url. CommonMark syntax MAY be used for rich text representation.
     /// </summary>
     property Description: NullString read FDescription write FDescription;
 
     /// <summary>
-    /// REQUIRED. A URL to the target host. This URL supports Server Variables and MAY be relative,
+    /// REQUIRED. A Url to the target host. This Url supports Server Variables and MAY be relative,
     /// to indicate that the host location is relative to the location where the OpenAPI document is being served.
     /// Variable substitutions will be made when a variable is named in {brackets}.
     /// </summary>
-    property URL: string read FURL write FURL;
+    property Url: string read FUrl write FUrl;
 
     /// <summary>
-    /// A map between a variable name and its value. The value is used for substitution in the server's URL template.
+    /// A map between a variable name and its value. The value is used for substitution in the server's Url template.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Variables: TOpenAPIServerVariableMap read FVariables write FVariables;
   end;
 
+  TOpenAPIServers = class(TObjectList<TOpenAPIServer>)
+  public
+    constructor Create;
+  end;
+
   TOpenAPIServerMap = class(TObjectDictionary<string, TOpenAPIServer>)
+  public
+    constructor Create;
   end;
 
   /// <summary>
@@ -775,10 +796,12 @@ type
 
   TOpenAPILinks = class(TObjectList<TOpenAPILink>)
   end;
-  
+
   TOpenAPILinkMap = class(TObjectDictionary<string, TOpenAPILink>)
+  public
+    constructor Create;
   end;
-  
+
   /// <summary>
   /// Response object.
   /// </summary>
@@ -819,6 +842,11 @@ type
     property Links: TOpenAPILinkMap read FLinks write FLinks;
   end;
 
+  TOpenAPIResponseMap = class(TObjectDictionary<string, TOpenAPIResponse>)
+  public
+    constructor Create;
+  end;
+
   TOpenAPIPathItem = class;
 
   TOpenApiCallback = class(TOpenAPIModel)
@@ -848,6 +876,16 @@ type
     //property Extensions: TObjectDictionary<string, IOpenApiExtension>;
   end;
 
+  TOpenApiCallbacks = class(TObjectList<TOpenApiCallback>)
+  public
+    constructor Create;
+  end;
+
+  TOpenApiCallbackMap = class(TObjectDictionary<string, TOpenApiCallback>)
+  public
+    constructor Create;
+  end;
+
   TOpenApiOAuthFlow = class(TOpenAPIModel)
   private
     FAuthorizationUrl: string;
@@ -856,19 +894,19 @@ type
     FScopes: TDictionary<string, string>;
   public
     /// <summary>
-    /// REQUIRED. The authorization URL to be used for this flow.
+    /// REQUIRED. The authorization Url to be used for this flow.
     /// Applies to implicit and authorizationCode OAuthFlow.
     /// </summary>
     property AuthorizationUrl: string read FAuthorizationUrl write FAuthorizationUrl;
 
     /// <summary>
-    /// REQUIRED. The token URL to be used for this flow.
+    /// REQUIRED. The token Url to be used for this flow.
     /// Applies to password, clientCredentials, and authorizationCode OAuthFlow.
     /// </summary>
     property TokenUrl: string read FTokenUrl write FTokenUrl;
 
     /// <summary>
-    /// The URL to be used for obtaining refresh tokens.
+    /// The Url to be used for obtaining refresh tokens.
     /// </summary>
     property RefreshUrl: NullString read FRefreshUrl write FRefreshUrl;
 
@@ -969,7 +1007,7 @@ type
     property Flows: TOpenApiOAuthFlows read FFlows write FFlows;
 
     /// <summary>
-    /// REQUIRED. OpenId Connect URL to discover OAuth2 configuration values.
+    /// REQUIRED. OpenId Connect Url to discover OAuth2 configuration values.
     /// </summary>
     property OpenIdConnectUrl: string read FOpenIdConnectUrl write FOpenIdConnectUrl;
 
@@ -994,6 +1032,11 @@ type
 
   end;
 
+  TOpenApiSecurityRequirements = class(TObjectList<TOpenApiSecurityRequirement>)
+  public
+    constructor Create;
+  end;
+
   /// <summary>
   ///   Operation Object
   /// </summary>
@@ -1004,11 +1047,11 @@ type
     FOperationId: NullString;
     FDescription: NullString;
     FExternalDocs: TOpenAPIExternalDocumentation;
-    FParameters: TObjectList<TOpenAPIParameter>;
+    FParameters: TOpenAPIParameters;
     FRequestBody: TOpenApiRequestBody;
-    FCallbacks: TObjectDictionary<string, TOpenApiCallback>;
-    FSecurity: TObjectList<TOpenApiSecurityRequirement>;
-    FServers: TObjectList<TOpenApiServer>;
+    FCallbacks: TOpenApiCallbackMap;
+    FSecurity: TOpenApiSecurityRequirements;
+    FServers: TOpenApiServers;
     FDeprecated_: TNullableBooleanSerializer;
     FResponses: TObjectDictionary<string, TOpenAPIResponse>;
   public
@@ -1048,7 +1091,7 @@ type
     /// The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location.
     /// The list can use the Reference Object to link to parameters that are defined at the OpenAPI Object's components/parameters.
     /// </summary>
-    property Parameters: TObjectList<TOpenAPIParameter> read FParameters write FParameters;
+    property Parameters: TOpenAPIParameters read FParameters write FParameters;
 
     /// <summary>
     /// The request body applicable for this operation.
@@ -1069,9 +1112,9 @@ type
     /// Each value in the map is a Callback Object that describes a request
     /// that may be initiated by the API provider and the expected responses.
     /// The key value used to identify the callback object is an expression, evaluated at runtime,
-    /// that identifies a URL to use for the callback operation.
+    /// that identifies a Url to use for the callback operation.
     /// </summary>
-    property Callbacks: TObjectDictionary<string, TOpenApiCallback> read FCallbacks write FCallbacks;
+    property Callbacks: TOpenApiCallbackMap read FCallbacks write FCallbacks;
 
     /// <summary>
     /// Declares this operation to be deprecated. Consumers SHOULD refrain from usage of the declared operation.
@@ -1086,14 +1129,14 @@ type
     /// This definition overrides any declared top-level security.
     /// To remove a top-level security declaration, an empty array can be used.
     /// </summary>
-    property Security: TObjectList<TOpenApiSecurityRequirement> read FSecurity write FSecurity;
+    property Security: TOpenApiSecurityRequirements read FSecurity write FSecurity;
 
     /// <summary>
     /// An alternative server array to service this operation.
     /// If an alternative server object is specified at the Path Item Object or Root level,
     /// it will be overridden by this value.
     /// </summary>
-    property Servers: TObjectList<TOpenApiServer> read FServers write FServers;
+    property Servers: TOpenApiServers read FServers write FServers;
 
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
@@ -1110,12 +1153,15 @@ type
   /// </summary>
   TOpenAPIInfo = class
   private
-    FContact: TOpenAPIOperation;
+    FContact: TOpenAPIContact;
     FDescription: NullString;
     FLicense: TOpenAPILicense;
     FTermsOfService: NullString;
     FTitle: string;
     FVersion: string;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// REQUIRED. The title of the application.
@@ -1128,18 +1174,20 @@ type
     property Description: NullString read FDescription write FDescription;
 
     /// <summary>
-    /// A URL to the Terms of Service for the API. MUST be in the format of a URL.
+    /// A Url to the Terms of Service for the API. MUST be in the format of a Url.
     /// </summary>
     property TermsOfService: NullString read FTermsOfService write FTermsOfService;
 
     /// <summary>
     /// The contact information for the exposed API.
     /// </summary>
-    property Contact: TOpenAPIOperation read FContact write FContact;
+    [NeonInclude(Include.NotEmpty)]
+    property Contact: TOpenAPIContact read FContact write FContact;
 
     /// <summary>
     /// The license information for the exposed API.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property License: TOpenAPILicense read FLicense write FLicense;
 
     /// <summary>
@@ -1147,7 +1195,6 @@ type
     /// </summary>
     property Version: string read FVersion write FVersion;
   end;
-
 
   /// <summary>
   /// Component Object.
@@ -1228,7 +1275,7 @@ type
   end;
 
   /// <summary>
-  ///   An object representing a Server Variable for server URL template substitution
+  ///   An object representing a Server Variable for server Url template substitution
   /// </summary>
   TOpenAPIPathItem = class
   private
@@ -1271,29 +1318,33 @@ type
   end;
 
   TOpenAPIPathMap = class(TObjectDictionary<string, TOpenAPIPathItem>)
-
+  public
+    constructor Create;
   end;
 
   /// <summary>
-  ///   A document (or set of documents) that defines or describes an API. An OpenAPI
-  ///   definition uses and conforms to the OpenAPI Specification
+  ///   A document (or set of documents) that defines or describes an API. An Openapi
+  ///   definition uses and conforms to the Openapi Specification
   /// </summary>
   TOpenAPIDocument = class
   private
     FInfo: TOpenAPIInfo;
-    FOpenAPI: string;
+    FOpenapi: string;
     FPaths: TOpenAPIPathMap;
-    FServers: TOpenAPIServer;
+    FServers: TOpenAPIServers;
     FComponents: TOpenApiComponents;
-    FSecurityRequirements: TObjectList<TOpenApiSecurityRequirement>;
+    FSecurityRequirements: TOpenApiSecurityRequirements;
     FTags: TObjectList<TOpenApiTag>;
     FExternalDocs: TOpenApiExternalDocs;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
-    ///   REQUIRED. This string MUST be the semantic version number of the OpenAPI
-    ///   Specification version that the OpenAPI document uses
+    ///   REQUIRED. This string MUST be the semantic version number of the Openapi
+    ///   Specification version that the Openapi document uses
     /// </summary>
-    property OpenAPI: string read FOpenAPI write FOpenAPI;
+    property Openapi: string read FOpenapi write FOpenapi;
 
     /// <summary>
     /// REQUIRED. Provides metadata about the API. The metadata MAY be used by tooling as required.
@@ -1303,7 +1354,8 @@ type
     /// <summary>
     /// An array of Server Objects, which provide connectivity information to a target server.
     /// </summary>
-    property Servers: TOpenAPIServer read FServers write FServers;
+    [NeonInclude(Include.NotEmpty)]
+    property Servers: TOpenAPIServers read FServers write FServers;
 
     /// <summary>
     /// REQUIRED. The available paths and operations for the API.
@@ -1313,21 +1365,25 @@ type
     /// <summary>
     /// An element to hold various schemas for the specification.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Components: TOpenApiComponents read FComponents write FComponents;
 
     /// <summary>
     /// A declaration of which security mechanisms can be used across the API.
     /// </summary>
-    property SecurityRequirements: TObjectList<TOpenApiSecurityRequirement> read FSecurityRequirements write FSecurityRequirements;
+    [NeonInclude(Include.NotEmpty)]
+    property SecurityRequirements: TOpenApiSecurityRequirements read FSecurityRequirements write FSecurityRequirements;
 
     /// <summary>
     /// A list of tags used by the specification with additional metadata.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Tags: TObjectList<TOpenApiTag> read FTags write FTags;
 
     /// <summary>
     /// Additional external documentation.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property ExternalDocs: TOpenApiExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>
@@ -1356,9 +1412,9 @@ end;
 
 constructor TOpenAPIResponse.Create;
 begin
-  FHeaders := TOpenAPIHeaderMap.Create([doOwnsValues]);
-  FContent := TOpenAPIMediaTypeMap.Create([doOwnsValues]);
-  FLinks := TOpenAPILinkMap.Create([doOwnsValues]);
+  FHeaders := TOpenAPIHeaderMap.Create;
+  FContent := TOpenAPIMediaTypeMap.Create;
+  FLinks := TOpenAPILinkMap.Create;
 end;
 
 destructor TOpenAPIResponse.Destroy;
@@ -1415,6 +1471,125 @@ end;
 { TOpenAPIParameterMap }
 
 constructor TOpenAPIParameterMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIDocument }
+
+constructor TOpenAPIDocument.Create;
+begin
+  FInfo := TOpenAPIInfo.Create;
+  FPaths := TOpenAPIPathMap.Create;
+  FServers := TOpenAPIServers.Create;
+  FComponents := TOpenApiComponents.Create;
+  FSecurityRequirements := TOpenApiSecurityRequirements.Create;
+  FTags := TOpenApiTags.Create;
+  //FExternalDocs := TOpenApiExternalDocs.Create;
+end;
+
+destructor TOpenAPIDocument.Destroy;
+begin
+  //FExternalDocs.Free;
+  FTags.Free;
+  FSecurityRequirements.Free;
+  FComponents.Free;
+  FServers.Free;
+  FPaths.Free;
+  FInfo.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIPathMap }
+
+constructor TOpenAPIPathMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenApiSecurityRequirements }
+
+constructor TOpenApiSecurityRequirements.Create;
+begin
+  inherited Create(True);
+end;
+
+{ TOpenAPITags }
+
+constructor TOpenAPITags.Create;
+begin
+  inherited Create(True);
+end;
+
+{ TOpenAPIInfo }
+
+constructor TOpenAPIInfo.Create;
+begin
+  FContact := TOpenAPIContact.Create;
+  FLicense := TOpenAPILicense.Create;
+end;
+
+destructor TOpenAPIInfo.Destroy;
+begin
+  FLicense.Free;
+  FContact.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIServers }
+
+constructor TOpenAPIServers.Create;
+begin
+  inherited Create(True);
+end;
+
+{ TOpenApiCallbacks }
+
+constructor TOpenApiCallbacks.Create;
+begin
+  inherited Create(True);
+end;
+
+{ TOpenApiCallbackMap }
+
+constructor TOpenApiCallbackMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIResponseMap }
+
+constructor TOpenAPIResponseMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIServerMap }
+
+constructor TOpenAPIServerMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPILinkMap }
+
+constructor TOpenAPILinkMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIHeaderMap }
+
+constructor TOpenAPIHeaderMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIMediaTypeMap }
+
+constructor TOpenAPIMediaTypeMap.Create;
 begin
   inherited Create([doOwnsValues]);
 end;
