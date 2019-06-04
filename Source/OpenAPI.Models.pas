@@ -24,7 +24,7 @@ unit OpenAPI.Models;
 interface
 
 uses
-  System.Classes, System.Generics.Collections, System.JSON,
+  System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes,
   OpenAPI.Interfaces,
@@ -311,7 +311,7 @@ type
     FSummary: NullString;
     FDescription: NullString;
     FExternalValue: NullString;
-    FReference: TOpenApiReference;
+    FReference: TOpenAPIReference;
     FUnresolvedReference: NullBoolean;
   public
     /// <summary>
@@ -343,7 +343,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    property Reference: TOpenApiReference read FReference write FReference;
+    property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
     /// Indicates object is a placeholder reference to an actual object and does not contain valid data.
@@ -357,7 +357,7 @@ type
   TOpenAPIExampleMap = class(TObjectDictionary<string, TOpenAPIExample>)
   end;
 
-  TOpenApiEncoding = class;
+  TOpenAPIEncoding = class;
   TOpenAPIEncodingMap = class;
   
   /// <summary>
@@ -365,14 +365,14 @@ type
   /// </summary>
   TOpenAPIMediaType = class(TOpenAPIModel)
   private
-    FSchema: TOpenApiSchema;
+    FSchema: TOpenAPISchema;
     FExamples: TOpenAPIExampleMap;
-    FEncoding: TOpenApiEncodingMap;
+    FEncoding: TOpenAPIEncodingMap;
   public
     /// <summary>
     /// The schema defining the type used for the request body.
     /// </summary>
-    property Schema: TOpenApiSchema read FSchema write FSchema;
+    property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
     /// Example of the media type.
@@ -392,7 +392,7 @@ type
     /// The encoding object SHALL only apply to requestBody objects
     /// when the media type is multipart or application/x-www-form-Urlencoded.
     /// </summary>
-    property Encoding: TOpenApiEncodingMap read FEncoding write FEncoding;
+    property Encoding: TOpenAPIEncodingMap read FEncoding write FEncoding;
 
     /// <summary>
     /// Serialize <see cref="OpenApiExternalDocs"/> to Open Api v3.0.
@@ -424,7 +424,7 @@ type
     FExplode: NullBoolean;
     FAllowReserved: NullBoolean;
     FSchema: TOpenAPISchema;
-    //FExample: TOpenApiAny;
+    //FExample: TOpenAPIAny;
     FExamples: TOpenAPIExampleMap;
     FContent: TOpenAPIMediaTypeMap;
   public
@@ -484,7 +484,7 @@ type
     /// <summary>
     /// Example of the media type.
     /// </summary>
-    //property Example: TOpenApiAny read FExample write FExample;
+    //property Example: TOpenAPIAny read FExample write FExample;
 
     /// <summary>
     /// Examples of the media type.
@@ -501,7 +501,7 @@ type
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
     /// </summary>
-    //Extensions: TObjectDictionary<string, TOpenApiExtension>;
+    //Extensions: TObjectDictionary<string, TOpenAPIExtension>;
   end;
 
   TOpenAPIHeaders = class(TObjectList<TOpenAPIHeader>)
@@ -566,7 +566,7 @@ type
   TOpenAPIEncodingMap = class(TObjectDictionary<string, TOpenAPIEncoding>)
   end;
   
-  TOpenApiExternalDocs = class(TOpenAPIModel)
+  TOpenAPIExternalDocs = class(TOpenAPIModel)
   private
     FDescription: NullString;
     FUrl: string;
@@ -584,16 +584,16 @@ type
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
     /// </summary>
-    //Extensions: TObjectDictionary<string, TOpenApiExtension>;
+    //Extensions: TObjectDictionary<string, TOpenAPIExtension>;
   end;
 
   TOpenAPITag = class(TOpenAPIModel)
   private
     FName: NullString;
     FDescription: NullString;
-    FExternalDocs: TOpenApiExternalDocs;
+    FExternalDocs: TOpenAPIExternalDocs;
     FUnresolvedReference: NullBoolean;
-    FReference: TOpenApiReference;
+    FReference: TOpenAPIReference;
   public
     /// <summary>
     /// The name of the tag.
@@ -608,12 +608,12 @@ type
     /// <summary>
     /// Additional external documentation for this tag.
     /// </summary>
-    property ExternalDocs: TOpenApiExternalDocs read FExternalDocs write FExternalDocs;
+    property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
     /// </summary>
-    //Extensions: TObjectDictionary<string, TOpenApiExtension>;
+    //Extensions: TObjectDictionary<string, TOpenAPIExtension>;
 
     /// <summary>
     /// Indicates if object is populated with data or is just a reference to the data
@@ -623,7 +623,7 @@ type
     /// <summary>
     /// Reference.
     /// </summary>
-    property Reference: TOpenApiReference read FReference write FReference;
+    property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
   TOpenAPITags = class(TObjectList<TOpenAPITag>)
@@ -631,13 +631,16 @@ type
     constructor Create;
   end;
 
-  TOpenApiRequestBody = class(TOpenAPIModel)
+  TOpenAPIRequestBody = class(TOpenAPIModel)
   private
     FUnresolvedReference: NullBoolean;
-    FReference: TOpenApiReference;
+    FReference: TOpenAPIReference;
     FDescription: NullString;
     FRequired: NullBoolean;
     FContent: TOpenAPIMediaTypeMap;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// Indicates if object is populated with data or is just a reference to the data
@@ -647,7 +650,8 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    property Reference: TOpenApiReference read FReference write FReference;
+    [NeonInclude(Include.NotEmpty)]
+    property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
     /// A brief description of the request body. This could contain examples of use.
@@ -669,7 +673,7 @@ type
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
     /// </summary>
-    //property Extensions: TObjectDictionary<string, TOpenApiExtension>;
+    //property Extensions: TObjectDictionary<string, TOpenAPIExtension>;
   end;
 
   /// <summary>
@@ -712,7 +716,8 @@ type
     FVariables: TOpenAPIServerVariableMap;
     FUrl: string;
   public
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const AURL, ADescription: string); overload;
     destructor Destroy; override;
   public
     /// <summary>
@@ -849,11 +854,11 @@ type
 
   TOpenAPIPathItem = class;
 
-  TOpenApiCallback = class(TOpenAPIModel)
+  TOpenAPICallback = class(TOpenAPIModel)
   private
     FPathItems: TObjectDictionary<TRuntimeExpression, TOpenAPIPathItem>;
     FUnresolvedReference: NullBoolean;
-    FReference: TOpenApiReference;
+    FReference: TOpenAPIReference;
   public
     /// <summary>
     /// A Path Item Object used to define a callback request and expected responses.
@@ -868,7 +873,7 @@ type
     /// <summary>
     /// Reference pointer.
     /// </summary>
-    property Reference: TOpenApiReference read FReference write FReference;
+    property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
@@ -876,17 +881,17 @@ type
     //property Extensions: TObjectDictionary<string, IOpenApiExtension>;
   end;
 
-  TOpenApiCallbacks = class(TObjectList<TOpenApiCallback>)
+  TOpenAPICallbacks = class(TObjectList<TOpenAPICallback>)
   public
     constructor Create;
   end;
 
-  TOpenApiCallbackMap = class(TObjectDictionary<string, TOpenApiCallback>)
+  TOpenAPICallbackMap = class(TObjectDictionary<string, TOpenAPICallback>)
   public
     constructor Create;
   end;
 
-  TOpenApiOAuthFlow = class(TOpenAPIModel)
+  TOpenAPIOAuthFlow = class(TOpenAPIModel)
   private
     FAuthorizationUrl: string;
     FTokenUrl: string;
@@ -921,32 +926,32 @@ type
     //property Extensions: TObjectDictionary<string, IOpenApiExtension>;
   end;
 
-  TOpenApiOAuthFlows = class(TOpenAPIModel)
+  TOpenAPIOAuthFlows = class(TOpenAPIModel)
   private
-    FImplicit: TOpenApiOAuthFlow;
-    FPassword: TOpenApiOAuthFlow;
-    FClientCredentials: TOpenApiOAuthFlow;
-    FAuthorizationCode: TOpenApiOAuthFlow;
+    FImplicit: TOpenAPIOAuthFlow;
+    FPassword: TOpenAPIOAuthFlow;
+    FClientCredentials: TOpenAPIOAuthFlow;
+    FAuthorizationCode: TOpenAPIOAuthFlow;
   public
     /// <summary>
     /// Configuration for the OAuth Implicit flow
     /// </summary>
-    property Implicit: TOpenApiOAuthFlow read FImplicit write FImplicit;
+    property Implicit: TOpenAPIOAuthFlow read FImplicit write FImplicit;
 
     /// <summary>
     /// Configuration for the OAuth Resource Owner Password flow.
     /// </summary>
-    property Password: TOpenApiOAuthFlow read FPassword write FPassword;
+    property Password: TOpenAPIOAuthFlow read FPassword write FPassword;
 
     /// <summary>
     /// Configuration for the OAuth Client Credentials flow.
     /// </summary>
-    property ClientCredentials: TOpenApiOAuthFlow read FClientCredentials write FClientCredentials;
+    property ClientCredentials: TOpenAPIOAuthFlow read FClientCredentials write FClientCredentials;
 
     /// <summary>
     /// Configuration for the OAuth Authorization Code flow.
     /// </summary>
-    property AuthorizationCode: TOpenApiOAuthFlow read FAuthorizationCode write FAuthorizationCode;
+    property AuthorizationCode: TOpenAPIOAuthFlow read FAuthorizationCode write FAuthorizationCode;
 
     /// <summary>
     /// Specification Extensions.
@@ -961,10 +966,10 @@ type
     FIn_: TParameterLocation;
     FScheme: string;
     FBearerFormat: NullString;
-    FFlows: TOpenApiOAuthFlows;
+    FFlows: TOpenAPIOAuthFlows;
     FOpenIdConnectUrl: string;
     FUnresolvedReference: NullBoolean;
-    FReference: TOpenApiReference;
+    FReference: TOpenAPIReference;
   public
     /// <summary>
     /// REQUIRED. The type of the security scheme. Valid values are "apiKey", "http", "oauth2", "openIdConnect".
@@ -1004,7 +1009,7 @@ type
     /// <summary>
     /// REQUIRED. An object containing configuration information for the flow types supported.
     /// </summary>
-    property Flows: TOpenApiOAuthFlows read FFlows write FFlows;
+    property Flows: TOpenAPIOAuthFlows read FFlows write FFlows;
 
     /// <summary>
     /// REQUIRED. OpenId Connect Url to discover OAuth2 configuration values.
@@ -1014,7 +1019,7 @@ type
     /// <summary>
     /// Specification Extensions.
     /// </summary>
-    //property Extensions: TObjectDictionary<string, TOpenApiExtension>;
+    //property Extensions: TObjectDictionary<string, TOpenAPIExtension>;
 
     /// <summary>
     /// Indicates if object is populated with data or is just a reference to the data
@@ -1024,15 +1029,15 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    property Reference: TOpenApiReference read FReference write FReference;
+    property Reference: TOpenAPIReference read FReference write FReference;
 
   end;
 
-  TOpenApiSecurityRequirement = class(TObjectDictionary<TOpenApiSecurityScheme, TList<string>>)
+  TOpenAPISecurityRequirement = class(TObjectDictionary<TOpenAPISecurityScheme, TList<string>>)
 
   end;
 
-  TOpenApiSecurityRequirements = class(TObjectList<TOpenApiSecurityRequirement>)
+  TOpenAPISecurityRequirements = class(TObjectList<TOpenAPISecurityRequirement>)
   public
     constructor Create;
   end;
@@ -1048,12 +1053,15 @@ type
     FDescription: NullString;
     FExternalDocs: TOpenAPIExternalDocumentation;
     FParameters: TOpenAPIParameters;
-    FRequestBody: TOpenApiRequestBody;
-    FCallbacks: TOpenApiCallbackMap;
-    FSecurity: TOpenApiSecurityRequirements;
-    FServers: TOpenApiServers;
-    FDeprecated_: TNullableBooleanSerializer;
-    FResponses: TObjectDictionary<string, TOpenAPIResponse>;
+    FRequestBody: TOpenAPIRequestBody;
+    FCallbacks: TOpenAPICallbackMap;
+    FSecurity: TOpenAPISecurityRequirements;
+    FServers: TOpenAPIServers;
+    FDeprecated_: NullBoolean;
+    FResponses: TOpenAPIResponseMap;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// A list of tags for API documentation control.
@@ -1076,6 +1084,7 @@ type
     /// <summary>
     /// Additional external documentation for this operation.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocumentation read FExternalDocs write FExternalDocs;
 
     /// <summary>
@@ -1091,6 +1100,7 @@ type
     /// The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location.
     /// The list can use the Reference Object to link to parameters that are defined at the OpenAPI Object's components/parameters.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Parameters: TOpenAPIParameters read FParameters write FParameters;
 
     /// <summary>
@@ -1099,12 +1109,14 @@ type
     /// has explicitly defined semantics for request bodies.
     /// In other cases where the HTTP spec is vague, requestBody SHALL be ignored by consumers.
     /// </summary>
-    property RequestBody: TOpenApiRequestBody read FRequestBody write FRequestBody;
+    [NeonInclude(Include.NotEmpty)]
+    property RequestBody: TOpenAPIRequestBody read FRequestBody write FRequestBody;
 
     /// <summary>
     /// REQUIRED. The list of possible responses as they are returned from executing this operation.
     /// </summary>
-    property Responses: TObjectDictionary<string, TOpenAPIResponse> read FResponses write FResponses;
+    [NeonInclude(Include.NotEmpty)]
+    property Responses: TOpenAPIResponseMap read FResponses write FResponses;
 
     /// <summary>
     /// A map of possible out-of band callbacks related to the parent operation.
@@ -1114,13 +1126,14 @@ type
     /// The key value used to identify the callback object is an expression, evaluated at runtime,
     /// that identifies a Url to use for the callback operation.
     /// </summary>
-    property Callbacks: TOpenApiCallbackMap read FCallbacks write FCallbacks;
+    [NeonInclude(Include.NotEmpty)]
+    property Callbacks: TOpenAPICallbackMap read FCallbacks write FCallbacks;
 
     /// <summary>
     /// Declares this operation to be deprecated. Consumers SHOULD refrain from usage of the declared operation.
     /// </summary>
     [NeonProperty('deprecated')]
-    property Deprecated_: TNullableBooleanSerializer read FDeprecated_ write FDeprecated_;
+    property Deprecated_: NullBoolean read FDeprecated_ write FDeprecated_;
 
     /// <summary>
     /// A declaration of which security mechanisms can be used for this operation.
@@ -1129,14 +1142,16 @@ type
     /// This definition overrides any declared top-level security.
     /// To remove a top-level security declaration, an empty array can be used.
     /// </summary>
-    property Security: TOpenApiSecurityRequirements read FSecurity write FSecurity;
+    [NeonInclude(Include.NotEmpty)]
+    property Security: TOpenAPISecurityRequirements read FSecurity write FSecurity;
 
     /// <summary>
     /// An alternative server array to service this operation.
     /// If an alternative server object is specified at the Path Item Object or Root level,
     /// it will be overridden by this value.
     /// </summary>
-    property Servers: TOpenApiServers read FServers write FServers;
+    [NeonInclude(Include.NotEmpty)]
+    property Servers: TOpenAPIServers read FServers write FServers;
 
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
@@ -1144,8 +1159,9 @@ type
     //property TObjectDictionary<string, IOpenApiExtension> Extensions { get; set; } = new Dictionary<string, IOpenApiExtension>();
   end;
 
-  TOpenAPIOperations = class (TObjectDictionary<TOperationType, TOpenApiOperation>)
-
+  TOpenAPIOperationMap = class (TObjectDictionary<TOperationType, TOpenAPIOperation>)
+  public
+    constructor Create;
   end;
 
   /// <summary>
@@ -1205,11 +1221,11 @@ type
     FResponses: TObjectDictionary<string, TOpenAPIResponse>;
     FParameters: TOpenAPIParameterMap;
     FExamples: TObjectDictionary<string, TOpenAPIExample>;
-    FRequestBodies: TObjectDictionary<string, TOpenApiRequestBody>;
+    FRequestBodies: TObjectDictionary<string, TOpenAPIRequestBody>;
     FHeaders: TOpenAPIHeaderMap;
-    FSecuritySchemes: TObjectDictionary<string, TOpenApiSecurityScheme>;
+    FSecuritySchemes: TObjectDictionary<string, TOpenAPISecurityScheme>;
     FLinks: TOpenAPILinkMap;
-    FCallbacks: TObjectDictionary<string, TOpenApiCallback>;
+    FCallbacks: TObjectDictionary<string, TOpenAPICallback>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1242,7 +1258,7 @@ type
     /// An object to hold reusable <see cref="OpenApiRequestBody"/> Objects.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property RequestBodies: TObjectDictionary<string, TOpenApiRequestBody> read FRequestBodies write FRequestBodies;
+    property RequestBodies: TObjectDictionary<string, TOpenAPIRequestBody> read FRequestBodies write FRequestBodies;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiHeader"/> Objects.
@@ -1254,7 +1270,7 @@ type
     /// An object to hold reusable <see cref="OpenApiSecurityScheme"/> Objects.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property SecuritySchemes: TObjectDictionary<string, TOpenApiSecurityScheme> read FSecuritySchemes write FSecuritySchemes;
+    property SecuritySchemes: TObjectDictionary<string, TOpenAPISecurityScheme> read FSecuritySchemes write FSecuritySchemes;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiLink"/> Objects.
@@ -1266,7 +1282,7 @@ type
     /// An object to hold reusable <see cref="OpenApiCallback"/> Objects.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property Callbacks: TObjectDictionary<string, TOpenApiCallback> read FCallbacks write FCallbacks;
+    property Callbacks: TObjectDictionary<string, TOpenAPICallback> read FCallbacks write FCallbacks;
 
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
@@ -1281,9 +1297,12 @@ type
   private
     FSummary: NullString;
     FDescription: NullString;
-    FOperations: TOpenAPIOperations;
+    FOperations: TOpenAPIOperationMap;
     FServers: TOpenAPIServerMap;
     FParameters: TOpenAPIParameterMap;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// An optional, string summary, intended to apply to all operations in this path.
@@ -1298,17 +1317,20 @@ type
     /// <summary>
     /// Gets the definition of operations on this path.
     /// </summary>
-    property Operations: TOpenAPIOperations read FOperations write FOperations;
+    [NeonInclude(Include.NotEmpty)]
+    property Operations: TOpenAPIOperationMap read FOperations write FOperations;
 
     /// <summary>
     /// An alternative server array to service all operations in this path.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Servers: TOpenAPIServerMap read FServers write FServers;
 
     /// <summary>
     /// A list of parameters that are applicable for all the operations described under this path.
     /// These parameters can be overridden at the operation level, but cannot be removed there.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Parameters: TOpenAPIParameterMap read FParameters write FParameters;
 
     /// <summary>
@@ -1332,10 +1354,10 @@ type
     FOpenapi: string;
     FPaths: TOpenAPIPathMap;
     FServers: TOpenAPIServers;
-    FComponents: TOpenApiComponents;
-    FSecurityRequirements: TOpenApiSecurityRequirements;
-    FTags: TObjectList<TOpenApiTag>;
-    FExternalDocs: TOpenApiExternalDocs;
+    FComponents: TOpenAPIComponents;
+    FSecurityRequirements: TOpenAPISecurityRequirements;
+    FTags: TObjectList<TOpenAPITag>;
+    FExternalDocs: TOpenAPIExternalDocs;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1366,25 +1388,25 @@ type
     /// An element to hold various schemas for the specification.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property Components: TOpenApiComponents read FComponents write FComponents;
+    property Components: TOpenAPIComponents read FComponents write FComponents;
 
     /// <summary>
     /// A declaration of which security mechanisms can be used across the API.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property SecurityRequirements: TOpenApiSecurityRequirements read FSecurityRequirements write FSecurityRequirements;
+    property SecurityRequirements: TOpenAPISecurityRequirements read FSecurityRequirements write FSecurityRequirements;
 
     /// <summary>
     /// A list of tags used by the specification with additional metadata.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property Tags: TObjectList<TOpenApiTag> read FTags write FTags;
+    property Tags: TObjectList<TOpenAPITag> read FTags write FTags;
 
     /// <summary>
     /// Additional external documentation.
     /// </summary>
     [NeonInclude(Include.NotEmpty)]
-    property ExternalDocs: TOpenApiExternalDocs read FExternalDocs write FExternalDocs;
+    property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
@@ -1400,6 +1422,13 @@ implementation
 constructor TOpenAPIServer.Create;
 begin
   FVariables := TOpenAPIServerVariableMap.Create([doOwnsValues]);
+end;
+
+constructor TOpenAPIServer.Create(const AURL, ADescription: string);
+begin
+  FUrl := AURL;
+  if not ADescription.IsEmpty then
+    FDescription := ADescription;
 end;
 
 destructor TOpenAPIServer.Destroy;
@@ -1482,10 +1511,10 @@ begin
   FInfo := TOpenAPIInfo.Create;
   FPaths := TOpenAPIPathMap.Create;
   FServers := TOpenAPIServers.Create;
-  FComponents := TOpenApiComponents.Create;
-  FSecurityRequirements := TOpenApiSecurityRequirements.Create;
-  FTags := TOpenApiTags.Create;
-  //FExternalDocs := TOpenApiExternalDocs.Create;
+  FComponents := TOpenAPIComponents.Create;
+  FSecurityRequirements := TOpenAPISecurityRequirements.Create;
+  FTags := TOpenAPITags.Create;
+  //FExternalDocs := TOpenAPIExternalDocs.Create;
 end;
 
 destructor TOpenAPIDocument.Destroy;
@@ -1508,9 +1537,9 @@ begin
   inherited Create([doOwnsValues]);
 end;
 
-{ TOpenApiSecurityRequirements }
+{ TOpenAPISecurityRequirements }
 
-constructor TOpenApiSecurityRequirements.Create;
+constructor TOpenAPISecurityRequirements.Create;
 begin
   inherited Create(True);
 end;
@@ -1545,16 +1574,16 @@ begin
   inherited Create(True);
 end;
 
-{ TOpenApiCallbacks }
+{ TOpenAPICallbacks }
 
-constructor TOpenApiCallbacks.Create;
+constructor TOpenAPICallbacks.Create;
 begin
   inherited Create(True);
 end;
 
-{ TOpenApiCallbackMap }
+{ TOpenAPICallbackMap }
 
-constructor TOpenApiCallbackMap.Create;
+constructor TOpenAPICallbackMap.Create;
 begin
   inherited Create([doOwnsValues]);
 end;
@@ -1592,6 +1621,69 @@ end;
 constructor TOpenAPIMediaTypeMap.Create;
 begin
   inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIPathItem }
+
+constructor TOpenAPIPathItem.Create;
+begin
+  FOperations := TOpenAPIOperationMap.Create;
+  FServers := TOpenAPIServerMap.Create;
+  FParameters := TOpenAPIParameterMap.Create;
+end;
+
+destructor TOpenAPIPathItem.Destroy;
+begin
+  FParameters.Free;
+  FServers.Free;
+  FOperations.Free;
+  inherited;
+end;
+
+{ TOpenAPIOperationMap }
+
+constructor TOpenAPIOperationMap.Create;
+begin
+  inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPIOperation }
+
+constructor TOpenAPIOperation.Create;
+begin
+  //FExternalDocs: TOpenAPIExternalDocumentation;
+  FParameters := TOpenAPIParameters.Create;
+  //FRequestBody := TOpenAPIRequestBody.Create;
+  FCallbacks := TOpenAPICallbackMap.Create;
+  FSecurity := TOpenAPISecurityRequirements.Create;
+  FServers := TOpenAPIServers.Create;
+  FResponses := TOpenAPIResponseMap.Create;
+end;
+
+destructor TOpenAPIOperation.Destroy;
+begin
+  FParameters.Free;
+  FRequestBody.Free;
+  FCallbacks.Free;
+  FSecurity.Free;
+  FServers.Free;
+  FResponses.Free;
+  inherited;
+end;
+
+{ TOpenAPIRequestBody }
+
+constructor TOpenAPIRequestBody.Create;
+begin
+  FReference := TOpenAPIReference.Create;
+  FContent := TOpenAPIMediaTypeMap.Create;
+end;
+
+destructor TOpenAPIRequestBody.Destroy;
+begin
+  FReference.Free;
+  FContent.Free;
+  inherited;
 end;
 
 end.

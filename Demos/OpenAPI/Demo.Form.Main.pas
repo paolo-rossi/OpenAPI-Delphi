@@ -15,11 +15,15 @@ uses
 type
   TfrmMain = class(TForm)
     memoDocument: TMemo;
-    btnDocumentCreate: TButton;
+    btnAddInfo: TButton;
     btnDocumentGenerate: TButton;
+    btnAddServers: TButton;
+    btnAddPaths: TButton;
     procedure FormCreate(Sender: TObject);
-    procedure btnDocumentCreateClick(Sender: TObject);
+    procedure btnAddInfoClick(Sender: TObject);
+    procedure btnAddServersClick(Sender: TObject);
     procedure btnDocumentGenerateClick(Sender: TObject);
+    procedure btnAddPathsClick(Sender: TObject);
   private
     FDocument: TOpenAPIDocument;
   public
@@ -38,7 +42,7 @@ begin
   FDocument := TOpenAPIDocument.Create;
 end;
 
-procedure TfrmMain.btnDocumentCreateClick(Sender: TObject);
+procedure TfrmMain.btnAddInfoClick(Sender: TObject);
 begin
   FDocument.OpenAPI := '3.0.2';
   FDocument.Info.Title := 'OpenAPI Demo';
@@ -49,9 +53,32 @@ begin
   FDocument.Info.License.URL := 'http://www.apache.org/licenses/';
 end;
 
+procedure TfrmMain.btnAddServersClick(Sender: TObject);
+begin
+  FDocument.Servers.Add(TOpenAPIServer.Create('https://api.mycompany.com/rest/app/', 'Production Server'));
+  FDocument.Servers.Add(TOpenAPIServer.Create('https://beta.mycompany.com/rest/app/', 'Beta Server API v2'));
+  FDocument.Servers.Add(TOpenAPIServer.Create('https://test.mycompany.com/rest/app/', 'Testing Server'));
+end;
+
 procedure TfrmMain.btnDocumentGenerateClick(Sender: TObject);
 begin
   memoDocument.Lines.Text := TNeon.ObjectToJSONString(FDocument, TOpenAPISerializer.GetNeonConfig);
+end;
+
+procedure TfrmMain.btnAddPathsClick(Sender: TObject);
+var
+  LPath: TOpenAPIPathItem;
+  LOperation: TOpenAPIOperation;
+begin
+  LPath := TOpenAPIPathItem.Create;
+  LPath.Description := 'Customers resource';
+
+    LOperation := TOpenAPIOperation.Create;
+    LOperation.Summary := 'Get all customers';
+    LOperation.OperationId := 'CustomerList';
+    LPath.Operations.Add(TOperationType.Get, LOperation);
+
+  FDocument.Paths.Add('/customers', LPath);
 end;
 
 end.

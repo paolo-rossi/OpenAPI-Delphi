@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'OpenAPI Demo'
-  ClientHeight = 523
-  ClientWidth = 570
+  ClientHeight = 549
+  ClientWidth = 902
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,35 +17,57 @@ object frmMain: TfrmMain
   object memoDocument: TMemo
     Left = 141
     Top = 0
-    Width = 429
-    Height = 523
+    Width = 761
+    Height = 549
     Align = alRight
+    Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
-    Font.Height = -13
+    Font.Height = -16
     Font.Name = 'Consolas'
     Font.Style = []
     Lines.Strings = (
       'memoDocument')
     ParentFont = False
+    ScrollBars = ssVertical
     TabOrder = 0
+    ExplicitWidth = 429
+    ExplicitHeight = 523
   end
-  object btnDocumentCreate: TButton
+  object btnAddInfo: TButton
     Left = 8
     Top = 8
     Width = 121
     Height = 25
-    Caption = 'Create Document'
+    Caption = 'Add Info'
     TabOrder = 1
-    OnClick = btnDocumentCreateClick
+    OnClick = btnAddInfoClick
   end
   object btnDocumentGenerate: TButton
     Left = 8
-    Top = 48
+    Top = 240
     Width = 121
     Height = 25
     Caption = 'Generate JSON'
     TabOrder = 2
     OnClick = btnDocumentGenerateClick
+  end
+  object btnAddServers: TButton
+    Left = 8
+    Top = 39
+    Width = 121
+    Height = 25
+    Caption = 'Add Servers'
+    TabOrder = 3
+    OnClick = btnAddServersClick
+  end
+  object btnAddPaths: TButton
+    Left = 8
+    Top = 70
+    Width = 121
+    Height = 25
+    Caption = 'Add Paths'
+    TabOrder = 4
+    OnClick = btnAddPathsClick
   end
 end
