@@ -2,6 +2,9 @@ unit OpenAPI.Any;
 
 interface
 
+uses
+  System.Rtti;
+
 {$SCOPEDENUMS ON}
 
 type
@@ -68,12 +71,11 @@ type
     property Primitive: TPrimitive read GetPrimitive;
   end;
 
-
   /// <summary>
   /// Open API primitive class.
   /// </summary>
   /// <typeparam name="T"></typeparam>
-  TOpenApiPrimitive<T> = class(TInterfacedObject, IOpenApiPrimitive)
+  TOpenAPIAnyValue<T> = class(TInterfacedObject, IOpenApiPrimitive)
   private
     FValue: T;
     function GetAny: TAny;
@@ -112,7 +114,7 @@ type
   /// <summary>
   /// Open API boolean.
   /// </summary>
-  TOpenAPIInteger = class(TOpenApiPrimitive<Integer>)
+  TOpenAPIInteger = class(TOpenAPIAnyValue<Integer>)
   protected
     /// <summary>
     /// Primitive type this object represents.
@@ -129,7 +131,7 @@ type
   /// <summary>
   /// Open API boolean.
   /// </summary>
-  TOpenAPIBoolean = class(TOpenApiPrimitive<Boolean>)
+  TOpenAPIBoolean = class(TOpenAPIAnyValue<Boolean>)
   protected
     /// <summary>
     /// Primitive type this object represents.
@@ -146,7 +148,7 @@ type
   /// <summary>
   /// Open API boolean.
   /// </summary>
-  TOpenAPIString = class(TOpenApiPrimitive<string>)
+  TOpenAPIString = class(TOpenAPIAnyValue<string>)
   protected
     /// <summary>
     /// Primitive type this object represents.
@@ -160,16 +162,24 @@ type
     constructor Create(const AValue: string);
   end;
 
+  TOpenAPIAny = class
+  private
+    FValue: TValue;
+  public
+    procedure ValueFrom<T>(const Value: T);
+    property Value: TValue read FValue write FValue;
+  end;
+
 implementation
 
-{ TOpenApiPrimitive }
+{ TOpenAPIAnyValue }
 
-constructor TOpenApiPrimitive<T>.Create(const AValue: T);
+constructor TOpenAPIAnyValue<T>.Create(const AValue: T);
 begin
   FValue := AValue;
 end;
 
-function TOpenApiPrimitive<T>.GetAny: TAny;
+function TOpenAPIAnyValue<T>.GetAny: TAny;
 begin
   Result := TAny.TypePrimitive;
 end;
@@ -208,6 +218,13 @@ end;
 function TOpenAPIInteger.GetPrimitive: TPrimitive;
 begin
   Result := TPrimitive.TypeInteger;
+end;
+
+{ TOpenAPIAny }
+
+procedure TOpenAPIAny.ValueFrom<T>(const Value: T);
+begin
+  FValue := TValue.From<T>(Value);
 end;
 
 end.

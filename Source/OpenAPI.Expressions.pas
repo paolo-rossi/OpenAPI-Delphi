@@ -188,7 +188,7 @@ type
     /// </summary>
     public const RESPONSE = '$response.';
   private
-    function GetSource: TSourceExpression;
+    FSource: TSourceExpression;
   public
     /// <summary>
     /// Create a new instance of the <see cref="ResponseExpression"/> class.
@@ -205,7 +205,7 @@ type
     /// <summary>
     /// The <see cref="SourceExpression"/> expression.
     /// </summary>
-    property Source: TSourceExpression read GetSource;
+    property Source: TSourceExpression read FSource;
   end;
 
   /// <summary>
@@ -240,6 +240,49 @@ type
     /// Gets the fragment string.
     /// </summary>
     property Fragment: string read GetFragment;
+  end;
+
+  /// <summary>
+  /// Header expression, The token identifier in header is case-insensitive.
+  /// </summary>
+  THeaderExpression = class(TSourceExpression)
+    /// <summary>
+    /// header. string
+    /// </summary>
+    public const HEADER = 'header.';
+  private
+    function GetToken: string;
+  protected
+    /// <summary>
+    /// Gets the expression string.
+    /// </summary>
+    function GetExpression: string; override;
+  public
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HeaderExpression"/> class.
+    /// </summary>
+    /// <param name="token">The token string, it's case-insensitive.</param>
+    constructor Create(const AToken: string); //    : base(token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            throw Error.ArgumentNullOrWhiteSpace(nameof(token));
+    }
+
+    /// <summary>
+    /// Gets the expression string.
+    /// </summary>
+    //public override string Expression
+        {
+            return Header + Value;
+        }
+
+    /// <summary>
+    /// Gets the token string.
+    /// </summary>
+    property Token: string read GetToken;
+        {
+            return Value;
+        }
   end;
 
 implementation
@@ -340,8 +383,41 @@ end;
 { TSourceExpression }
 
 class function TSourceExpression.Build(const AExpression: string): TSourceExpression;
+var
+  LSubString: string;
+  LExpressions: TArray<string>;
 begin
   { TODO -opaolo -c : to finish 31/03/2019 11:15:25 }
+  if not string.IsNullOrWhiteSpace(AExpression) then
+  begin
+      LExpressions := AExpression.Split(['.']);
+      if Length(LExpressions) = 2 then
+      begin
+          if AExpression.StartsWith(THeaderExpression.HEADER) then
+              // header.
+              Exit(THeaderExpression(LExpressions[1]));
+          {
+          if AExpression.StartsWith(TQueryExpression.QUERY) then
+              // query.
+              Exit(TQueryExpression(LExpressions[1]));
+
+          if AExpression.StartsWith(TPathExpression.PATH) then
+              // path.
+              Exit(PathExpression(LExpressions[1]));
+          }
+      end;
+
+      // body
+      if AExpression.StartsWith(TBodyExpression.BODY) then
+      begin
+          LSubString := AExpression.Substring(Length(TBodyExpression.BODY));
+          if string.IsNullOrEmpty(LSubString) then
+            Exit(TBodyExpression.Create(nil));
+
+          Exit(TBodyExpression.Create(TJsonPointer.Create(LSubString)));
+      end;
+  end;
+  raise EOpenAPIException.Create('Source Expression invalid format');
 end;
 
 constructor TSourceExpression.Create(const AValue: string);
@@ -416,17 +492,32 @@ end;
 
 constructor TResponseExpression.Create(ASource: TSourceExpression);
 begin
-
+  FSource := ASource;
 end;
 
 function TResponseExpression.GetExpression: string;
 begin
-
+  Result := RESPONSE + Source.Expression;
 end;
 
-function TResponseExpression.GetSource: TSourceExpression;
-begin
+{ THeaderExpression }
 
+constructor THeaderExpression.Create(const AToken: string);
+begin
+  if string.IsNullOrWhiteSpace(AToken) then
+    raise Exception.Create('Argument null or whitespace');
+
+  inherited Create(AToken);
+end;
+
+function THeaderExpression.GetExpression: string;
+begin
+  Result := HEADER + FValue;
+end;
+
+function THeaderExpression.GetToken: string;
+begin
+  Result := FValue;
 end;
 
 end.

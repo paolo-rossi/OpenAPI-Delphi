@@ -27,6 +27,7 @@ uses
   System.Classes, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes,
+  OpenAPI.Any,
   OpenAPI.Nullables,
   OpenAPI.Reference;
 
@@ -85,6 +86,7 @@ type
     FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
     FDefault_: TOpenAPISchema;
+    FEnum: TOpenAPIAny;
   public
     constructor Create;
     destructor Destroy; override;
@@ -284,7 +286,7 @@ type
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// </summary>
-    //public IList<IOpenApiAny> Enum  = new List<IOpenApiAny>();
+    property Enum: TOpenAPIAny read FEnum write FEnum;
 
     /// <summary>
     /// Allows sending a null value for the defined schema. Default value is false.
@@ -348,6 +350,7 @@ begin
   FProperties := TObjectDictionary<string, TOpenAPISchema>.Create([doOwnsValues]);
   //FAdditionalProperties := TOpenAPISchema.Create;
   FReference := TOpenAPIReference.Create;
+  FEnum := TOpenAPIAny.Create;
 end;
 
 destructor TOpenAPISchema.Destroy;
@@ -361,6 +364,7 @@ begin
   FOneOf.Free;
   FAllOf.Free;
   FDefault_.Free;
+  FEnum.Free;
 
   inherited;
 end;

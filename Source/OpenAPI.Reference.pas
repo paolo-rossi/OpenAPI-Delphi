@@ -24,7 +24,7 @@ unit OpenAPI.Reference;
 interface
 
 uses
-  System.Classes, System.Generics.Collections, System.JSON,
+  System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes;
 
@@ -86,14 +86,13 @@ implementation
 function TOpenAPIReference.IsExternal: Boolean;
 begin
   { TODO -opaolo -c : to finish 31/03/2019 18:47:51 }
-  //FExternalResource.
-  //Result := not FExternalResource.IsEmpty;
+  Result := not FExternalResource.IsEmpty;
 end;
 
 function TOpenAPIReference.IsLocal: Boolean;
 begin
   { TODO -opaolo -c : to finish 31/03/2019 18:47:51 }
-  //Result := FExternalResource.IsEmpty;
+  Result := FExternalResource.IsEmpty;
 end;
 
 end.

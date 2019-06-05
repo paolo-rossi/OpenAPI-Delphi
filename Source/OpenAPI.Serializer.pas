@@ -10,6 +10,7 @@ uses
   Neon.Core.Types,
   Neon.Core.Serializers,
 
+  OpenAPI.Any,
   OpenAPI.Nullables;
 
 type
@@ -58,6 +59,14 @@ type
   end;
 
   TNullableTDateTimeSerializer = class(TCustomSerializer)
+  public
+    class function GetTargetInfo: PTypeInfo; override;
+  public
+    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+  end;
+
+  TOpenAPIAnySrializer = class(TCustomSerializer)
   public
     class function GetTargetInfo: PTypeInfo; override;
   public
@@ -240,7 +249,30 @@ begin
       .RegisterSerializer(TNullableInt64Serializer)
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
+      .RegisterSerializer(TOpenAPIAnySrializer)
   ;
+end;
+
+{ TOpenAPIAnySrializer }
+
+function TOpenAPIAnySrializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+  AContext: IDeserializerContext): TValue;
+begin
+  Result := nil;
+end;
+
+class function TOpenAPIAnySrializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TypeInfo(TOpenAPIAny);
+end;
+
+function TOpenAPIAnySrializer.Serialize(const AValue: TValue;
+  AContext: ISerializerContext): TJSONValue;
+var
+  LValue: TOpenAPIAny;
+begin
+  LValue := AValue.AsType<TOpenAPIAny>;
+  Result := AContext.WriteDataMember(LValue.Value);
 end;
 
 end.
