@@ -5,17 +5,44 @@ interface
 {$SCOPEDENUMS ON}
 
 type
+
+{$REGION ENUMTYPES}
+  /// <summary>
+  /// Type of an <see cref="IOpenApiAny"/>
+  /// </summary>
+  TAny = (
+    TypePrimitive,
+    TypeNull,
+    TypeArray,
+    TypeObject
+  );
+
+  /// <summary>
+  /// Primitive type.
+  /// </summary>
+  TPrimitive = (
+    TypeInteger,
+    TypeLong,
+    TypeFloat,
+    TypeDouble,
+    TypeString,
+    TypeByte,
+    TypeBinary,
+    TypeBoolean,
+    TypeDate,
+    TypeDateTime,
+    TypePassword
+  );
+
+{$ENDREGION}
+
+
   /// <summary>
   /// Represents an Open API element.
   /// </summary>
   IOpenApiElement = interface
   ['{F7230DE3-B52E-4A2A-8A32-FF409E4ADD49}']
   end;
-
-  /// <summary>
-  /// Type of an <see cref="IOpenApiAny"/>
-  /// </summary>
-  TAnyType = (ValPrimitive, ValNull, ValArray, ValObject);
 
   /// <summary>
   /// Base interface for all the types that represent Open API Any.
@@ -25,11 +52,162 @@ type
     /// <summary>
     /// Type of an <see cref="IOpenApiAny"/>.
     /// </summary>
-   function GetAnyType: TAnyType;
-   property AnyType: TAnyType read GetAnyType;
+   function GetAny: TAny;
+   property Any: TAny read GetAny;
+  end;
 
+  /// <summary>
+  /// Base interface for the Primitive type.
+  /// </summary>
+  IOpenApiPrimitive = interface(IOpenApiAny)
+  ['{193D437C-682E-457D-B24F-C1C15EDFAD67}']
+    /// <summary>
+    /// Primitive type.
+    /// </summary>
+    function GetPrimitive: TPrimitive;
+    property Primitive: TPrimitive read GetPrimitive;
+  end;
+
+
+  /// <summary>
+  /// Open API primitive class.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  TOpenApiPrimitive<T> = class(TInterfacedObject, IOpenApiPrimitive)
+  private
+    FValue: T;
+    function GetAny: TAny;
+  protected
+    function GetPrimitive: TPrimitive; virtual; abstract;
+  public
+    /// <summary>
+    /// Initializes the <see cref="IOpenApiPrimitive"/> class with the given value.
+    /// </summary>
+    /// <param name="value"></param>
+    constructor Create(const AValue: T);
+
+    /// <summary>
+    /// The kind of <see cref="IOpenApiAny"/>.
+    /// </summary>
+    property Any: TAny read GetAny;
+
+    /// <summary>
+    /// The primitive class this object represents.
+    /// </summary>
+    property PrimitiveType: TPrimitive read GetPrimitive;
+
+    /// <summary>
+    /// Value of this <see cref="IOpenApiPrimitive"/>
+    /// </summary>
+    property Value: T read FValue;
+
+    /// <summary>
+    /// Write out content of primitive element
+    /// </summary>
+    /// <param name="writer"></param>
+    /// <param name="specVersion"></param>
+    //public void Write(IOpenApiWriter writer, OpenApiSpecVersion specVersion)
+  end;
+
+  /// <summary>
+  /// Open API boolean.
+  /// </summary>
+  TOpenAPIInteger = class(TOpenApiPrimitive<Integer>)
+  protected
+    /// <summary>
+    /// Primitive type this object represents.
+    /// </summary>
+    function GetPrimitive: TPrimitive; override;
+  public
+    /// <summary>
+    /// Initializes the <see cref="TOpenApiInteger"/> class.
+    /// </summary>
+    /// <param name="value"></param>
+    constructor Create(const AValue: Integer);
+  end;
+
+  /// <summary>
+  /// Open API boolean.
+  /// </summary>
+  TOpenAPIBoolean = class(TOpenApiPrimitive<Boolean>)
+  protected
+    /// <summary>
+    /// Primitive type this object represents.
+    /// </summary>
+    function GetPrimitive: TPrimitive; override;
+  public
+    /// <summary>
+    /// Initializes the <see cref="OpenApiBoolean"/> class.
+    /// </summary>
+    /// <param name="value"></param>
+    constructor Create(const AValue: Boolean);
+  end;
+
+  /// <summary>
+  /// Open API boolean.
+  /// </summary>
+  TOpenAPIString = class(TOpenApiPrimitive<string>)
+  protected
+    /// <summary>
+    /// Primitive type this object represents.
+    /// </summary>
+    function GetPrimitive: TPrimitive; override;
+  public
+    /// <summary>
+    /// Initializes the <see cref="TOpenApiString"/> class.
+    /// </summary>
+    /// <param name="value"></param>
+    constructor Create(const AValue: string);
   end;
 
 implementation
+
+{ TOpenApiPrimitive }
+
+constructor TOpenApiPrimitive<T>.Create(const AValue: T);
+begin
+  FValue := AValue;
+end;
+
+function TOpenApiPrimitive<T>.GetAny: TAny;
+begin
+  Result := TAny.TypePrimitive;
+end;
+
+{ TOpenAPIBoolean }
+
+constructor TOpenAPIBoolean.Create(const AValue: Boolean);
+begin
+  inherited Create(AValue);
+end;
+
+function TOpenAPIBoolean.GetPrimitive: TPrimitive;
+begin
+  Result := TPrimitive.TypeBoolean;
+end;
+
+{ TOpenAPIString }
+
+constructor TOpenAPIString.Create(const AValue: string);
+begin
+  FValue := AValue;
+end;
+
+function TOpenAPIString.GetPrimitive: TPrimitive;
+begin
+  Result := TPrimitive.TypeString;
+end;
+
+{ TOpenAPIInteger }
+
+constructor TOpenAPIInteger.Create(const AValue: Integer);
+begin
+  FValue := AValue;
+end;
+
+function TOpenAPIInteger.GetPrimitive: TPrimitive;
+begin
+  Result := TPrimitive.TypeInteger;
+end;
 
 end.

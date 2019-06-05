@@ -69,14 +69,22 @@ procedure TfrmMain.btnAddPathsClick(Sender: TObject);
 var
   LPath: TOpenAPIPathItem;
   LOperation: TOpenAPIOperation;
+  LParameter: TOpenAPIParameter;
 begin
   LPath := TOpenAPIPathItem.Create;
   LPath.Description := 'Customers resource';
 
     LOperation := TOpenAPIOperation.Create;
+    LPath.Operations.Add(TOperationType.Get, LOperation);
     LOperation.Summary := 'Get all customers';
     LOperation.OperationId := 'CustomerList';
-    LPath.Operations.Add(TOperationType.Get, LOperation);
+
+    LParameter := TOpenAPIParameter.Create;
+    LOperation.Parameters.Add(LParameter);
+    LParameter.Name := 'id';
+    LParameter.In_ := 'query';
+    LParameter.Description := 'Customer ID';
+    LParameter.Schema.Type_ := 'string';
 
   FDocument.Paths.Add('/customers', LPath);
 end;

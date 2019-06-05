@@ -239,6 +239,9 @@ type
     property Url: string read FUrl write FUrl;
   end;
 
+  TOpenAPIExamples = class;
+  TOpenAPIMediaTypeMap = class;
+
   /// <summary>
   /// Parameter Object
   /// </summary>
@@ -250,6 +253,15 @@ type
     FIn_: string;
     FName: string;
     FRequired: NullBoolean;
+    FStyle: TParameterStyle;
+    FExplode: NullBoolean;
+    FAllowReserved: NullBoolean;
+    FSchema: TOpenApiSchema;
+    FExamples: TOpenApiExamples;
+    FContent: TOpenApiMediaTypeMap;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// REQUIRED. The name of the parameter. Parameter names are case sensitive.
@@ -293,6 +305,73 @@ type
     /// the value of allowEmptyValue SHALL be ignored.
     /// </summary>
     property AllowEmptyValue: NullBoolean read FAllowEmptyValue write FAllowEmptyValue;
+
+    /// <summary>
+    /// Describes how the parameter value will be serialized depending on the type of the parameter value.
+    /// Default values (based on value of in): for query - form; for path - simple; for header - simple;
+    /// for cookie - form.
+    /// </summary>
+    property Style: TParameterStyle read FStyle write FStyle;
+
+    /// <summary>
+    /// When this is true, parameter values of type array or object generate separate parameters
+    /// for each value of the array or key-value pair of the map.
+    /// For other types of parameters this property has no effect.
+    /// When style is form, the default value is true.
+    /// For all other styles, the default value is false.
+    /// </summary>
+    property Explode: NullBoolean read FExplode write FExplode;
+
+    /// <summary>
+    /// Determines whether the parameter value SHOULD allow reserved characters,
+    /// as defined by RFC3986 :/?#[]@!$&amp;'()*+,;= to be included without percent-encoding.
+    /// This property only applies to parameters with an in value of query.
+    /// The default value is false.
+    /// </summary>
+    property AllowReserved: NullBoolean read FAllowReserved write FAllowReserved;
+
+    /// <summary>
+    /// The schema defining the type used for the parameter.
+    /// </summary>
+    [NeonInclude(Include.NotEmpty)]
+    property Schema: TOpenApiSchema read FSchema write FSchema;
+
+    /// <summary>
+    /// Examples of the media type. Each example SHOULD contain a value
+    /// in the correct format as specified in the parameter encoding.
+    /// The examples object is mutually exclusive of the example object.
+    /// Furthermore, if referencing a schema which contains an example,
+    /// the examples value SHALL override the example provided by the schema.
+    /// </summary>
+    [NeonInclude(Include.NotEmpty)]
+    property Examples: TOpenApiExamples read FExamples write FExamples;
+
+    /// <summary>
+    /// Example of the media type. The example SHOULD match the specified schema and encoding properties
+    /// if present. The example object is mutually exclusive of the examples object.
+    /// Furthermore, if referencing a schema which contains an example,
+    /// the example value SHALL override the example provided by the schema.
+    /// To represent examples of media types that cannot naturally be represented in JSON or YAML,
+    /// a string value can contain the example with escaping where necessary.
+    /// </summary>
+    //property IOpenApiAny Example { get; set; }
+
+    /// <summary>
+    /// A map containing the representations for the parameter.
+    /// The key is the media type and the value describes it.
+    /// The map MUST only contain one entry.
+    /// For more complex scenarios, the content property can define the media type and schema of the parameter.
+    /// A parameter MUST contain either a schema property, or a content property, but not both.
+    /// When example or examples are provided in conjunction with the schema object,
+    /// the example MUST follow the prescribed serialization strategy for the parameter.
+    /// </summary>
+    [NeonInclude(Include.NotEmpty)]
+    property Content: TOpenApiMediaTypeMap read FContent write FContent;
+
+    /// <summary>
+    /// This object MAY be extended with Specification Extensions.
+    /// </summary>
+    //property Extensions: IOpenApiExtension;
   end;
 
   TOpenAPIParameters = class(TObjectList<TOpenAPIParameter>)
@@ -313,6 +392,9 @@ type
     FExternalValue: NullString;
     FReference: TOpenAPIReference;
     FUnresolvedReference: NullBoolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// Short description for the example.
@@ -343,6 +425,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
@@ -369,9 +452,13 @@ type
     FExamples: TOpenAPIExampleMap;
     FEncoding: TOpenAPIEncodingMap;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
     /// The schema defining the type used for the request body.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
@@ -384,6 +471,7 @@ type
     /// Examples of the media type.
     /// Each example object SHOULD match the media type and specified schema if present.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Examples: TOpenAPIExampleMap read FExamples write FExamples;
 
     /// <summary>
@@ -392,6 +480,7 @@ type
     /// The encoding object SHALL only apply to requestBody objects
     /// when the media type is multipart or application/x-www-form-Urlencoded.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Encoding: TOpenAPIEncodingMap read FEncoding write FEncoding;
 
     /// <summary>
@@ -400,10 +489,10 @@ type
     //property Extensions: TObjectDictionary<string, IOpenApiExtension>;
   end;
 
-   
+
   TOpenAPIMediaTypes = class(TObjectList<TOpenAPIMediaType>)
   end;
-  
+
   TOpenAPIMediaTypeMap = class(TObjectDictionary<string, TOpenAPIMediaType>)
   public
     constructor Create;
@@ -427,6 +516,9 @@ type
     //FExample: TOpenAPIAny;
     FExamples: TOpenAPIExampleMap;
     FContent: TOpenAPIMediaTypeMap;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// Indicates if object is populated with data or is just a reference to the data
@@ -511,7 +603,7 @@ type
   public
     constructor Create;
   end;
-  
+
   TOpenAPIEncoding = class(TOpenAPIModel)
   private
     FContentType: NullString;
@@ -519,6 +611,9 @@ type
     FStyle: TParameterStyle;
     FExplode: NullBoolean;
     FAllowReserved: NullBoolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
   public
     /// <summary>
     /// The Content-Type for encoding a specific property.
@@ -530,6 +625,7 @@ type
     /// <summary>
     /// A map allowing additional information to be provided as headers.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Headers: TOpenAPIHeaderMap read FHeaders write FHeaders;
 
     /// <summary>
@@ -595,6 +691,9 @@ type
     FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
     /// The name of the tag.
     /// </summary>
@@ -608,6 +707,7 @@ type
     /// <summary>
     /// Additional external documentation for this tag.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>
@@ -623,6 +723,7 @@ type
     /// <summary>
     /// Reference.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
@@ -1683,6 +1784,105 @@ destructor TOpenAPIRequestBody.Destroy;
 begin
   FReference.Free;
   FContent.Free;
+  inherited;
+end;
+
+{ TOpenAPITag }
+
+constructor TOpenAPITag.Create;
+begin
+  //FExternalDocs: TOpenAPIExternalDocs;
+  FReference := TOpenAPIReference.Create;
+end;
+
+destructor TOpenAPITag.Destroy;
+begin
+  FReference.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIExample }
+
+constructor TOpenAPIExample.Create;
+begin
+  FReference := TOpenAPIReference.Create;
+end;
+
+destructor TOpenAPIExample.Destroy;
+begin
+  FReference.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIMediaType }
+
+constructor TOpenAPIMediaType.Create;
+begin
+  FSchema := TOpenAPISchema.Create;
+  FExamples := TOpenAPIExampleMap.Create;
+  FEncoding := TOpenAPIEncodingMap.Create;
+end;
+
+destructor TOpenAPIMediaType.Destroy;
+begin
+  FSchema.Free;
+  FExamples.Free;
+  FEncoding.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIHeader }
+
+constructor TOpenAPIHeader.Create;
+begin
+  FReference := TOpenAPIReference.Create;
+  FSchema := TOpenAPISchema.Create;
+  FExamples := TOpenAPIExampleMap.Create;
+  FContent := TOpenAPIMediaTypeMap.Create;
+end;
+
+destructor TOpenAPIHeader.Destroy;
+begin
+  FReference.Free;
+  FSchema.Free;
+  FExamples.Free;
+  FContent.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIEncoding }
+
+constructor TOpenAPIEncoding.Create;
+begin
+  FHeaders := TOpenAPIHeaderMap.Create;
+end;
+
+destructor TOpenAPIEncoding.Destroy;
+begin
+  FHeaders.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIParameter }
+
+constructor TOpenAPIParameter.Create;
+begin
+  FSchema := TOpenApiSchema.Create;
+  FExamples := TOpenApiExamples.Create;
+  FContent := TOpenApiMediaTypeMap.Create;
+end;
+
+destructor TOpenAPIParameter.Destroy;
+begin
+  FSchema.Free;
+  FExamples.Free;
+  FContent.Free;
+
   inherited;
 end;
 
