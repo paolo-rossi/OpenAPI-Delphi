@@ -70,7 +70,6 @@ var
   LPath: TOpenAPIPathItem;
   LOperation: TOpenAPIOperation;
   LParameter: TOpenAPIParameter;
-  LParamEnum: TArray<string>;
 begin
   LPath := TOpenAPIPathItem.Create;
   LPath.Description := 'Customers resource';
@@ -86,8 +85,15 @@ begin
       LParameter.In_ := 'query';
       LParameter.Description := 'Customer ID';
       LParameter.Schema.Type_ := 'string';
-      LParamEnum := ['enum1', 'enum2'];
-      LParameter.Schema.Enum.Value := TValue.From<TArray<string>>(LParamEnum);
+      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
+
+      LParameter := TOpenAPIParameter.Create;
+      LOperation.Parameters.Add(LParameter);
+      LParameter.Name := 'country';
+      LParameter.In_ := 'query';
+      LParameter.Description := 'Country Code';
+      LParameter.Schema.Type_ := 'string';
+      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
 
   FDocument.Paths.Add('/customers', LPath);
 end;

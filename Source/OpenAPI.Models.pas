@@ -961,6 +961,9 @@ type
     FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
     /// A Path Item Object used to define a callback request and expected responses.
     /// </summary>
@@ -974,6 +977,7 @@ type
     /// <summary>
     /// Reference pointer.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
@@ -999,6 +1003,9 @@ type
     FRefreshUrl: NullString;
     FScopes: TDictionary<string, string>;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
     /// REQUIRED. The authorization Url to be used for this flow.
     /// Applies to implicit and authorizationCode OAuthFlow.
@@ -1019,6 +1026,7 @@ type
     /// <summary>
     /// REQUIRED. A map between the scope name and a short description for it.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Scopes: TDictionary<string, string> read FScopes write FScopes;
 
     /// <summary>
@@ -1034,24 +1042,31 @@ type
     FClientCredentials: TOpenAPIOAuthFlow;
     FAuthorizationCode: TOpenAPIOAuthFlow;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
     /// Configuration for the OAuth Implicit flow
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Implicit: TOpenAPIOAuthFlow read FImplicit write FImplicit;
 
     /// <summary>
     /// Configuration for the OAuth Resource Owner Password flow.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Password: TOpenAPIOAuthFlow read FPassword write FPassword;
 
     /// <summary>
     /// Configuration for the OAuth Client Credentials flow.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property ClientCredentials: TOpenAPIOAuthFlow read FClientCredentials write FClientCredentials;
 
     /// <summary>
     /// Configuration for the OAuth Authorization Code flow.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property AuthorizationCode: TOpenAPIOAuthFlow read FAuthorizationCode write FAuthorizationCode;
 
     /// <summary>
@@ -1072,6 +1087,9 @@ type
     FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
   public
+    constructor Create;
+    destructor Destroy; override;
+  public
     /// <summary>
     /// REQUIRED. The type of the security scheme. Valid values are "apiKey", "http", "oauth2", "openIdConnect".
     /// </summary>
@@ -1091,7 +1109,7 @@ type
     /// <summary>
     /// REQUIRED. The location of the API key. Valid values are "query", "header" or "cookie".
     /// </summary>
-    [NeonProperty('in')]
+    [NeonProperty('in')][NeonInclude(Include.NotEmpty)]
     property In_: TParameterLocation read FIn_ write FIn_;
 
     /// <summary>
@@ -1130,8 +1148,8 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
+    [NeonInclude(Include.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
-
   end;
 
   TOpenAPISecurityRequirement = class(TObjectDictionary<TOpenAPISecurityScheme, TList<string>>)
@@ -1576,12 +1594,16 @@ end;
 
 constructor TOpenAPILink.Create;
 begin
-  { TODO -opaolo -c : Finire 28/03/2019 18:52:44 }
+  //FRequestBody := TRuntimeExpression.Create;
+  FParameters := TRuntimeExpressionMap.Create;;
+  FServer := TOpenAPIServer.Create;
 end;
 
 destructor TOpenAPILink.Destroy;
 begin
-  { TODO -opaolo -c : Finire 28/03/2019 18:52:44 }
+  FServer.Free;
+  FParameters.Free;
+  FRequestBody.Free;
 
   inherited;
 end;
@@ -1764,11 +1786,13 @@ end;
 destructor TOpenAPIOperation.Destroy;
 begin
   FParameters.Free;
+  FExternalDocs.Free;
   FRequestBody.Free;
   FCallbacks.Free;
   FSecurity.Free;
   FServers.Free;
   FResponses.Free;
+
   inherited;
 end;
 
@@ -1798,6 +1822,7 @@ end;
 destructor TOpenAPITag.Destroy;
 begin
   FReference.Free;
+  FExternalDocs.Free;
 
   inherited;
 end;
@@ -1882,6 +1907,70 @@ begin
   FSchema.Free;
   FExamples.Free;
   FContent.Free;
+
+  inherited;
+end;
+
+{ TOpenAPICallback }
+
+constructor TOpenAPICallback.Create;
+begin
+  FReference := TOpenAPIReference.Create;
+end;
+
+destructor TOpenAPICallback.Destroy;
+begin
+  FReference.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIOAuthFlow }
+
+constructor TOpenAPIOAuthFlow.Create;
+begin
+  FScopes := TDictionary<string, string>.Create;
+end;
+
+destructor TOpenAPIOAuthFlow.Destroy;
+begin
+  FScopes.Free;
+
+  inherited;
+end;
+
+{ TOpenAPIOAuthFlows }
+
+constructor TOpenAPIOAuthFlows.Create;
+begin
+  FImplicit := TOpenAPIOAuthFlow.Create;
+  FPassword := TOpenAPIOAuthFlow.Create;
+  FClientCredentials := TOpenAPIOAuthFlow.Create;
+  FAuthorizationCode := TOpenAPIOAuthFlow.Create;
+end;
+
+destructor TOpenAPIOAuthFlows.Destroy;
+begin
+  FImplicit.Free;
+  FPassword.Free;
+  FClientCredentials.Free;
+  FAuthorizationCode.Free;
+
+  inherited;
+end;
+
+{ TOpenAPISecurityScheme }
+
+constructor TOpenAPISecurityScheme.Create;
+begin
+  FFlows := TOpenAPIOAuthFlows.Create;
+  FReference := TOpenAPIReference.Create;
+end;
+
+destructor TOpenAPISecurityScheme.Destroy;
+begin
+  FFlows.Free;
+  FReference.Free;
 
   inherited;
 end;

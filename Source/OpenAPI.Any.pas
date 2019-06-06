@@ -29,7 +29,7 @@ type
     TypeFloat,
     TypeDouble,
     TypeString,
-    TypeByte,
+    TypeBytes,
     TypeBinary,
     TypeBoolean,
     TypeDate,
@@ -102,13 +102,6 @@ type
     /// Value of this <see cref="IOpenApiPrimitive"/>
     /// </summary>
     property Value: T read FValue;
-
-    /// <summary>
-    /// Write out content of primitive element
-    /// </summary>
-    /// <param name="writer"></param>
-    /// <param name="specVersion"></param>
-    //public void Write(IOpenApiWriter writer, OpenApiSpecVersion specVersion)
   end;
 
   /// <summary>
