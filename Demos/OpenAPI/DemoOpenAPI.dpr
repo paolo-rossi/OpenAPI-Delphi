@@ -9,7 +9,6 @@ uses
   OpenAPI.Interfaces in '..\..\Source\OpenAPI.Interfaces.pas',
   OpenAPI.JsonPointer in '..\..\Source\OpenAPI.JsonPointer.pas',
   OpenAPI.Models in '..\..\Source\OpenAPI.Models.pas',
-  OpenAPI.Nullables in '..\..\Source\OpenAPI.Nullables.pas',
   OpenAPI.Reference in '..\..\Source\OpenAPI.Reference.pas',
   OpenAPI.Schema in '..\..\Source\OpenAPI.Schema.pas',
   OpenAPI.Serializer in '..\..\Source\OpenAPI.Serializer.pas';

@@ -3,13 +3,16 @@ unit OpenAPI.Any;
 interface
 
 uses
-  System.Rtti;
+  System.Rtti,
+
+  Neon.Core.Attributes,
+  Neon.Core.Nullables;
 
 {$SCOPEDENUMS ON}
 
 type
 
-{$REGION ENUMTYPES}
+{$REGION 'Enum Types'}
   /// <summary>
   /// Type of an <see cref="IOpenApiAny"/>
   /// </summary>
@@ -160,6 +163,8 @@ type
     FValue: TValue;
   public
     procedure ValueFrom<T>(const Value: T);
+
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Value: TValue read FValue write FValue;
   end;
 

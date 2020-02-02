@@ -114,7 +114,6 @@
         <DCCReference Include="..\..\Source\OpenAPI.Interfaces.pas"/>
         <DCCReference Include="..\..\Source\OpenAPI.JsonPointer.pas"/>
         <DCCReference Include="..\..\Source\OpenAPI.Models.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Nullables.pas"/>
         <DCCReference Include="..\..\Source\OpenAPI.Reference.pas"/>
         <DCCReference Include="..\..\Source\OpenAPI.Schema.pas"/>
         <DCCReference Include="..\..\Source\OpenAPI.Serializer.pas"/>

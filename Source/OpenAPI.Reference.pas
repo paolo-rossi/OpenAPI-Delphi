@@ -75,7 +75,7 @@ type
     [NeonIgnore]
     property ExternalResource: string read FExternalResource write FExternalResource;
 
-    [NeonProperty('$ref')][NeonInclude(Include.NotEmpty)]
+    [NeonProperty('$ref')][NeonInclude(IncludeIf.NotEmpty)]
     property Ref: string read FRef write FRef;
   end;
 

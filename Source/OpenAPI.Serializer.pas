@@ -8,10 +8,9 @@ uses
   Neon.Core.Attributes,
   Neon.Core.Persistence,
   Neon.Core.Types,
-  Neon.Core.Serializers,
+  Neon.Core.Nullables,
 
-  OpenAPI.Any,
-  OpenAPI.Nullables;
+  OpenAPI.Any;
 
 type
   TOpenAPISerializer = class
@@ -19,61 +18,67 @@ type
   end;
 
   TNullableStringSerializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
   TNullableBooleanSerializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
   TNullableIntegerSerializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
   TNullableInt64Serializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
   TNullableDoubleSerializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
   TNullableTDateTimeSerializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
   TOpenAPIAnySrializer = class(TCustomSerializer)
-  public
+  protected
     class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
-    function Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue; override;
-    function Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue; override;
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
-
 
 implementation
 
@@ -82,7 +87,16 @@ uses
 
 { TNullableStringSerializer }
 
-function TNullableStringSerializer.Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue;
+class function TNullableStringSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TNullableStringSerializer.Deserialize(AValue: TJSONValue; const AData:
+    TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LNullValue: NullString;
 begin
@@ -95,7 +109,8 @@ begin
   Result := TypeInfo(NullString);
 end;
 
-function TNullableStringSerializer.Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue;
+function TNullableStringSerializer.Serialize(const AValue: TValue; ANeonObject:
+    TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: NullString;
 begin
@@ -107,7 +122,16 @@ end;
 
 { TNullableBooleanSerializer }
 
-function TNullableBooleanSerializer.Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue;
+class function TNullableBooleanSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TNullableBooleanSerializer.Deserialize(AValue: TJSONValue; const
+    AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LNullValue: NullBoolean;
 begin
@@ -120,7 +144,8 @@ begin
   Result := TypeInfo(NullBoolean);
 end;
 
-function TNullableBooleanSerializer.Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue;
+function TNullableBooleanSerializer.Serialize(const AValue: TValue;
+    ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: NullBoolean;
 begin
@@ -132,8 +157,16 @@ end;
 
 { TNullableIntegerSerializer }
 
-function TNullableIntegerSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
-  AContext: IDeserializerContext): TValue;
+class function TNullableIntegerSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TNullableIntegerSerializer.Deserialize(AValue: TJSONValue; const
+    AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LNullValue: NullInteger;
 begin
@@ -147,7 +180,7 @@ begin
 end;
 
 function TNullableIntegerSerializer.Serialize(const AValue: TValue;
-  AContext: ISerializerContext): TJSONValue;
+    ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: NullInteger;
 begin
@@ -159,8 +192,16 @@ end;
 
 { TNullableInt64Serializer }
 
+class function TNullableInt64Serializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
 function TNullableInt64Serializer.Deserialize(AValue: TJSONValue; const AData: TValue;
-  AContext: IDeserializerContext): TValue;
+    ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LNullValue: NullInt64;
 begin
@@ -173,7 +214,8 @@ begin
   Result := TypeInfo(NullInt64);
 end;
 
-function TNullableInt64Serializer.Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue;
+function TNullableInt64Serializer.Serialize(const AValue: TValue; ANeonObject:
+    TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: NullInt64;
 begin
@@ -185,8 +227,16 @@ end;
 
 { TNullableDoubleSerializer }
 
+class function TNullableDoubleSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
 function TNullableDoubleSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
-  AContext: IDeserializerContext): TValue;
+    ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LNullValue: NullDouble;
 begin
@@ -199,7 +249,8 @@ begin
   Result := TypeInfo(NullDouble);
 end;
 
-function TNullableDoubleSerializer.Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue;
+function TNullableDoubleSerializer.Serialize(const AValue: TValue; ANeonObject:
+    TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: NullDouble;
 begin
@@ -211,7 +262,16 @@ end;
 
 { TNullableTDateTimeSerializer }
 
-function TNullableTDateTimeSerializer.Deserialize(AValue: TJSONValue; const AData: TValue; AContext: IDeserializerContext): TValue;
+class function TNullableTDateTimeSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TNullableTDateTimeSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+    ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LNullValue: NullDateTime;
 begin
@@ -224,7 +284,8 @@ begin
   Result := TypeInfo(NullDateTime);
 end;
 
-function TNullableTDateTimeSerializer.Serialize(const AValue: TValue; AContext: ISerializerContext): TJSONValue;
+function TNullableTDateTimeSerializer.Serialize(const AValue: TValue;
+    ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: NullDateTime;
 begin
@@ -255,8 +316,16 @@ end;
 
 { TOpenAPIAnySrializer }
 
+class function TOpenAPIAnySrializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
 function TOpenAPIAnySrializer.Deserialize(AValue: TJSONValue; const AData: TValue;
-  AContext: IDeserializerContext): TValue;
+    ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 begin
   Result := nil;
 end;
@@ -267,12 +336,15 @@ begin
 end;
 
 function TOpenAPIAnySrializer.Serialize(const AValue: TValue;
-  AContext: ISerializerContext): TJSONValue;
+    ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: TOpenAPIAny;
 begin
   LValue := AValue.AsType<TOpenAPIAny>;
-  Result := AContext.WriteDataMember(LValue.Value);
+  if not LValue.Value.IsEmpty then
+    Result := AContext.WriteDataMember(LValue.Value)
+  else
+    Result := nil;
 end;
 
 end.

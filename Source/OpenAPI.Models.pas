@@ -27,8 +27,8 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes,
+  Neon.Core.Nullables,
   OpenAPI.Interfaces,
-  OpenAPI.Nullables,
   OpenAPI.Schema,
   OpenAPI.Expressions,
   OpenAPI.Reference,
@@ -45,8 +45,8 @@ type
     function CheckModel: Boolean; inline;
   end;
 
-{$REGION 'ENUM TYPES'}  
-  [NeonEnumNames('matrix, label, form, simple, spaceDelimited, pipeDelimited, deepObject')]
+{$REGION 'OpenAPI Enum Types'}
+  [NeonEnumNames('matrix,label,form,simple,spaceDelimited,pipeDelimited,deepObject')]
   TParameterStyle = (
     /// <summary>
     /// Path-style parameters.
@@ -84,7 +84,7 @@ type
     DeepObject
   );
 
-  [NeonEnumNames('apiKey, http, oauth2, openIdConnect')]
+  [NeonEnumNames('apiKey,http,oauth2,openIdConnect')]
   TSecurityScheme = (
     /// <summary>
     /// Use API key
@@ -107,7 +107,7 @@ type
     OpenIdConnect
   );
 
-  [NeonEnumNames('query, header, path, cookie')]
+  [NeonEnumNames('query,header,path,cookie')]
   TParameterLocation = (
     /// <summary>
     /// Parameters that are appended to the Url.
@@ -131,7 +131,7 @@ type
     Cookie
   );  
 
-  [NeonEnumNames('get, put, post, delete, options, head, patch, trace')]
+  [NeonEnumNames('get,put,post,delete,options,head,patch,trace')]
   TOperationType = (
     /// <summary>
     /// A definition of a GET operation on this path.
@@ -333,7 +333,7 @@ type
     /// <summary>
     /// The schema defining the type used for the parameter.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Schema: TOpenApiSchema read FSchema write FSchema;
 
     /// <summary>
@@ -343,7 +343,7 @@ type
     /// Furthermore, if referencing a schema which contains an example,
     /// the examples value SHALL override the example provided by the schema.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Examples: TOpenApiExamples read FExamples write FExamples;
 
     /// <summary>
@@ -365,7 +365,7 @@ type
     /// When example or examples are provided in conjunction with the schema object,
     /// the example MUST follow the prescribed serialization strategy for the parameter.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Content: TOpenApiMediaTypeMap read FContent write FContent;
 
     /// <summary>
@@ -425,7 +425,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
@@ -458,7 +458,7 @@ type
     /// <summary>
     /// The schema defining the type used for the request body.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
@@ -471,7 +471,7 @@ type
     /// Examples of the media type.
     /// Each example object SHOULD match the media type and specified schema if present.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Examples: TOpenAPIExampleMap read FExamples write FExamples;
 
     /// <summary>
@@ -480,7 +480,7 @@ type
     /// The encoding object SHALL only apply to requestBody objects
     /// when the media type is multipart or application/x-www-form-Urlencoded.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Encoding: TOpenAPIEncodingMap read FEncoding write FEncoding;
 
     /// <summary>
@@ -570,7 +570,7 @@ type
     /// <summary>
     /// The schema defining the type used for the header.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
@@ -581,13 +581,13 @@ type
     /// <summary>
     /// Examples of the media type.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Examples: TOpenAPIExampleMap read FExamples write FExamples;
 
     /// <summary>
     /// A map containing the representations for the header.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Content: TOpenAPIMediaTypeMap read FContent write FContent;
 
     /// <summary>
@@ -625,7 +625,7 @@ type
     /// <summary>
     /// A map allowing additional information to be provided as headers.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Headers: TOpenAPIHeaderMap read FHeaders write FHeaders;
 
     /// <summary>
@@ -707,7 +707,7 @@ type
     /// <summary>
     /// Additional external documentation for this tag.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>
@@ -723,7 +723,7 @@ type
     /// <summary>
     /// Reference.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
@@ -751,7 +751,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
@@ -801,7 +801,7 @@ type
     /// <summary>
     /// An enumeration of string values to be used if the substitution options are from a limited set.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Enum: TArray<string> read FEnum write FEnum;
   end;
 
@@ -836,7 +836,7 @@ type
     /// <summary>
     /// A map between a variable name and its value. The value is used for substitution in the server's Url template.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Variables: TOpenAPIServerVariableMap read FVariables write FVariables;
   end;
 
@@ -880,13 +880,13 @@ type
     /// <summary>
     /// A map representing parameters to pass to an operation as specified with operationId or identified via operationRef.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Parameters: TRuntimeExpressionMap read FParameters write FParameters;
 
     /// <summary>
     /// A literal value or {expression} to use as a request body when calling the target operation.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property RequestBody: TRuntimeExpression read FRequestBody write FRequestBody;
 
     /// <summary>
@@ -929,14 +929,14 @@ type
     /// <summary>
     /// Maps a header name to its definition.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Headers: TOpenAPIHeaderMap read FHeaders write FHeaders;
 
     /// <summary>
     /// A map containing descriptions of potential response payloads.
     /// The key is a media type or media type range and the value describes it.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Content: TOpenAPIMediaTypeMap read FContent write FContent;
 
     /// <summary>
@@ -944,7 +944,7 @@ type
     /// The key of the map is a short name for the link,
     /// following the naming constraints of the names for Component Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Links: TOpenAPILinkMap read FLinks write FLinks;
   end;
 
@@ -977,7 +977,7 @@ type
     /// <summary>
     /// Reference pointer.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
 
     /// <summary>
@@ -1026,7 +1026,7 @@ type
     /// <summary>
     /// REQUIRED. A map between the scope name and a short description for it.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Scopes: TDictionary<string, string> read FScopes write FScopes;
 
     /// <summary>
@@ -1048,25 +1048,25 @@ type
     /// <summary>
     /// Configuration for the OAuth Implicit flow
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Implicit: TOpenAPIOAuthFlow read FImplicit write FImplicit;
 
     /// <summary>
     /// Configuration for the OAuth Resource Owner Password flow.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Password: TOpenAPIOAuthFlow read FPassword write FPassword;
 
     /// <summary>
     /// Configuration for the OAuth Client Credentials flow.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property ClientCredentials: TOpenAPIOAuthFlow read FClientCredentials write FClientCredentials;
 
     /// <summary>
     /// Configuration for the OAuth Authorization Code flow.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property AuthorizationCode: TOpenAPIOAuthFlow read FAuthorizationCode write FAuthorizationCode;
 
     /// <summary>
@@ -1109,7 +1109,7 @@ type
     /// <summary>
     /// REQUIRED. The location of the API key. Valid values are "query", "header" or "cookie".
     /// </summary>
-    [NeonProperty('in')][NeonInclude(Include.NotEmpty)]
+    [NeonProperty('in')][NeonInclude(IncludeIf.NotEmpty)]
     property In_: TParameterLocation read FIn_ write FIn_;
 
     /// <summary>
@@ -1148,7 +1148,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
@@ -1186,7 +1186,7 @@ type
     /// A list of tags for API documentation control.
     /// Tags can be used for logical grouping of operations by resources or any other qualifier.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Tags: TArray<string> read FTags write FTags;
 
     /// <summary>
@@ -1203,7 +1203,7 @@ type
     /// <summary>
     /// Additional external documentation for this operation.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocumentation read FExternalDocs write FExternalDocs;
 
     /// <summary>
@@ -1219,7 +1219,7 @@ type
     /// The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location.
     /// The list can use the Reference Object to link to parameters that are defined at the OpenAPI Object's components/parameters.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Parameters: TOpenAPIParameters read FParameters write FParameters;
 
     /// <summary>
@@ -1228,13 +1228,13 @@ type
     /// has explicitly defined semantics for request bodies.
     /// In other cases where the HTTP spec is vague, requestBody SHALL be ignored by consumers.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property RequestBody: TOpenAPIRequestBody read FRequestBody write FRequestBody;
 
     /// <summary>
     /// REQUIRED. The list of possible responses as they are returned from executing this operation.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Responses: TOpenAPIResponseMap read FResponses write FResponses;
 
     /// <summary>
@@ -1245,7 +1245,7 @@ type
     /// The key value used to identify the callback object is an expression, evaluated at runtime,
     /// that identifies a Url to use for the callback operation.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Callbacks: TOpenAPICallbackMap read FCallbacks write FCallbacks;
 
     /// <summary>
@@ -1261,7 +1261,7 @@ type
     /// This definition overrides any declared top-level security.
     /// To remove a top-level security declaration, an empty array can be used.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Security: TOpenAPISecurityRequirements read FSecurity write FSecurity;
 
     /// <summary>
@@ -1269,7 +1269,7 @@ type
     /// If an alternative server object is specified at the Path Item Object or Root level,
     /// it will be overridden by this value.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Servers: TOpenAPIServers read FServers write FServers;
 
     /// <summary>
@@ -1316,13 +1316,13 @@ type
     /// <summary>
     /// The contact information for the exposed API.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Contact: TOpenAPIContact read FContact write FContact;
 
     /// <summary>
     /// The license information for the exposed API.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property License: TOpenAPILicense read FLicense write FLicense;
 
     /// <summary>
@@ -1352,55 +1352,55 @@ type
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiSchema"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Schemas: TObjectDictionary<string, TOpenAPISchema> read FSchemas write FSchemas;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiResponse"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Responses: TObjectDictionary<string, TOpenAPIResponse> read FResponses write FResponses;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiParameter"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Parameters: TOpenAPIParameterMap read FParameters write FParameters;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiExample"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Examples: TObjectDictionary<string, TOpenAPIExample> read FExamples write FExamples;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiRequestBody"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property RequestBodies: TObjectDictionary<string, TOpenAPIRequestBody> read FRequestBodies write FRequestBodies;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiHeader"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Headers: TOpenAPIHeaderMap read FHeaders write FHeaders;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiSecurityScheme"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property SecuritySchemes: TObjectDictionary<string, TOpenAPISecurityScheme> read FSecuritySchemes write FSecuritySchemes;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiLink"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Links: TOpenAPILinkMap read FLinks write FLinks;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiCallback"/> Objects.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Callbacks: TObjectDictionary<string, TOpenAPICallback> read FCallbacks write FCallbacks;
 
     /// <summary>
@@ -1436,20 +1436,20 @@ type
     /// <summary>
     /// Gets the definition of operations on this path.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Operations: TOpenAPIOperationMap read FOperations write FOperations;
 
     /// <summary>
     /// An alternative server array to service all operations in this path.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Servers: TOpenAPIServerMap read FServers write FServers;
 
     /// <summary>
     /// A list of parameters that are applicable for all the operations described under this path.
     /// These parameters can be overridden at the operation level, but cannot be removed there.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Parameters: TOpenAPIParameterMap read FParameters write FParameters;
 
     /// <summary>
@@ -1495,7 +1495,7 @@ type
     /// <summary>
     /// An array of Server Objects, which provide connectivity information to a target server.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Servers: TOpenAPIServers read FServers write FServers;
 
     /// <summary>
@@ -1506,25 +1506,25 @@ type
     /// <summary>
     /// An element to hold various schemas for the specification.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Components: TOpenAPIComponents read FComponents write FComponents;
 
     /// <summary>
     /// A declaration of which security mechanisms can be used across the API.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property SecurityRequirements: TOpenAPISecurityRequirements read FSecurityRequirements write FSecurityRequirements;
 
     /// <summary>
     /// A list of tags used by the specification with additional metadata.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Tags: TObjectList<TOpenAPITag> read FTags write FTags;
 
     /// <summary>
     /// Additional external documentation.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>

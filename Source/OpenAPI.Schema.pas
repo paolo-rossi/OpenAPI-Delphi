@@ -27,12 +27,12 @@ uses
   System.Classes, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes,
+  Neon.Core.Nullables,
   OpenAPI.Any,
-  OpenAPI.Nullables,
   OpenAPI.Reference;
 
 type
-  TOPenAPIDiscriminator = class
+  TOpenAPIDiscriminator = class
   private
     FPropertyName: NullString;
     FMapping: TDictionary<string, string>;
@@ -48,6 +48,7 @@ type
     /// <summary>
     /// An object to hold mappings between payload values and schema names or references.
     /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Mapping: TDictionary<string, string> read FMapping write FMapping;
 
   end;
@@ -163,7 +164,7 @@ type
     /// Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level.
     /// For example, if type is string, then default can be "foo" but cannot be 1.
     /// </summary>
-    //[NeonProperty('default')] [NeonInclude(Include.NotEmpty)]
+    //[NeonProperty('default')] [NeonInclude(IncludeIf.NotEmpty)]
     //property Default_: TOpenAPISchema read FDefault_ write FDefault_;
     { TODO -opaolo -c : Il risultato è un valore (Any) 21/05/2019 14:47:36 }
 
@@ -193,34 +194,34 @@ type
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property AllOf: TObjectList<TOpenAPISchema> read FAllOf write FAllOf;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property OneOf: TObjectList<TOpenAPISchema> read FOneOf write FOneOf;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property AnyOf: TObjectList<TOpenAPISchema> read FAnyOf write FAnyOf;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(Include.NotNull)]
+    [NeonInclude(IncludeIf.NotNull)]
     property Not_: TOpenAPISchema read FNot_ write FNot_;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Required: TArray<string> read FRequired write FRequired;
 
     /// <summary>
@@ -228,7 +229,7 @@ type
     /// Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object
     /// and not a standard JSON Schema. items MUST be present if the type is array.
     /// </summary>
-    [NeonInclude(Include.NotNull)]
+    [NeonInclude(IncludeIf.NotNull)]
     property Items: TOpenAPISchema read FItems write FItems;
 
     /// <summary>
@@ -250,7 +251,7 @@ type
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or referenced).
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Properties: TObjectDictionary<string, TOpenAPISchema> read FProperties write FProperties;
 
     /// <summary>
@@ -273,7 +274,7 @@ type
     /// Value can be boolean or object. Inline or referenced schema
     /// MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(Include.NotNull)]
+    [NeonInclude(IncludeIf.NotNull)]
     property AdditionalProperties: TOpenAPISchema read FAdditionalProperties write FAdditionalProperties;
 
     /// <summary>
@@ -286,6 +287,7 @@ type
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Enum: TOpenAPIAny read FEnum write FEnum;
 
     /// <summary>
@@ -311,7 +313,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    [NeonInclude(Include.NotEmpty)]
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
@@ -324,14 +326,14 @@ type
 
 implementation
 
-{ TOPenAPIDiscriminator }
+{ TOpenAPIDiscriminator }
 
-constructor TOPenAPIDiscriminator.Create;
+constructor TOpenAPIDiscriminator.Create;
 begin
   FMapping := TDictionary<string, string>.Create;
 end;
 
-destructor TOPenAPIDiscriminator.Destroy;
+destructor TOpenAPIDiscriminator.Destroy;
 begin
   FMapping.Free;
   inherited;
