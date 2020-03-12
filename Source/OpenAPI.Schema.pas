@@ -88,6 +88,7 @@ type
     FReference: TOpenAPIReference;
     FDefault_: TOpenAPISchema;
     FEnum: TOpenAPIAny;
+    FRef: string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -315,6 +316,10 @@ type
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
+
+    [NeonProperty('$ref')][NeonInclude(IncludeIf.NotEmpty)]
+    property Ref: string read FRef write FRef;
+
   end;
 
 

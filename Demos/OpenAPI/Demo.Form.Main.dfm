@@ -12,6 +12,7 @@ object frmMain: TfrmMain
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object memoDocument: TMemo
@@ -67,5 +68,14 @@ object frmMain: TfrmMain
     Caption = 'Add Paths'
     TabOrder = 4
     OnClick = btnAddPathsClick
+  end
+  object btnAddModels: TButton
+    Left = 8
+    Top = 101
+    Width = 121
+    Height = 25
+    Caption = 'Add Models'
+    TabOrder = 5
+    OnClick = btnAddModelsClick
   end
 end
