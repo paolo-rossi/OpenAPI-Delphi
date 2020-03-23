@@ -1416,9 +1416,16 @@ type
   private
     FSummary: NullString;
     FDescription: NullString;
-    FOperations: TOpenAPIOperationMap;
     FServers: TOpenAPIServerMap;
     FParameters: TOpenAPIParameterMap;
+    FGet: TOpenAPIOperation;
+    FHead: TOpenAPIOperation;
+    FPatch: TOpenAPIOperation;
+    FPost: TOpenAPIOperation;
+    FTrace: TOpenAPIOperation;
+    FPut: TOpenAPIOperation;
+    FDelete: TOpenAPIOperation;
+    FOptions: TOpenAPIOperation;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1434,10 +1441,52 @@ type
     property Description: NullString read FDescription write FDescription;
 
     /// <summary>
-    /// Gets the definition of operations on this path.
+    /// A definition of a GET operation on this path.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Operations: TOpenAPIOperationMap read FOperations write FOperations;
+    property Get: TOpenAPIOperation read FGet write FGet;
+
+    /// <summary>
+    /// A definition of a POST operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Post: TOpenAPIOperation read FPost write FPost;
+
+    /// <summary>
+    /// A definition of a PUT operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Put: TOpenAPIOperation read FPut write FPut;
+
+    /// <summary>
+    /// A definition of a PATCH operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Patch: TOpenAPIOperation read FPatch write FPatch;
+
+    /// <summary>
+    /// A definition of a DELETE operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Delete: TOpenAPIOperation read FDelete write FDelete;
+
+    /// <summary>
+    /// A definition of a HEAD operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Head: TOpenAPIOperation read FHead write FHead;
+
+    /// <summary>
+    /// A definition of a OPTIONS operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Options: TOpenAPIOperation read FOptions write FOptions;
+
+    /// <summary>
+    /// A definition of a TRACE operation on this path.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Trace: TOpenAPIOperation read FTrace write FTrace;
 
     /// <summary>
     /// An alternative server array to service all operations in this path.
@@ -1750,16 +1799,31 @@ end;
 
 constructor TOpenAPIPathItem.Create;
 begin
-  FOperations := TOpenAPIOperationMap.Create;
   FServers := TOpenAPIServerMap.Create;
   FParameters := TOpenAPIParameterMap.Create;
+  //operations
+  FGet := TOpenAPIOperation.Create;
+  FHead := TOpenAPIOperation.Create;
+  FPatch := TOpenAPIOperation.Create;
+  FPost := TOpenAPIOperation.Create;
+  FTrace := TOpenAPIOperation.Create;
+  FPut := TOpenAPIOperation.Create;
+  FDelete := TOpenAPIOperation.Create;
+  FOptions := TOpenAPIOperation.Create;
 end;
 
 destructor TOpenAPIPathItem.Destroy;
 begin
   FParameters.Free;
   FServers.Free;
-  FOperations.Free;
+  FGet.Free;
+  FHead.Free;
+  FPatch.Free;
+  FPost.Free;
+  FTrace.Free;
+  FPut.Free;
+  FDelete.Free;
+  FOptions.Free;
   inherited;
 end;
 
