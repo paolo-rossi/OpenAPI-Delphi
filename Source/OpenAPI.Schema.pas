@@ -24,7 +24,7 @@ unit OpenAPI.Schema;
 interface
 
 uses
-  System.Classes, System.Generics.Collections, System.JSON,
+  System.SysUtils, System.Classes, System.Generics.Defaults, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes,
   Neon.Core.Nullables,
@@ -346,6 +346,13 @@ end;
 
 { TOpenAPISchema }
 
+type
+ TEntryOrderedEqualityComparer=class(TDelegatedEqualityComparer<string>)
+ public
+   EntryOrder:Integer;
+   constructor Create;
+ end;
+
 constructor TOpenAPISchema.Create;
 begin
   //FDefault_ := TOpenAPISchema.Create;
@@ -354,7 +361,7 @@ begin
   FAnyOf := TObjectList<TOpenAPISchema>.Create(True);
   //FNot_ := TOpenAPISchema.Create;
   //FItems := TOpenAPISchema.Create;
-  FProperties := TObjectDictionary<string, TOpenAPISchema>.Create([doOwnsValues]);
+  FProperties := TObjectDictionary<string, TOpenAPISchema>.Create([doOwnsValues],TEntryOrderedEqualityComparer.Create);
   //FAdditionalProperties := TOpenAPISchema.Create;
   FReference := TOpenAPIReference.Create;
   FEnum := TOpenAPIAny.Create;
@@ -374,6 +381,27 @@ begin
   FEnum.Free;
 
   inherited;
+end;
+
+{ TEntryOrderedEqualityComparer }
+
+constructor TEntryOrderedEqualityComparer.Create;
+begin
+  inherited Create(
+      function(const Left, Right: String): Boolean
+      begin
+        { Make a case insensitive comparison }
+        Result := CompareText(Left, Right) = 0;
+      end,
+      { THasher<String> }
+      function(const Value: String): Integer
+      begin
+        { Use entry order as hash code. }
+        Result := EntryOrder;
+        inc(EntryOrder);
+      end);
+  EntryOrder:=0;
+
 end;
 
 end.
