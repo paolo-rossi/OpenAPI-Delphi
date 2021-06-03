@@ -4,12 +4,13 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Rtti, Vcl.StdCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Rtti, Vcl.StdCtrls, System.JSON,
 
   Neon.Core.Types,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
   OpenAPI.Models,
+  OpenAPI.Schema,
   OpenAPI.Serializer;
 
 type
@@ -19,11 +20,23 @@ type
     btnDocumentGenerate: TButton;
     btnAddServers: TButton;
     btnAddPaths: TButton;
+    btnAddComponents: TButton;
+    btnAddCompSchemas: TButton;
+    btnAddResponse: TButton;
+    btnAddSecurityDefs: TButton;
+    Button1: TButton;
+    btnAddSecurity: TButton;
+    procedure btnAddComponentsClick(Sender: TObject);
+    procedure btnAddCompSchemasClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnAddInfoClick(Sender: TObject);
     procedure btnAddServersClick(Sender: TObject);
     procedure btnDocumentGenerateClick(Sender: TObject);
     procedure btnAddPathsClick(Sender: TObject);
+    procedure btnAddResponseClick(Sender: TObject);
+    procedure btnAddSecurityDefsClick(Sender: TObject);
+    procedure btnAddSecurityClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     FDocument: TOpenAPIDocument;
   public
@@ -71,31 +84,77 @@ var
   LOperation: TOpenAPIOperation;
   LParameter: TOpenAPIParameter;
 begin
-  LPath := TOpenAPIPathItem.Create;
+  LPath := FDocument.AddPath('/customers');
   LPath.Description := 'Customers resource';
 
-    LOperation := TOpenAPIOperation.Create;
-    LPath.Operations.Add(TOperationType.Get, LOperation);
+    LOperation := LPath.AddOperation(TOperationType.Get);
     LOperation.Summary := 'Get all customers';
     LOperation.OperationId := 'CustomerList';
 
-      LParameter := TOpenAPIParameter.Create;
-      LOperation.Parameters.Add(LParameter);
-      LParameter.Name := 'id';
-      LParameter.In_ := 'query';
+      LParameter := LOperation.AddParameter('id', 'query');
       LParameter.Description := 'Customer ID';
       LParameter.Schema.Type_ := 'string';
       LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
 
-      LParameter := TOpenAPIParameter.Create;
-      LOperation.Parameters.Add(LParameter);
-      LParameter.Name := 'country';
-      LParameter.In_ := 'query';
+      LParameter := LOperation.AddParameter('country', 'query');
       LParameter.Description := 'Country Code';
       LParameter.Schema.Type_ := 'string';
       LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
-
-  FDocument.Paths.Add('/customers', LPath);
 end;
+
+procedure TfrmMain.btnAddComponentsClick(Sender: TObject);
+var
+  LParameter: TOpenAPIParameter;
+begin
+  LParameter := FDocument.Components.AddParameter('idParam', 'id', 'query');
+  LParameter.Description := 'Customer ID';
+  LParameter.Schema.Type_ := 'string';
+  LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
+end;
+
+procedure TfrmMain.btnAddCompSchemasClick(Sender: TObject);
+var
+  LSchema: TOpenAPISchema;
+  LProperty: TOpenAPISchema;
+begin
+  LSchema := FDocument.Components.AddSchema('Category');
+  LSchema.Type_ := 'object';
+    LProperty := LSchema.AddProperty('id');
+    LProperty.Type_ := 'integer';
+    LProperty.Format := 'int64';
+
+    LProperty := LSchema.AddProperty('name');
+    LProperty.Type_ := 'string';
+	
+end;
+
+procedure TfrmMain.btnAddResponseClick(Sender: TObject);
+var
+  LResponse: TOpenAPIResponse;
+  LMediaType: TOpenAPIMediaType;
+begin
+  LResponse := FDocument.Components.AddResponse('200', 'Successful response');
+  LMediaType := LResponse.AddMediaType('application/json');
+  LMediaType.Schema.Reference.Ref := '#components/schemas/country';
+end;
+
+procedure TfrmMain.btnAddSecurityDefsClick(Sender: TObject);
+begin
+  FDocument.Components.AddSecurityApiKey('key_auth', 'Key Standard Authentication', 'X-ApiKey', tapikeylocation.Header);
+  FDocument.Components.AddSecurityHttp('basic_auth', 'Basic Authentication', 'Basic', '');
+  FDocument.Components.AddSecurityHttp('bearer_auth', 'Bearer Authentication', 'Bearer', 'Bearer');
+end;
+
+procedure TfrmMain.btnAddSecurityClick(Sender: TObject);
+begin
+  FDocument.AddSecurity('basic_auth', []);
+  FDocument.AddSecurity('bearer_auth', []);
+end;
+
+procedure TfrmMain.Button1Click(Sender: TObject);
+begin
+  memoDocument.Lines.Text := StringReplace(memoDocument.Lines.Text, '\/', '/', [rfReplaceAll]);
+end;
+
 
 end.

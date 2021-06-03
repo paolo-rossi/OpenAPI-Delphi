@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2019 Paolo Rossi                                         }
+{  Copyright (c) 2018-2021 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -53,6 +53,39 @@ type
 
   end;
 
+  TOpenAPISchemaBase = class
+  protected
+    FType_: NullString;
+    FTitle: NullString;
+    FDescription: NullString;
+    FFormat: NullString;
+  public
+    /// <summary>
+    /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
+    /// While relying on JSON Schema's defined formats,
+    /// the OAS offers a few additional predefined formats.
+    /// </summary>
+    property Format: NullString read FFormat write FFormat;
+
+    /// <summary>
+    /// Follow JSON Schema definition. Short text providing information about the data.
+    /// </summary>
+    property Title: NullString read FTitle write FTitle;
+
+    /// <summary>
+    /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
+    /// Value MUST be a string. Multiple types via an array are not supported.
+    /// </summary>
+    [NeonProperty('type')]
+    property Type_: NullString read FType_ write FType_;
+
+    /// <summary>
+    /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
+    /// CommonMark syntax MAY be used for rich text representation.
+    /// </summary>
+    property Description: NullString read FDescription write FDescription;
+  end;
+
   TOpenAPISchema = class
   private
     FFormat: NullString;
@@ -88,9 +121,12 @@ type
     FReference: TOpenAPIReference;
     FDefault_: TOpenAPISchema;
     FEnum: TOpenAPIAny;
+    FDiscriminator: TOpenAPIDiscriminator;
   public
     constructor Create;
     destructor Destroy; override;
+  public
+    function AddProperty(const AKeyName: string): TOpenAPISchema;
   public
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -278,6 +314,13 @@ type
     property AdditionalProperties: TOpenAPISchema read FAdditionalProperties write FAdditionalProperties;
 
     /// <summary>
+    /// Adds support for polymorphism. The discriminator is an object name that is used to differentiate
+    /// between other schemas which may satisfy the payload description.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Discriminator: TOpenAPIDiscriminator read FDiscriminator write FDiscriminator;
+
+    /// <summary>
     /// A free-form property to include an example of an instance for this schema.
     /// To represent examples that cannot be naturally represented in JSON or YAML,
     /// a string value can be used to contain the example with escaping where necessary.
@@ -322,6 +365,8 @@ type
   end;
 
   TOpenAPISchemaMap = class(TObjectDictionary<string, TOpenAPISchema>)
+  public
+    constructor Create;
   end;
 
 implementation
@@ -341,6 +386,13 @@ end;
 
 { TOpenAPISchema }
 
+function TOpenAPISchema.AddProperty(const AKeyName: string): TOpenAPISchema;
+begin
+  Result := TOpenAPISchema.Create;
+
+  FProperties.Add(AKeyName, Result);
+end;
+
 constructor TOpenAPISchema.Create;
 begin
   //FDefault_ := TOpenAPISchema.Create;
@@ -350,6 +402,7 @@ begin
   //FNot_ := TOpenAPISchema.Create;
   //FItems := TOpenAPISchema.Create;
   FProperties := TObjectDictionary<string, TOpenAPISchema>.Create([doOwnsValues]);
+  FDiscriminator := TOpenAPIDiscriminator.Create;
   //FAdditionalProperties := TOpenAPISchema.Create;
   FReference := TOpenAPIReference.Create;
   FEnum := TOpenAPIAny.Create;
@@ -359,6 +412,7 @@ destructor TOpenAPISchema.Destroy;
 begin
   FReference.Free;
   FAdditionalProperties.Free;
+  FDiscriminator.Free;
   FProperties.Free;
   FItems.Free;
   FNot_.Free;
@@ -369,6 +423,13 @@ begin
   FEnum.Free;
 
   inherited;
+end;
+
+{ TOpenAPISchemaMap }
+
+constructor TOpenAPISchemaMap.Create;
+begin
+  inherited Create([doOwnsValues]);
 end;
 
 end.

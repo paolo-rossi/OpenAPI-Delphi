@@ -15,9 +15,9 @@ object frmMain: TfrmMain
   PixelsPerInch = 96
   TextHeight = 13
   object memoDocument: TMemo
-    Left = 141
+    Left = 166
     Top = 0
-    Width = 761
+    Width = 736
     Height = 549
     Align = alRight
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -67,5 +67,59 @@ object frmMain: TfrmMain
     Caption = 'Add Paths'
     TabOrder = 4
     OnClick = btnAddPathsClick
+  end
+  object btnAddComponents: TButton
+    Left = 8
+    Top = 101
+    Width = 121
+    Height = 25
+    Caption = 'Add Components'
+    TabOrder = 5
+    OnClick = btnAddComponentsClick
+  end
+  object btnAddCompSchemas: TButton
+    Left = 24
+    Top = 132
+    Width = 121
+    Height = 25
+    Caption = 'Add Schemas'
+    TabOrder = 6
+    OnClick = btnAddCompSchemasClick
+  end
+  object btnAddResponse: TButton
+    Left = 24
+    Top = 163
+    Width = 121
+    Height = 25
+    Caption = 'btnAddResponse'
+    TabOrder = 7
+    OnClick = btnAddResponseClick
+  end
+  object btnAddSecurityDefs: TButton
+    Left = 8
+    Top = 304
+    Width = 121
+    Height = 25
+    Caption = 'Add SecurityDefs'
+    TabOrder = 8
+    OnClick = btnAddSecurityDefsClick
+  end
+  object Button1: TButton
+    Left = 8
+    Top = 516
+    Width = 75
+    Height = 25
+    Caption = 'Replace \/'
+    TabOrder = 9
+    OnClick = Button1Click
+  end
+  object btnAddSecurity: TButton
+    Left = 54
+    Top = 335
+    Width = 75
+    Height = 25
+    Caption = 'Add Security'
+    TabOrder = 10
+    OnClick = btnAddSecurityClick
   end
 end

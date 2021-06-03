@@ -71,7 +71,7 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
-  TOpenAPIAnySrializer = class(TCustomSerializer)
+  TOpenAPIAnySerializer = class(TCustomSerializer)
   protected
     class function GetTargetInfo: PTypeInfo; override;
     class function CanHandle(AType: PTypeInfo): Boolean; override;
@@ -79,6 +79,7 @@ type
     function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
+
 
 implementation
 
@@ -310,13 +311,13 @@ begin
       .RegisterSerializer(TNullableInt64Serializer)
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
-      .RegisterSerializer(TOpenAPIAnySrializer)
+      .RegisterSerializer(TOpenAPIAnySerializer)
   ;
 end;
 
-{ TOpenAPIAnySrializer }
+{ TOpenAPIAnySerializer }
 
-class function TOpenAPIAnySrializer.CanHandle(AType: PTypeInfo): Boolean;
+class function TOpenAPIAnySerializer.CanHandle(AType: PTypeInfo): Boolean;
 begin
   if AType = GetTargetInfo then
     Result := True
@@ -324,18 +325,18 @@ begin
     Result := False;
 end;
 
-function TOpenAPIAnySrializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+function TOpenAPIAnySerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 begin
   Result := nil;
 end;
 
-class function TOpenAPIAnySrializer.GetTargetInfo: PTypeInfo;
+class function TOpenAPIAnySerializer.GetTargetInfo: PTypeInfo;
 begin
   Result := TypeInfo(TOpenAPIAny);
 end;
 
-function TOpenAPIAnySrializer.Serialize(const AValue: TValue;
+function TOpenAPIAnySerializer.Serialize(const AValue: TValue;
     ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
   LValue: TOpenAPIAny;
