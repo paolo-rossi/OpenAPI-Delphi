@@ -77,9 +77,9 @@ end;
 
 procedure TfrmMain.actAddServersExecute(Sender: TObject);
 begin
-  FDocument.Servers.Add(TOpenAPIServer.Create('https://api.mycompany.com/rest/app/', 'Production Server'));
-  FDocument.Servers.Add(TOpenAPIServer.Create('https://beta.mycompany.com/rest/app/', 'Beta Server API v2'));
-  FDocument.Servers.Add(TOpenAPIServer.Create('https://test.mycompany.com/rest/app/', 'Testing Server'));
+  FDocument.Servers.Add(TOpenAPIServer.Create('https://api.wirl.com/rest/app/', 'Production Server'));
+  FDocument.Servers.Add(TOpenAPIServer.Create('https://beta.wirl.com/rest/app/', 'Beta Server API v2'));
+  FDocument.Servers.Add(TOpenAPIServer.Create('https://test.wirl.com/rest/app/', 'Testing Server'));
 end;
 
 procedure TfrmMain.actAddPathsExecute(Sender: TObject);
@@ -105,6 +105,11 @@ begin
       LParameter.Schema.Type_ := 'string';
       LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
 
+      LParameter := LOperation.AddParameter('date', 'query');
+      LParameter.Description := 'Date';
+      LParameter.Schema.Type_ := 'string';
+      LParameter.Schema.Format := 'date-time';
+      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
 end;
 
 procedure TfrmMain.actCompAddResponsesExecute(Sender: TObject);
@@ -112,7 +117,7 @@ var
   LResponse: TOpenAPIResponse;
   LMediaType: TOpenAPIMediaType;
 begin
-  LResponse := FDocument.Components.AddResponse('200', 'Successful response');
+  LResponse := FDocument.Components.AddResponse('200', 'Successful Response');
   LMediaType := LResponse.AddMediaType('application/json');
   LMediaType.Schema.Reference.Ref := '#components/schemas/country';
 end;
@@ -122,27 +127,39 @@ var
   LSchema: TOpenAPISchema;
   LProperty: TOpenAPISchema;
 begin
-  LSchema := FDocument.Components.AddSchema('Category');
+  LSchema := FDocument.Components.AddSchema('Person');
   LSchema.Type_ := 'object';
+
     LProperty := LSchema.AddProperty('id');
+    LProperty.Title := 'ID Value';
+    LProperty.Description := 'AutoInc **ID** value';
     LProperty.Type_ := 'integer';
     LProperty.Format := 'int64';
 
-    LProperty := LSchema.AddProperty('name');
+    LProperty := LSchema.AddProperty('firstname');
     LProperty.Type_ := 'string';
+
+    LProperty := LSchema.AddProperty('lastname');
+    LProperty.Type_ := 'string';
+
+    LProperty := LSchema.AddProperty('birthdate');
+    LProperty.Title := 'Birth Date';
+    LProperty.Description := 'Birth Date';
+    LProperty.Type_ := 'string';
+    LProperty.Format := 'date-time';
 end;
 
 procedure TfrmMain.actCompAddSecurityDefsExecute(Sender: TObject);
 begin
   FDocument.Components.AddSecurityApiKey('key_auth', 'Key Standard Authentication', 'X-ApiKey', tapikeylocation.Header);
   FDocument.Components.AddSecurityHttp('basic_auth', 'Basic Authentication', 'Basic', '');
-  FDocument.Components.AddSecurityHttp('bearer_auth', 'Bearer Authentication', 'Bearer', 'Bearer');
+  FDocument.Components.AddSecurityHttp('jwt_auth', 'JWT (Bearer) Authentication', 'Bearer', 'JWT');
 end;
 
 procedure TfrmMain.actAddSecurityExecute(Sender: TObject);
 begin
   FDocument.AddSecurity('basic_auth', []);
-  FDocument.AddSecurity('bearer_auth', []);
+  FDocument.AddSecurity('jwt_auth', []);
 end;
 
 procedure TfrmMain.actCompAddParametersExecute(Sender: TObject);
@@ -157,12 +174,14 @@ end;
 
 procedure TfrmMain.actJSONGenerateExecute(Sender: TObject);
 begin
-  memoDocument.Lines.Text := TNeon.ObjectToJSONString(FDocument, TOpenAPISerializer.GetNeonConfig);
+  memoDocument.Lines.Text :=
+    TNeon.ObjectToJSONString(FDocument, TOpenAPISerializer.GetNeonConfig);
 end;
 
 procedure TfrmMain.actJSONReplaceExecute(Sender: TObject);
 begin
-  memoDocument.Lines.Text := StringReplace(memoDocument.Lines.Text, '\/', '/', [rfReplaceAll]);
+  memoDocument.Lines.Text :=
+    StringReplace(memoDocument.Lines.Text, '\/', '/', [rfReplaceAll]);
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);

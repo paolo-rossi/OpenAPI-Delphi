@@ -45,14 +45,14 @@ object frmMain: TfrmMain
     TabOrder = 1
     object panGeneral: TCategoryPanel
       Top = 0
-      Height = 321
+      Height = 441
       Caption = 'OpenAPI Document'
       TabOrder = 0
       object CategoryButtons1: TCategoryButtons
         Left = 0
         Top = 0
         Width = 196
-        Height = 295
+        Height = 415
         Align = alClient
         ButtonFlow = cbfVertical
         ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boUsePlusMinus]
@@ -93,10 +93,10 @@ object frmMain: TfrmMain
             Collapsed = False
             Items = <
               item
-                Caption = 'Add Paths'
+                Action = actAddPaths
               end
               item
-                Caption = 'Add Security'
+                Action = actAddSecurity
               end
               item
               end>
@@ -104,30 +104,33 @@ object frmMain: TfrmMain
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 0
+        ExplicitHeight = 295
       end
     end
     object CategoryPanel1: TCategoryPanel
-      Top = 321
-      Height = 168
+      Top = 441
+      Height = 120
       Caption = 'JSON Generation'
       TabOrder = 1
+      ExplicitTop = 321
       object CategoryButtons2: TCategoryButtons
         Left = 0
         Top = 0
         Width = 196
-        Height = 142
+        Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
         Categories = <>
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 0
+        ExplicitHeight = 142
       end
       object catJSON: TCategoryButtons
         Left = 0
         Top = 0
         Width = 196
-        Height = 142
+        Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
         ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boUsePlusMinus]
@@ -147,6 +150,7 @@ object frmMain: TfrmMain
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 1
+        ExplicitHeight = 142
       end
     end
   end
@@ -163,7 +167,7 @@ object frmMain: TfrmMain
       OnExecute = actAddServersExecute
     end
     object actAddPaths: TAction
-      Caption = 'Add Paths & Params'
+      Caption = 'Add Paths && Params'
       OnExecute = actAddPathsExecute
     end
     object actAddSecurity: TAction
