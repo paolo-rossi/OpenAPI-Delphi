@@ -2,7 +2,7 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'OpenAPI Demo'
-  ClientHeight = 549
+  ClientHeight = 580
   ClientWidth = 902
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,114 +12,191 @@ object frmMain: TfrmMain
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object memoDocument: TMemo
-    Left = 166
+    Left = 200
     Top = 0
-    Width = 736
-    Height = 549
-    Align = alRight
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Width = 702
+    Height = 580
+    Align = alClient
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Consolas'
     Font.Style = []
-    Lines.Strings = (
-      'memoDocument')
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 0
+    ExplicitLeft = 204
+    ExplicitTop = -8
   end
-  object btnAddInfo: TButton
-    Left = 8
-    Top = 8
-    Width = 121
-    Height = 25
-    Caption = 'Add Info'
+  object catMenu: TCategoryPanelGroup
+    Left = 0
+    Top = 0
+    Height = 580
+    VertScrollBar.Tracking = True
+    HeaderFont.Charset = DEFAULT_CHARSET
+    HeaderFont.Color = clWindowText
+    HeaderFont.Height = -11
+    HeaderFont.Name = 'Tahoma'
+    HeaderFont.Style = []
     TabOrder = 1
-    OnClick = btnAddInfoClick
+    object panGeneral: TCategoryPanel
+      Top = 0
+      Height = 321
+      Caption = 'OpenAPI Document'
+      TabOrder = 0
+      object CategoryButtons1: TCategoryButtons
+        Left = 0
+        Top = 0
+        Width = 196
+        Height = 295
+        Align = alClient
+        ButtonFlow = cbfVertical
+        ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boUsePlusMinus]
+        Categories = <
+          item
+            Caption = 'General'
+            Color = 15466474
+            Collapsed = False
+            Items = <
+              item
+                Action = actAddInfo
+              end
+              item
+                Action = actAddServers
+              end>
+          end
+          item
+            Caption = 'Components'
+            Color = 16771818
+            Collapsed = False
+            Items = <
+              item
+                Action = actCompAddSchemas
+              end
+              item
+                Action = actCompAddResponses
+              end
+              item
+                Action = actCompAddSecurityDefs
+              end
+              item
+                Action = actCompAddParameters
+              end>
+          end
+          item
+            Caption = 'Optional Sections'
+            Color = 16771839
+            Collapsed = False
+            Items = <
+              item
+                Caption = 'Add Paths'
+              end
+              item
+                Caption = 'Add Security'
+              end
+              item
+              end>
+          end>
+        RegularButtonColor = clWhite
+        SelectedButtonColor = 15132390
+        TabOrder = 0
+      end
+    end
+    object CategoryPanel1: TCategoryPanel
+      Top = 321
+      Height = 168
+      Caption = 'JSON Generation'
+      TabOrder = 1
+      object CategoryButtons2: TCategoryButtons
+        Left = 0
+        Top = 0
+        Width = 196
+        Height = 142
+        Align = alClient
+        ButtonFlow = cbfVertical
+        Categories = <>
+        RegularButtonColor = clWhite
+        SelectedButtonColor = 15132390
+        TabOrder = 0
+      end
+      object catJSON: TCategoryButtons
+        Left = 0
+        Top = 0
+        Width = 196
+        Height = 142
+        Align = alClient
+        ButtonFlow = cbfVertical
+        ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boUsePlusMinus]
+        Categories = <
+          item
+            Caption = 'Generation'
+            Color = 15466474
+            Collapsed = False
+            Items = <
+              item
+                Action = actJSONGenerate
+              end
+              item
+                Action = actJSONReplace
+              end>
+          end>
+        RegularButtonColor = clWhite
+        SelectedButtonColor = 15132390
+        TabOrder = 1
+      end
+    end
   end
-  object btnDocumentGenerate: TButton
-    Left = 8
-    Top = 240
-    Width = 121
-    Height = 25
-    Caption = 'Generate JSON'
-    TabOrder = 2
-    OnClick = btnDocumentGenerateClick
+  object aclCommands: TActionList
+    Images = imgCommands
+    Left = 64
+    Top = 144
+    object actAddInfo: TAction
+      Caption = 'Add Info Object'
+      OnExecute = actAddInfoExecute
+    end
+    object actAddServers: TAction
+      Caption = 'Add Servers'
+      OnExecute = actAddServersExecute
+    end
+    object actAddPaths: TAction
+      Caption = 'Add Paths & Params'
+      OnExecute = actAddPathsExecute
+    end
+    object actAddSecurity: TAction
+      Caption = 'actAddSecurity'
+      OnExecute = actAddSecurityExecute
+    end
+    object actCompAddSchemas: TAction
+      Caption = 'Add Schemas'
+      OnExecute = actCompAddSchemasExecute
+    end
+    object actCompAddResponses: TAction
+      Caption = 'Add Responses'
+      OnExecute = actCompAddResponsesExecute
+    end
+    object actCompAddSecurityDefs: TAction
+      Caption = 'Add SecurityDefs'
+      OnExecute = actCompAddSecurityDefsExecute
+    end
+    object actCompAddParameters: TAction
+      Caption = 'Add Parameters'
+      OnExecute = actCompAddParametersExecute
+    end
+    object actJSONGenerate: TAction
+      Caption = 'Generate SON'
+      OnExecute = actJSONGenerateExecute
+    end
+    object actJSONReplace: TAction
+      Caption = 'Replace JSON'
+      OnExecute = actJSONReplaceExecute
+    end
   end
-  object btnAddServers: TButton
-    Left = 8
-    Top = 39
-    Width = 121
-    Height = 25
-    Caption = 'Add Servers'
-    TabOrder = 3
-    OnClick = btnAddServersClick
-  end
-  object btnAddPaths: TButton
-    Left = 8
-    Top = 70
-    Width = 121
-    Height = 25
-    Caption = 'Add Paths'
-    TabOrder = 4
-    OnClick = btnAddPathsClick
-  end
-  object btnAddComponents: TButton
-    Left = 8
-    Top = 101
-    Width = 121
-    Height = 25
-    Caption = 'Add Components'
-    TabOrder = 5
-    OnClick = btnAddComponentsClick
-  end
-  object btnAddCompSchemas: TButton
-    Left = 24
-    Top = 132
-    Width = 121
-    Height = 25
-    Caption = 'Add Schemas'
-    TabOrder = 6
-    OnClick = btnAddCompSchemasClick
-  end
-  object btnAddResponse: TButton
-    Left = 24
-    Top = 163
-    Width = 121
-    Height = 25
-    Caption = 'btnAddResponse'
-    TabOrder = 7
-    OnClick = btnAddResponseClick
-  end
-  object btnAddSecurityDefs: TButton
-    Left = 8
-    Top = 304
-    Width = 121
-    Height = 25
-    Caption = 'Add SecurityDefs'
-    TabOrder = 8
-    OnClick = btnAddSecurityDefsClick
-  end
-  object Button1: TButton
-    Left = 8
-    Top = 516
-    Width = 75
-    Height = 25
-    Caption = 'Replace \/'
-    TabOrder = 9
-    OnClick = Button1Click
-  end
-  object btnAddSecurity: TButton
-    Left = 54
-    Top = 335
-    Width = 75
-    Height = 25
-    Caption = 'Add Security'
-    TabOrder = 10
-    OnClick = btnAddSecurityClick
+  object imgCommands: TImageList
+    Left = 72
+    Top = 216
   end
 end

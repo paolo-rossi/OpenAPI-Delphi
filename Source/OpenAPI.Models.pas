@@ -495,6 +495,7 @@ type
     /// Example of the media type.
     /// The example object SHOULD be in the correct format as specified by the media type.
     /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Example: TOpenAPIAny read FExample write FExample;
 
     /// <summary>
@@ -1392,6 +1393,7 @@ type
     FSecuritySchemes: TOpenAPISecuritySchemeMap;
     FLinks: TOpenAPILinkMap;
     FCallbacks: TOpenAPICallbackMap;
+    function AddSecurityScheme(const AName, ADescription: string; AType: TSecurityScheme): TOpenAPISecurityScheme;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1399,7 +1401,6 @@ type
     function AddSchema(const AKeyName: string): TOpenAPISchema;
     function AddResponse(const AKeyName, ADescription: string): TOpenAPIResponse;
     function AddParameter(const AKeyName, AName, ALocation: string): TOpenAPIparameter;
-    function AddSecurityScheme(const AName, ADescription: string; AType: TSecurityScheme): TOpenAPISecurityScheme;
 
     function AddSecurityHttp(const AKeyName, ADescription, AScheme, ABearerFormat: string): TOpenAPISecurityScheme;
     function AddSecurityApiKey(const AKeyName, ADescription, AHeaderName: string; ALocation: TAPIKeyLocation): TOpenAPISecurityScheme;
@@ -2039,7 +2040,7 @@ begin
   FSchema := TOpenAPISchema.Create;
   FExamples := TOpenAPIExampleMap.Create;
   FEncoding := TOpenAPIEncodingMap.Create;
-  //FExample := TOpenAPIAny.Create;
+  FExample := TOpenAPIAny.Create;
 end;
 
 destructor TOpenAPIMediaType.Destroy;
@@ -2060,7 +2061,7 @@ begin
   FSchema := TOpenAPISchema.Create;
   FExamples := TOpenAPIExampleMap.Create;
   FContent := TOpenAPIMediaTypeMap.Create;
-  //FExample := TOpenAPIAny.Create;
+  FExample := TOpenAPIAny.Create;
 end;
 
 destructor TOpenAPIHeader.Destroy;
