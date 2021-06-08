@@ -29,8 +29,6 @@ object frmMain: TfrmMain
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 0
-    ExplicitLeft = 204
-    ExplicitTop = -8
   end
   object catMenu: TCategoryPanelGroup
     Left = 0
@@ -51,7 +49,7 @@ object frmMain: TfrmMain
       object CategoryButtons1: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 196
+        Width = 194
         Height = 415
         Align = alClient
         ButtonFlow = cbfVertical
@@ -104,7 +102,6 @@ object frmMain: TfrmMain
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 0
-        ExplicitHeight = 295
       end
     end
     object CategoryPanel1: TCategoryPanel
@@ -112,11 +109,10 @@ object frmMain: TfrmMain
       Height = 120
       Caption = 'JSON Generation'
       TabOrder = 1
-      ExplicitTop = 321
       object CategoryButtons2: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 196
+        Width = 194
         Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
@@ -124,12 +120,11 @@ object frmMain: TfrmMain
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 0
-        ExplicitHeight = 142
       end
       object catJSON: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 196
+        Width = 194
         Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
@@ -150,7 +145,6 @@ object frmMain: TfrmMain
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 1
-        ExplicitHeight = 142
       end
     end
   end
@@ -190,12 +184,15 @@ object frmMain: TfrmMain
       Caption = 'Add Parameters'
       OnExecute = actCompAddParametersExecute
     end
+    object actCompAddRequestBodies: TAction
+      Caption = 'Add RequestBodies'
+    end
     object actJSONGenerate: TAction
       Caption = 'Generate SON'
       OnExecute = actJSONGenerateExecute
     end
     object actJSONReplace: TAction
-      Caption = 'Replace JSON'
+      Caption = 'Replace Ecaped Slash "/"'
       OnExecute = actJSONReplaceExecute
     end
   end

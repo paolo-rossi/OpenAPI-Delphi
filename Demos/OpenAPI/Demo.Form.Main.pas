@@ -4,17 +4,28 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.Rtti, Vcl.StdCtrls, System.JSON,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CategoryButtons,
+  Vcl.ExtCtrls, System.Actions, Vcl.ActnList, System.ImageList, Vcl.ImgList,
+  System.Rtti, System.JSON,
 
   Neon.Core.Types,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
+  Neon.Core.Persistence.Swagger,
   OpenAPI.Models,
   OpenAPI.Schema,
-  OpenAPI.Serializer, Vcl.CategoryButtons, Vcl.ExtCtrls, System.Actions,
-  Vcl.ActnList, System.ImageList, Vcl.ImgList;
+  OpenAPI.Serializer;
 
 type
+  TPerson = class
+  private
+    FAge: Integer;
+    FName: string;
+  public
+    property Age: Integer read FAge write FAge;
+    property Name: string read FName write FName;
+  end;
+
   TfrmMain = class(TForm)
     memoDocument: TMemo;
     catMenu: TCategoryPanelGroup;
@@ -35,6 +46,7 @@ type
     actJSONGenerate: TAction;
     actJSONReplace: TAction;
     actCompAddParameters: TAction;
+    actCompAddRequestBodies: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure actAddInfoExecute(Sender: TObject);
     procedure actAddServersExecute(Sender: TObject);
@@ -97,19 +109,24 @@ begin
 
       LParameter := LOperation.AddParameter('id', 'query');
       LParameter.Description := 'Customer ID';
-      LParameter.Schema.Type_ := 'string';
-      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
+      LParameter.Schema.JSONSchema.Type_ := 'string';
+      LParameter.Schema.JSONSchema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
 
       LParameter := LOperation.AddParameter('country', 'query');
       LParameter.Description := 'Country Code';
-      LParameter.Schema.Type_ := 'string';
-      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
+      LParameter.Schema.JSONSchema.Type_ := 'string';
+      LParameter.Schema.JSONSchema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
 
       LParameter := LOperation.AddParameter('date', 'query');
       LParameter.Description := 'Date';
-      LParameter.Schema.Type_ := 'string';
-      LParameter.Schema.Format := 'date-time';
-      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
+      LParameter.Schema.JSONSchema.Type_ := 'string';
+      LParameter.Schema.JSONSchema.Format := 'date-time';
+      LParameter.Schema.JSONSchema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
+
+      // Uses a JSON schema already existing as a TJSONObject
+      LParameter := LOperation.AddParameter('person', 'query');
+      LParameter.Description := 'Person Entity';
+      LParameter.Schema.SetJSONObject(TNeonSchemaGenerator.ClassToJSONSchema(TPerson));
 end;
 
 procedure TfrmMain.actCompAddResponsesExecute(Sender: TObject);
@@ -119,7 +136,7 @@ var
 begin
   LResponse := FDocument.Components.AddResponse('200', 'Successful Response');
   LMediaType := LResponse.AddMediaType('application/json');
-  LMediaType.Schema.Reference.Ref := '#components/schemas/country';
+  LMediaType.Schema.JSONSchema.Reference.Ref := '#components/schemas/country';
 end;
 
 procedure TfrmMain.actCompAddSchemasExecute(Sender: TObject);
@@ -168,8 +185,9 @@ var
 begin
   LParameter := FDocument.Components.AddParameter('idParam', 'id', 'query');
   LParameter.Description := 'Customer ID';
-  LParameter.Schema.Type_ := 'string';
-  LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
+  LParameter.Schema.JSONSchema.Type_ := 'string';
+  LParameter.Schema.JSONSchema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
+  LParameter.Schema.JSONSchema.MaxLength := 123;
 end;
 
 procedure TfrmMain.actJSONGenerateExecute(Sender: TObject);
@@ -186,8 +204,7 @@ end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
-  FDocument := TOpenAPIDocument.Create;
-  FDocument.OpenAPI := '3.0.3';
+  FDocument := TOpenAPIDocument.Create('3.0.3');
 end;
 
 end.

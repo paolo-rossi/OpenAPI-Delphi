@@ -364,10 +364,26 @@ type
   TOpenAPISchemas = class(TObjectList<TOpenAPISchema>)
   end;
 
-  TOpenAPISchemaMap = class(TObjectDictionary<string, TOpenAPISchema>)
+  TOpenAPISchemaContainer = class
+  private
+    FJSONObject: TJSONObject;
+    FJSONSchema: TOpenAPISchema;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure SetJSONObject(AJSONObject: TJSONObject);
+
+    property JSONObject: TJSONObject read FJSONObject write FJSONObject;
+    property JSONSchema: TOpenAPISchema read FJSONSchema write FJSONSchema;
+  end;
+
+  TOpenAPISchemaContainerMap = class(TObjectDictionary<string, TOpenAPISchemaContainer>)
+  private
   public
     constructor Create;
   end;
+
 
 implementation
 
@@ -425,11 +441,30 @@ begin
   inherited;
 end;
 
-{ TOpenAPISchemaMap }
+{ TOpenAPISchemaContainerMap }
 
-constructor TOpenAPISchemaMap.Create;
+constructor TOpenAPISchemaContainerMap.Create;
 begin
   inherited Create([doOwnsValues]);
+end;
+
+{ TOpenAPISchemaContainer }
+
+constructor TOpenAPISchemaContainer.Create;
+begin
+  FJSONSchema := TOpenAPISchema.Create;
+end;
+
+destructor TOpenAPISchemaContainer.Destroy;
+begin
+  FJSONSchema.Free;
+  FJSONObject.Free;
+  inherited;
+end;
+
+procedure TOpenAPISchemaContainer.SetJSONObject(AJSONObject: TJSONObject);
+begin
+  FJSONObject := AJSONObject;
 end;
 
 end.

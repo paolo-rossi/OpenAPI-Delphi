@@ -10,7 +10,8 @@ uses
   Neon.Core.Types,
   Neon.Core.Nullables,
 
-  OpenAPI.Any;
+  OpenAPI.Any,
+  OpenAPI.Schema;
 
 type
   TOpenAPISerializer = class
@@ -80,6 +81,14 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
+  TOpenAPISchemaSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
 
 implementation
 
@@ -312,6 +321,7 @@ begin
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
       .RegisterSerializer(TOpenAPIAnySerializer)
+      .RegisterSerializer(TOpenAPISchemaSerializer)
   ;
 end;
 
@@ -346,6 +356,40 @@ begin
     Result := AContext.WriteDataMember(LValue.Value)
   else
     Result := nil;
+end;
+
+{ TOpenAPISchemaSerializer }
+
+class function TOpenAPISchemaSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  if AType = GetTargetInfo then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TOpenAPISchemaSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+    ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+begin
+  Result := nil;
+end;
+
+class function TOpenAPISchemaSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TypeInfo(TOpenAPISchemaContainer);
+end;
+
+function TOpenAPISchemaSerializer.Serialize(const AValue: TValue;
+    ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LValue: TOpenAPISchemaContainer;
+begin
+  LValue := AValue.AsType<TOpenAPISchemaContainer>;
+
+  if Assigned(LValue.JSONObject) then
+    Result := LValue.JSONObject.Clone as TJSONObject
+  else
+    Result := AContext.WriteDataMember(LValue.JSONSchema);
 end;
 
 end.
