@@ -1,4 +1,4 @@
-unit OpenAPI.Serializer;
+unit OpenAPI.Neon.Serializers;
 
 interface
 
@@ -10,9 +10,10 @@ uses
   Neon.Core.Types,
   Neon.Core.Nullables,
 
-  OpenAPI.Any,
-  OpenAPI.Models,
-  OpenAPI.Schema;
+  OpenAPI.Model.Any,
+  OpenAPI.Model.Base,
+  OpenAPI.Model.Classes,
+  OpenAPI.Model.Schema;
 
 type
   TOpenAPISerializer = class

@@ -19,7 +19,7 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
-unit OpenAPI.Schema;
+unit OpenAPI.Model.Schema;
 
 interface
 
@@ -28,8 +28,10 @@ uses
 
   Neon.Core.Attributes,
   Neon.Core.Nullables,
-  OpenAPI.Any,
-  OpenAPI.Reference;
+
+  OpenAPI.Model.Any,
+  OpenAPI.Model.Base,
+  OpenAPI.Model.Reference;
 
 type
   TOpenAPIDiscriminator = class
@@ -86,7 +88,7 @@ type
     property Description: NullString read FDescription write FDescription;
   end;
 
-  TOpenAPISchema = class
+  TOpenAPISchema = class(TOpenAPIModelReference)
   private
     FFormat: NullString;
     FTitle: NullString;

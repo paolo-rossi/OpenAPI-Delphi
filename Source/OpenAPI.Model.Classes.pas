@@ -19,7 +19,7 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
-unit OpenAPI.Models;
+unit OpenAPI.Model.Classes;
 
 interface
 
@@ -34,35 +34,15 @@ uses
   Neon.Core.Attributes,
   Neon.Core.Persistence,
 
-  OpenAPI.Any,
-  OpenAPI.Interfaces,
-  OpenAPI.Schema,
-  OpenAPI.Exceptions,
-  OpenAPI.Expressions,
-  OpenAPI.Reference;
+  OpenAPI.Core.Exceptions,
+  OpenAPI.Core.Interfaces,
+  OpenAPI.Model.Base,
+  OpenAPI.Model.Any,
+  OpenAPI.Model.Schema,
+  OpenAPI.Model.Expressions,
+  OpenAPI.Model.Reference;
 
 type
-  /// <summary>
-  /// Base class for OpenAPI model classes
-  /// </summary>
-  TOpenAPIModel = class
-  protected
-    function InternalCheckModel: Boolean; virtual;
-  public
-    function CheckModel: Boolean; inline;
-  end;
-
-  TOpenAPIModelReference = class(TOpenAPIModel)
-  protected
-    FReference: TOpenAPIReference;
-  public
-    /// <summary>
-    /// Reference object.
-    /// </summary>
-    [NeonInclude(IncludeIf.NotEmpty)]
-    property Reference: TOpenAPIReference read FReference write FReference;
-  end;
-
 
 {$REGION 'OpenAPI enum types'}
   [NeonEnumNames('matrix,label,form,simple,spaceDelimited,pipeDelimited,deepObject')]
@@ -1860,18 +1840,6 @@ begin
   FRequestBody.Free;
 
   inherited;
-end;
-
-{ TOpenAPIModel }
-
-function TOpenAPIModel.CheckModel: Boolean;
-begin
-  Result := InternalCheckModel;
-end;
-
-function TOpenAPIModel.InternalCheckModel: Boolean;
-begin
-  Result := True;
 end;
 
 { TOpenAPIParameterMap }

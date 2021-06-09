@@ -19,7 +19,7 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
-unit OpenAPI.Reference;
+unit OpenAPI.Model.Reference;
 
 interface
 

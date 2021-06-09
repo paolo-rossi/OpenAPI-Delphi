@@ -19,7 +19,7 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
-unit OpenAPI.JsonPointer;
+unit OpenAPI.Model.JsonPointer;
 
 interface
 

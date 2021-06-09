@@ -1,4 +1,4 @@
-unit OpenAPI.Exceptions;
+unit OpenAPI.Core.Exceptions;
 
 interface
 

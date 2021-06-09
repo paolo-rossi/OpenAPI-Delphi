@@ -3,15 +3,16 @@ program DemoOpenAPI;
 uses
   Vcl.Forms,
   Demo.Form.Main in 'Demo.Form.Main.pas' {frmMain},
-  OpenAPI.Any in '..\..\Source\OpenAPI.Any.pas',
-  OpenAPI.Exceptions in '..\..\Source\OpenAPI.Exceptions.pas',
-  OpenAPI.Expressions in '..\..\Source\OpenAPI.Expressions.pas',
-  OpenAPI.Interfaces in '..\..\Source\OpenAPI.Interfaces.pas',
-  OpenAPI.JsonPointer in '..\..\Source\OpenAPI.JsonPointer.pas',
-  OpenAPI.Models in '..\..\Source\OpenAPI.Models.pas',
-  OpenAPI.Reference in '..\..\Source\OpenAPI.Reference.pas',
-  OpenAPI.Schema in '..\..\Source\OpenAPI.Schema.pas',
-  OpenAPI.Serializer in '..\..\Source\OpenAPI.Serializer.pas';
+  OpenAPI.Core.Interfaces in '..\..\Source\OpenAPI.Core.Interfaces.pas',
+  OpenAPI.Core.Exceptions in '..\..\Source\OpenAPI.Core.Exceptions.pas',
+  OpenAPI.Model.Any in '..\..\Source\OpenAPI.Model.Any.pas',
+  OpenAPI.Model.Schema in '..\..\Source\OpenAPI.Model.Schema.pas',
+  OpenAPI.Model.Classes in '..\..\Source\OpenAPI.Model.Classes.pas',
+  OpenAPI.Model.Reference in '..\..\Source\OpenAPI.Model.Reference.pas',
+  OpenAPI.Model.Expressions in '..\..\Source\OpenAPI.Model.Expressions.pas',
+  OpenAPI.Model.JsonPointer in '..\..\Source\OpenAPI.Model.JsonPointer.pas',
+  OpenAPI.Neon.Serializers in '..\..\Source\OpenAPI.Neon.Serializers.pas',
+  OpenAPI.Model.Base in '..\..\Source\OpenAPI.Model.Base.pas';
 
 {$R *.res}
 

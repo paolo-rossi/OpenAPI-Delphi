@@ -108,15 +108,16 @@
             <Form>frmMain</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\Source\OpenAPI.Any.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Exceptions.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Expressions.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Interfaces.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.JsonPointer.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Models.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Reference.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Schema.pas"/>
-        <DCCReference Include="..\..\Source\OpenAPI.Serializer.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Core.Interfaces.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Core.Exceptions.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.Any.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.Schema.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.Classes.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.Reference.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.Expressions.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.JsonPointer.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Neon.Serializers.pas"/>
+        <DCCReference Include="..\..\Source\OpenAPI.Model.Base.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

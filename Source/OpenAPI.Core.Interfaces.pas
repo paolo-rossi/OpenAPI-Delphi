@@ -1,4 +1,4 @@
-unit OpenAPI.Interfaces;
+unit OpenAPI.Core.Interfaces;
 
 interface
 

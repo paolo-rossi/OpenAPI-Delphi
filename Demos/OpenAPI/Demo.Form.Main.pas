@@ -12,9 +12,9 @@ uses
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
   Neon.Core.Persistence.JSON.Schema,
-  OpenAPI.Models,
-  OpenAPI.Schema,
-  OpenAPI.Serializer;
+  OpenAPI.Model.Classes,
+  OpenAPI.Model.Schema,
+  OpenAPI.Neon.Serializers;
 
 type
   TPerson = class

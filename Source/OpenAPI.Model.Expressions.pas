@@ -19,14 +19,14 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
-unit OpenAPI.Expressions;
+unit OpenAPI.Model.Expressions;
 
 interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.RegularExpressions,
-  OpenAPI.JsonPointer,
-  OpenAPI.Reference;
+  OpenAPI.Model.JsonPointer,
+  OpenAPI.Model.Reference;
 
 type
   /// <summary>
@@ -288,7 +288,7 @@ type
 implementation
 
 uses
-  OpenAPI.Exceptions;
+  OpenAPI.Core.Exceptions;
 
 { TRuntimeExpression }
 
