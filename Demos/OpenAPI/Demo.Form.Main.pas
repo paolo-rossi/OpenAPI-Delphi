@@ -11,7 +11,7 @@ uses
   Neon.Core.Types,
   Neon.Core.Persistence,
   Neon.Core.Persistence.JSON,
-  Neon.Core.Persistence.Swagger,
+  Neon.Core.Persistence.JSON.Schema,
   OpenAPI.Models,
   OpenAPI.Schema,
   OpenAPI.Serializer;

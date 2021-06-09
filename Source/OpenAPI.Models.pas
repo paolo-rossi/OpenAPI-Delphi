@@ -52,6 +52,18 @@ type
     function CheckModel: Boolean; inline;
   end;
 
+  TOpenAPIModelReference = class(TOpenAPIModel)
+  protected
+    FReference: TOpenAPIReference;
+  public
+    /// <summary>
+    /// Reference object.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Reference: TOpenAPIReference read FReference write FReference;
+  end;
+
+
 {$REGION 'OpenAPI enum types'}
   [NeonEnumNames('matrix,label,form,simple,spaceDelimited,pipeDelimited,deepObject')]
   TParameterStyle = (
@@ -419,7 +431,7 @@ type
   /// <summary>
   /// Example Object.
   /// </summary>
-  TOpenAPIExample = class(TOpenAPIModel)
+  TOpenAPIExample = class(TOpenAPIModelReference)
   private
     FSummary: NullString;
     FDescription: NullString;
@@ -536,7 +548,7 @@ type
   /// <summary>
   /// Header Object.
   /// </summary>
-  TOpenAPIHeader = class(TOpenAPIModel)
+  TOpenAPIHeader = class(TOpenAPIModelReference)
   private
     FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
@@ -717,7 +729,7 @@ type
     //Extensions: TObjectDictionary<string, TOpenAPIExtension>;
   end;
 
-  TOpenAPITag = class(TOpenAPIModel)
+  TOpenAPITag = class(TOpenAPIModelReference)
   private
     FName: NullString;
     FDescription: NullString;
@@ -764,7 +776,7 @@ type
   TOpenAPITags = class(TObjectList<TOpenAPITag>)
   end;
 
-  TOpenAPIRequestBody = class(TOpenAPIModel)
+  TOpenAPIRequestBody = class(TOpenAPIModelReference)
   private
     FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
@@ -998,7 +1010,7 @@ type
 
   TOpenAPIPathItem = class;
 
-  TOpenAPICallback = class(TOpenAPIModel)
+  TOpenAPICallback = class(TOpenAPIModelReference)
   private
     FPathItems: TObjectDictionary<TRuntimeExpression, TOpenAPIPathItem>;
     FUnresolvedReference: NullBoolean;
@@ -1115,7 +1127,7 @@ type
     /// </summary>
   end;
 
-  TOpenAPISecurityScheme = class(TOpenAPIModel)
+  TOpenAPISecurityScheme = class(TOpenAPIModelReference)
   private
     FType_: Nullable<TSecurityScheme>;
     FDescription: NullString;

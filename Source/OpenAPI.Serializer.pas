@@ -11,6 +11,7 @@ uses
   Neon.Core.Nullables,
 
   OpenAPI.Any,
+  OpenAPI.Models,
   OpenAPI.Schema;
 
 type
@@ -81,7 +82,7 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
-  TOpenAPISchemaSerializer = class(TCustomSerializer)
+  TOpenAPIReferenceSerializer = class(TCustomSerializer)
   protected
     class function GetTargetInfo: PTypeInfo; override;
     class function CanHandle(AType: PTypeInfo): Boolean; override;
@@ -321,7 +322,7 @@ begin
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
       .RegisterSerializer(TOpenAPIAnySerializer)
-      .RegisterSerializer(TOpenAPISchemaSerializer)
+      .RegisterSerializer(TOpenAPIReferenceSerializer)
   ;
 end;
 
@@ -358,38 +359,40 @@ begin
     Result := nil;
 end;
 
-{ TOpenAPISchemaSerializer }
+{ TOpenAPIReferenceSerializer }
 
-class function TOpenAPISchemaSerializer.CanHandle(AType: PTypeInfo): Boolean;
+class function TOpenAPIReferenceSerializer.CanHandle(AType: PTypeInfo): Boolean;
 begin
-  if AType = GetTargetInfo then
-    Result := True
-  else
-    Result := False;
+  Result := TypeInfoIs(AType);
 end;
 
-function TOpenAPISchemaSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+function TOpenAPIReferenceSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 begin
   Result := nil;
 end;
 
-class function TOpenAPISchemaSerializer.GetTargetInfo: PTypeInfo;
+class function TOpenAPIReferenceSerializer.GetTargetInfo: PTypeInfo;
 begin
-  Result := TypeInfo(TOpenAPISchemaContainer);
+  Result := TOpenAPIModelReference.ClassInfo;
 end;
 
-function TOpenAPISchemaSerializer.Serialize(const AValue: TValue;
+function TOpenAPIReferenceSerializer.Serialize(const AValue: TValue;
     ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
-  LValue: TOpenAPISchemaContainer;
+  LRefObj: TOpenAPIModelReference;
+  LType: TRttiType;
 begin
-  LValue := AValue.AsType<TOpenAPISchemaContainer>;
+  LRefObj := AValue.AsType<TOpenAPIModelReference>;
 
-  if Assigned(LValue.JSONObject) then
-    Result := LValue.JSONObject.Clone as TJSONObject
+  if Assigned(LRefObj.Reference) then
+    Result := AContext.WriteDataMember(LRefObj.Reference)
   else
-    Result := AContext.WriteDataMember(LValue.JSONSchema);
+  begin
+    LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
+    Result := TJSONObject.Create;
+    AContext.WriteMembers(LType, AValue.AsObject, Result);
+  end;
 end;
 
 end.
