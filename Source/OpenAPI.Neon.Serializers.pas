@@ -92,6 +92,15 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
+  TOpenAPISchemaSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
 implementation
 
 uses
@@ -322,8 +331,10 @@ begin
       .RegisterSerializer(TNullableInt64Serializer)
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
+      // OpenAPI Models
       .RegisterSerializer(TOpenAPIAnySerializer)
       .RegisterSerializer(TOpenAPIReferenceSerializer)
+      .RegisterSerializer(TOpenAPISchemaSerializer)
   ;
 end;
 
@@ -354,10 +365,20 @@ var
   LValue: TOpenAPIAny;
 begin
   LValue := AValue.AsType<TOpenAPIAny>;
-  if not LValue.Value.IsEmpty then
-    Result := AContext.WriteDataMember(LValue.Value)
-  else
-    Result := nil;
+  if LValue = nil then
+    Exit(nil);
+
+  if LValue.Value.IsEmpty then
+    Exit(nil);
+
+  Result := AContext.WriteDataMember(LValue.Value);
+  case ANeonObject.NeonInclude.Value of
+    IncludeIf.NotEmpty, IncludeIf.NotDefault:
+    begin
+      if (Result as TJSONObject).Count = 0 then
+        FreeAndNil(Result);
+    end;
+  end;
 end;
 
 { TOpenAPIReferenceSerializer }
@@ -385,6 +406,8 @@ var
   LType: TRttiType;
 begin
   LRefObj := AValue.AsType<TOpenAPIModelReference>;
+  if LRefObj = nil then
+    Exit(nil);
 
   if Assigned(LRefObj.Reference) then
     Result := AContext.WriteDataMember(LRefObj.Reference)
@@ -393,6 +416,62 @@ begin
     LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
     Result := TJSONObject.Create;
     AContext.WriteMembers(LType, AValue.AsObject, Result);
+  end;
+
+  case ANeonObject.NeonInclude.Value of
+    IncludeIf.NotEmpty, IncludeIf.NotDefault:
+    begin
+      if (Result as TJSONObject).Count = 0 then
+        FreeAndNil(Result);
+    end;
+  end;
+
+end;
+
+{ TOpenAPISchemaSerializer }
+
+class function TOpenAPISchemaSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPISchemaSerializer.Deserialize(AValue: TJSONValue;
+  const AData: TValue; ANeonObject: TNeonRttiObject;
+  AContext: IDeserializerContext): TValue;
+begin
+
+end;
+
+class function TOpenAPISchemaSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPISchema.ClassInfo;
+end;
+
+function TOpenAPISchemaSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LSchema: TOpenAPISchema;
+  LType: TRttiType;
+begin
+  LSchema := AValue.AsType<TOpenAPISchema>;
+  if LSchema = nil then
+    Exit(nil);
+
+  if Assigned(LSchema.JSONObject) then
+    Result := LSchema.JSONObject.Clone as TJSONObject
+  else
+  begin
+    LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
+    Result := TJSONObject.Create;
+    AContext.WriteMembers(LType, AValue.AsObject, Result);
+  end;
+
+  case ANeonObject.NeonInclude.Value of
+    IncludeIf.NotEmpty, IncludeIf.NotDefault:
+    begin
+      if (Result as TJSONObject).Count = 0 then
+        FreeAndNil(Result);
+    end;
   end;
 end;
 

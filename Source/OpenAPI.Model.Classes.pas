@@ -279,7 +279,7 @@ type
     FStyle: Nullable<TParameterStyle>;
     FExplode: NullBoolean;
     FAllowReserved: NullBoolean;
-    FSchema: TOpenApiSchemaContainer;
+    FSchema: TOpenAPISchema;
     FExamples: TOpenApiExamples;
     FContent: TOpenApiMediaTypeMap;
     FExample: TOpenAPIAny;
@@ -360,7 +360,7 @@ type
     /// The schema defining the type used for the parameter.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Schema: TOpenApiSchemaContainer read FSchema write FSchema;
+    property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
     /// Examples of the media type. Each example SHOULD contain a value
@@ -475,7 +475,7 @@ type
   /// </summary>
   TOpenAPIMediaType = class(TOpenAPIModel)
   private
-    FSchema: TOpenApiSchemaContainer;
+    FSchema: TOpenAPISchema;
     FExamples: TOpenAPIExampleMap;
     FEncoding: TOpenAPIEncodingMap;
     FExample: TOpenAPIAny;
@@ -486,7 +486,7 @@ type
     /// <summary>
     /// The schema defining the type used for the request body.
     /// </summary>
-    property Schema: TOpenApiSchemaContainer read FSchema write FSchema;
+    property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
     /// Example of the media type.
@@ -539,7 +539,7 @@ type
     FStyle: Nullable<TParameterStyle>;
     FExplode: NullBoolean;
     FAllowReserved: NullBoolean;
-    FSchema: TOpenAPISchemaContainer;
+    FSchema: TOpenAPISchema;
     FExamples: TOpenAPIExampleMap;
     FContent: TOpenAPIMediaTypeMap;
     FExample: TOpenAPIAny;
@@ -597,7 +597,7 @@ type
     /// <summary>
     /// The schema defining the type used for the header.
     /// </summary>
-    property Schema: TOpenAPISchemaContainer read FSchema write FSchema;
+    property Schema: TOpenAPISchema read FSchema write FSchema;
 
     /// <summary>
     /// Example of the media type.
@@ -1385,7 +1385,7 @@ type
   /// </summary>
   TOpenAPIComponents = class(TOpenAPIModel)
   private
-    FSchemas: TOpenAPISchemaContainerMap;
+    FSchemas: TOpenAPISchemaMap;
     FResponses: TOpenAPIResponseMap;
     FParameters: TOpenAPIParameterMap;
     FExamples: TOpenAPIExampleMap;
@@ -1412,7 +1412,7 @@ type
     /// An object to hold reusable <see cref="OpenApiSchema"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Schemas: TOpenAPISchemaContainerMap read FSchemas write FSchemas;
+    property Schemas: TOpenAPISchemaMap read FSchemas write FSchemas;
 
     /// <summary>
     /// An object to hold reusable <see cref="OpenApiResponse"/> Objects.
@@ -1743,15 +1743,12 @@ begin
 end;
 
 function TOpenAPIComponents.AddSchema(const AKeyName: string): TOpenAPISchema;
-var
-  LContainer: TOpenAPISchemaContainer;
 begin
-  if not FSchemas.TryGetValue(AKeyName, LContainer) then
+  if not FSchemas.TryGetValue(AKeyName, Result) then
   begin
-    LContainer := TOpenAPISchemaContainer.Create;
-    FSchemas.Add(AKeyName, LContainer);
+    Result := TOpenApiSchema.Create;
+    FSchemas.Add(AKeyName, Result);
   end;
-  Result := LContainer.JSONSchema;
 end;
 
 function TOpenAPIComponents.AddSecurityApiKey(const AKeyName, ADescription,
@@ -1798,7 +1795,7 @@ end;
 
 constructor TOpenAPIComponents.Create;
 begin
-  FSchemas := TOpenAPISchemaContainerMap.Create;
+  FSchemas := TOpenAPISchemaMap.Create;
   FResponses := TOpenAPIResponseMap.Create;
   FParameters := TOpenAPIParameterMap.Create;
   FExamples := TOpenAPIExampleMap.Create;
@@ -2182,7 +2179,7 @@ end;
 
 constructor TOpenAPIMediaType.Create;
 begin
-  FSchema := TOpenAPISchemaContainer.Create;
+  FSchema := TOpenAPISchema.Create;
   FExamples := TOpenAPIExampleMap.Create;
   FEncoding := TOpenAPIEncodingMap.Create;
   FExample := TOpenAPIAny.Create;
@@ -2203,7 +2200,7 @@ end;
 constructor TOpenAPIHeader.Create;
 begin
   FReference := TOpenAPIReference.Create;
-  FSchema := TOpenAPISchemaContainer.Create;
+  FSchema := TOpenAPISchema.Create;
   FExamples := TOpenAPIExampleMap.Create;
   FContent := TOpenAPIMediaTypeMap.Create;
   FExample := TOpenAPIAny.Create;
@@ -2238,7 +2235,7 @@ end;
 
 constructor TOpenAPIParameter.Create;
 begin
-  FSchema := TOpenApiSchemaContainer.Create;
+  FSchema := TOpenAPISchema.Create;
   FExamples := TOpenApiExamples.Create;
   FContent := TOpenApiMediaTypeMap.Create;
   FExample := TOpenAPIAny.Create;

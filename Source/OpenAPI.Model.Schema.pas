@@ -124,11 +124,16 @@ type
     FDefault_: TOpenAPISchema;
     FEnum: TOpenAPIAny;
     FDiscriminator: TOpenAPIDiscriminator;
+    FJSONObject: TJSONObject;
   public
     constructor Create;
     destructor Destroy; override;
   public
     function AddProperty(const AKeyName: string): TOpenAPISchema;
+    procedure SetJSONObject(AJSON: TJSONObject);
+
+    [NeonIgnore]
+    property JSONObject: TJSONObject read FJSONObject write FJSONObject;
   public
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -366,21 +371,7 @@ type
   TOpenAPISchemas = class(TObjectList<TOpenAPISchema>)
   end;
 
-  TOpenAPISchemaContainer = class
-  private
-    FJSONObject: TJSONObject;
-    FJSONSchema: TOpenAPISchema;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure SetJSONObject(AJSONObject: TJSONObject);
-
-    property JSONObject: TJSONObject read FJSONObject write FJSONObject;
-    property JSONSchema: TOpenAPISchema read FJSONSchema write FJSONSchema;
-  end;
-
-  TOpenAPISchemaContainerMap = class(TObjectDictionary<string, TOpenAPISchemaContainer>)
+  TOpenAPISchemaMap = class(TObjectDictionary<string, TOpenAPISchema>)
   private
   public
     constructor Create;
@@ -443,30 +434,16 @@ begin
   inherited;
 end;
 
-{ TOpenAPISchemaContainerMap }
+procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject);
+begin
+  FJSONObject := AJSON;
+end;
 
-constructor TOpenAPISchemaContainerMap.Create;
+{ TOpenAPISchemaMap }
+
+constructor TOpenAPISchemaMap.Create;
 begin
   inherited Create([doOwnsValues]);
-end;
-
-{ TOpenAPISchemaContainer }
-
-constructor TOpenAPISchemaContainer.Create;
-begin
-  FJSONSchema := TOpenAPISchema.Create;
-end;
-
-destructor TOpenAPISchemaContainer.Destroy;
-begin
-  FJSONSchema.Free;
-  FJSONObject.Free;
-  inherited;
-end;
-
-procedure TOpenAPISchemaContainer.SetJSONObject(AJSONObject: TJSONObject);
-begin
-  FJSONObject := AJSONObject;
 end;
 
 end.
