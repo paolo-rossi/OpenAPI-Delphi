@@ -1199,10 +1199,13 @@ type
     constructor Create;
   end;
 
-  TOpenAPISecurityRequirement = TPair<string, TArray<string>>;
+  TOpenAPISecurityRequirement = class(TDictionary<string, TArray<string>>)
+  end;
 
-  TOpenAPISecurityRequirements = class(TDictionary<string, TArray<string>>)
-
+  TOpenAPISecurityRequirements = class(TObjectList<TOpenAPISecurityRequirement>)
+  public
+    procedure AddSecurityRequirement(ASecuritySchemes: TOpenAPISecuritySchemeMap;
+        ASchemeName: string; AParams: TArray<string>);
   end;
 
   /// <summary>
@@ -1864,9 +1867,14 @@ end;
 procedure TOpenAPIDocument.AddSecurity(ASchemeName: string; AParams: TArray<string>);
 var
   LScheme: TOpenAPISecurityScheme;
+  LSecReq: TOpenAPISecurityRequirement;
 begin
   if FComponents.SecuritySchemes.TryGetValue(ASchemeName, LScheme) then
-    FSecurity.Add(ASchemeName, AParams)
+  begin
+    LSecReq := TOpenAPISecurityRequirement.Create();
+    LSecreq.Add(ASchemeName, AParams);
+    FSecurity.Add(LSecReq);
+  end
   else
     raise EOpenAPIException.CreateFmt('The scheme [%s] does not exists in securityDefinitions', [ASchemeName]);
 end;
@@ -2006,7 +2014,7 @@ begin
     TOperationType.Patch:     Result := GetOrCreate(FPatch);
     TOperationType.Trace:     Result := GetOrCreate(FTrace);
   else
-    raise EOpenAPIException.CreateFmt('Operation Type [%s] not supported', []);
+    raise EOpenAPIException.CreateFmt('Operation Type [%s] not supported', [AType.ToString]);
   end;
 end;
 
@@ -2028,9 +2036,8 @@ end;
 
 constructor TOpenAPIPathItem.Create;
 begin
-  //FOperations := TOpenAPIOperationMap.Create;
   FServers := TOpenAPIServerMap.Create;
-  FParameters := TOpenAPIParameters.Create;
+  FParameters := TOpenAPIParameters.Create(True);
 end;
 
 destructor TOpenAPIPathItem.Destroy;
@@ -2043,12 +2050,10 @@ begin
   FPost.Free;
   FHead.Free;
   FPatch.Free;
-  FPost.Free;
   FTrace.Free;
   FDelete.Free;
   FOptions.Free;
 
-  //FOperations.Free;
   inherited;
 end;
 
@@ -2410,6 +2415,23 @@ begin
     TOperationType.Patch:    Result := 'patch';
     TOperationType.Trace:    Result := 'trace';
   end;
+end;
+
+procedure TOpenAPISecurityRequirements.AddSecurityRequirement(
+    ASecuritySchemes: TOpenAPISecuritySchemeMap; ASchemeName: string; AParams:
+    TArray<string>);
+var
+  LScheme: TOpenAPISecurityScheme;
+  LSecReq: TOpenAPISecurityRequirement;
+begin
+  if ASecuritySchemes.TryGetValue(ASchemeName, LScheme) then
+  begin
+    LSecReq := TOpenAPISecurityRequirement.Create();
+    LSecreq.Add(ASchemeName, AParams);
+    Self.Add(LSecReq);
+  end
+  else
+    raise EOpenAPIException.CreateFmt('The scheme [%s] does not exists in securityDefinitions', [ASchemeName]);
 end;
 
 end.
