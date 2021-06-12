@@ -380,6 +380,7 @@ type
     /// To represent examples of media types that cannot naturally be represented in JSON or YAML,
     /// a string value can contain the example with escaping where necessary.
     /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
     property Example: TOpenAPIAny read FExample write FExample;
 
     /// <summary>
@@ -2036,6 +2037,7 @@ destructor TOpenAPIPathItem.Destroy;
 begin
   FParameters.Free;
   FServers.Free;
+
   FGet.Free;
   FPut.Free;
   FPost.Free;

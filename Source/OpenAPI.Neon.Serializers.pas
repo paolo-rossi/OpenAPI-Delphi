@@ -101,6 +101,8 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
+  procedure RegisterOpenAPISerializers(ARegistry: TNeonSerializerRegistry);
+
 implementation
 
 uses
@@ -473,6 +475,19 @@ begin
         FreeAndNil(Result);
     end;
   end;
+end;
+
+procedure RegisterOpenAPISerializers(ARegistry: TNeonSerializerRegistry);
+begin
+  ARegistry.RegisterSerializer(TNullableStringSerializer);
+  ARegistry.RegisterSerializer(TNullableBooleanSerializer);
+  ARegistry.RegisterSerializer(TNullableIntegerSerializer);
+  ARegistry.RegisterSerializer(TNullableInt64Serializer);
+  ARegistry.RegisterSerializer(TNullableDoubleSerializer);
+  ARegistry.RegisterSerializer(TNullableTDateTimeSerializer);
+
+  ARegistry.RegisterSerializer(TOpenAPIReferenceSerializer);
+  ARegistry.RegisterSerializer(TOpenAPISchemaSerializer);
 end;
 
 end.
