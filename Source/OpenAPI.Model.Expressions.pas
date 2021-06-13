@@ -70,7 +70,7 @@ type
     /// <summary>
     /// Create a composite expression from a string literal with an embedded expression
     /// </summary>
-    /// <param name="expression"></param>
+    /// <param name="AExpression"></param>
     constructor Create(const AExpression: string);
     destructor Destroy; override;
 
@@ -91,15 +91,15 @@ type
     FValue: string;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="QueryExpression"/> class.
+    /// Initializes a new instance of the <see cref="TSourceExpression"/> class.
     /// </summary>
-    /// <param name="value">The value string.</param>
+    /// <param name="AValue">The value string.</param>
     constructor Create(const AValue: string);
   public
     /// <summary>
     /// Build the source expression from input string.
     /// </summary>
-    /// <param name="expression">The source expression.</param>
+    /// <param name="AExpression">The source expression.</param>
     /// <returns>The built source expression.</returns>
     class function Build(const AExpression: string): TSourceExpression; reintroduce;
   end;
@@ -166,9 +166,9 @@ type
     function GetSource: TSourceExpression;
   public
     /// <summary>
-    /// Initializes a new instance of the <see cref="RequestExpression"/> class.
+    /// Initializes a new instance of the <see cref="TRequestExpression"/> class.
     /// </summary>
-    /// <param name="source">The source of the request.</param>
+    /// <param name="ASource">The source of the request.</param>
     constructor Create(ASource: TSourceExpression);
 
     /// <summary>
@@ -177,7 +177,7 @@ type
     function GetExpression: string; override;
 
     /// <summary>
-    /// The <see cref="SourceExpression"/> expression.
+    /// The <see cref="TSourceExpression"/> expression.
     /// </summary>
     property Source: TSourceExpression read GetSource;
   end;
@@ -191,9 +191,9 @@ type
     FSource: TSourceExpression;
   public
     /// <summary>
-    /// Create a new instance of the <see cref="ResponseExpression"/> class.
+    /// Create a new instance of the <see cref="TResponseExpression"/> class.
     /// </summary>
-    /// <param name="source">The source of the response.</param>
+    /// <param name="ASource">The source of the response.</param>
     constructor Create(ASource: TSourceExpression);
 
     /// <summary>
@@ -203,7 +203,7 @@ type
     //public override string Expression => Response + Source.Expression;
 
     /// <summary>
-    /// The <see cref="SourceExpression"/> expression.
+    /// The <see cref="TSourceExpression"/> expression.
     /// </summary>
     property Source: TSourceExpression read FSource;
   end;
@@ -231,9 +231,9 @@ type
     function GetExpression: string; override;
   public
     /// <summary>
-    /// Initializes a new instance of the <see cref="BodyExpression"/> class.
+    /// Initializes a new instance of the <see cref="TBodyExpression"/> class.
     /// </summary>
-    /// <param name="pointer">a JSON Pointer [RFC 6901](https://tools.ietf.org/html/rfc6901).</param>
+    /// <param name="APointer">a JSON Pointer [RFC 6901](https://tools.ietf.org/html/rfc6901).</param>
     constructor Create(APointer: TJsonPointer);
 
     /// <summary>
@@ -259,10 +259,10 @@ type
     function GetExpression: string; override;
   public
     /// <summary>
-    /// Initializes a new instance of the <see cref="HeaderExpression"/> class.
+    /// Initializes a new instance of the <see cref="THeaderExpression"/> class.
     /// </summary>
-    /// <param name="token">The token string, it's case-insensitive.</param>
-    constructor Create(const AToken: string); //    : base(token)
+    /// <param name="AToken">The token string, it's case-insensitive.</param>
+    constructor Create(const AToken: string);
     {
         if (string.IsNullOrWhiteSpace(token))
             throw Error.ArgumentNullOrWhiteSpace(nameof(token));
@@ -521,3 +521,4 @@ begin
 end;
 
 end.
+

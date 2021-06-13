@@ -35,9 +35,9 @@ type
     FTokens: TArray<string>;
   public
     /// <summary>
-    /// Initializes the <see cref="JsonPointer"/> class.
+    /// Initializes the <see cref="TJSONPointer"/> class.
     /// </summary>
-    /// <param name="pointer">Pointer as string.</param>
+    /// <param name="APointer">Pointer as string.</param>
     constructor Create(APointer: string); overload;
     constructor Create(ATokens: TArray<string>); overload;
 
@@ -117,3 +117,4 @@ begin
 end;
 
 end.
+

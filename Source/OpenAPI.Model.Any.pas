@@ -88,7 +88,7 @@ type
     /// <summary>
     /// Initializes the <see cref="IOpenApiPrimitive"/> class with the given value.
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="AValue"></param>
     constructor Create(const AValue: T);
 
     /// <summary>
@@ -120,7 +120,7 @@ type
     /// <summary>
     /// Initializes the <see cref="TOpenApiInteger"/> class.
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="AValue"></param>
     constructor Create(const AValue: Integer);
   end;
 
@@ -135,9 +135,9 @@ type
     function GetPrimitive: TPrimitive; override;
   public
     /// <summary>
-    /// Initializes the <see cref="OpenApiBoolean"/> class.
+    /// Initializes the <see cref="TOpenApiBoolean"/> class.
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="AValue"></param>
     constructor Create(const AValue: Boolean);
   end;
 
@@ -154,7 +154,7 @@ type
     /// <summary>
     /// Initializes the <see cref="TOpenApiString"/> class.
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="AValue"></param>
     constructor Create(const AValue: string);
   end;
 

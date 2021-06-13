@@ -419,6 +419,8 @@ end;
 
 destructor TOpenAPISchema.Destroy;
 begin
+  FJSONObject.Free;
+
   FReference.Free;
   FAdditionalProperties.Free;
   FDiscriminator.Free;

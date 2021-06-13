@@ -513,7 +513,7 @@ type
     property Encoding: TOpenAPIEncodingMap read FEncoding write FEncoding;
 
     /// <summary>
-    /// Serialize <see cref="OpenApiExternalDocs"/> to Open Api v3.0.
+    /// Serialize <see cref="TOpenApiExternalDocs"/> to Open Api v3.0.
     /// </summary>
     //property Extensions: TObjectDictionary<string, IOpenApiExtension>;
   end;
@@ -1413,55 +1413,55 @@ type
     function AddSecurityOAuth2(const AKeyName, ADescription: string; AFlow: TOpenAPIOAuthFlows): TOpenAPISecurityScheme;
   public
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiSchema"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiSchema"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Schemas: TOpenAPISchemaMap read FSchemas write FSchemas;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiResponse"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiResponse"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Responses: TOpenAPIResponseMap read FResponses write FResponses;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiParameter"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiParameter"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Parameters: TOpenAPIParameterMap read FParameters write FParameters;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiExample"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiExample"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Examples: TOpenAPIExampleMap read FExamples write FExamples;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiRequestBody"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiRequestBody"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property RequestBodies: TOpenAPIRequestBodyMap read FRequestBodies write FRequestBodies;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiHeader"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiHeader"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Headers: TOpenAPIHeaderMap read FHeaders write FHeaders;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiSecurityScheme"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiSecurityScheme"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property SecuritySchemes: TOpenAPISecuritySchemeMap read FSecuritySchemes write FSecuritySchemes;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiLink"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiLink"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Links: TOpenAPILinkMap read FLinks write FLinks;
 
     /// <summary>
-    /// An object to hold reusable <see cref="OpenApiCallback"/> Objects.
+    /// An object to hold reusable <see cref="TOpenApiCallback"/> Objects.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Callbacks: TOpenAPICallbackMap read FCallbacks write FCallbacks;
@@ -1479,7 +1479,6 @@ type
   private
     FSummary: NullString;
     FDescription: NullString;
-    //FOperations: TOpenAPIOperationMap;
     FServers: TOpenAPIServerMap;
     FParameters: TOpenAPIParameters;
     FGet: TOpenAPIOperation;
