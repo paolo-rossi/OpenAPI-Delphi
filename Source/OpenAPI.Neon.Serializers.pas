@@ -334,7 +334,7 @@ begin
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
       // OpenAPI Models
-      .RegisterSerializer(TOpenAPIAnySerializer)
+      //.RegisterSerializer(TOpenAPIAnySerializer)
       .RegisterSerializer(TOpenAPIReferenceSerializer)
       .RegisterSerializer(TOpenAPISchemaSerializer)
   ;
@@ -411,8 +411,9 @@ begin
   if LRefObj = nil then
     Exit(nil);
 
-  if Assigned(LRefObj.Reference) then
-    Result := AContext.WriteDataMember(LRefObj.Reference)
+  if Assigned(LRefObj.Reference) and not (LRefObj.Reference.Ref.IsEmpty) then
+    Result := TJSONString.Create(LRefObj.Reference.Ref)
+    //AContext.WriteDataMember(LRefObj.Reference)
   else
   begin
     LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
@@ -456,8 +457,16 @@ var
   LType: TRttiType;
 begin
   LSchema := AValue.AsType<TOpenAPISchema>;
+
   if LSchema = nil then
     Exit(nil);
+
+  // It's also a reference object
+  if Assigned(LSchema.Reference) and not (LSchema.Reference.Ref.IsEmpty) then
+  begin
+    Result := AContext.WriteDataMember(LSchema.Reference);
+    Exit;
+  end;
 
   if Assigned(LSchema.JSONObject) then
     Result := LSchema.JSONObject.Clone as TJSONObject

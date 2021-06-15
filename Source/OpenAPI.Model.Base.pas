@@ -27,7 +27,7 @@ type
     /// <summary>
     /// Reference object.
     /// </summary>
-    [NeonInclude(IncludeIf.NotEmpty)]
+    [NeonProperty('$ref')][NeonInclude(IncludeIf.NotEmpty)]
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 

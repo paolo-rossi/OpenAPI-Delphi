@@ -111,7 +111,7 @@ begin
       LParameter.Description := 'Customer ID';
       LParameter.Schema.Type_ := 'string';
       LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
-      {
+
       LParameter := LOperation.AddParameter('country', 'query');
       LParameter.Description := 'Country Code';
       LParameter.Schema.Type_ := 'string';
@@ -127,7 +127,11 @@ begin
       LParameter := LOperation.AddParameter('person', 'query');
       LParameter.Description := 'Person Entity';
       LParameter.Schema.SetJSONObject(TNeonSchemaGenerator.ClassToJSONSchema(TPerson));
-      }
+
+      // Uses #ref
+      LParameter := LOperation.AddParameter('order', 'query');
+      LParameter.Description := 'Order Entity';
+      LParameter.Schema.Reference.Ref := '#comp/deidjed/';
 end;
 
 procedure TfrmMain.actCompAddResponsesExecute(Sender: TObject);
