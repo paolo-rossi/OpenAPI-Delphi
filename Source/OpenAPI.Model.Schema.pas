@@ -441,6 +441,8 @@ end;
 
 procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject);
 begin
+  if Assigned(FJSONObject) then
+    FJSONObject.Free;
   FJSONObject := AJSON;
 end;
 

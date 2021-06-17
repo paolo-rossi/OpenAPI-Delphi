@@ -1403,6 +1403,7 @@ type
     constructor Create;
     destructor Destroy; override;
   public
+    function SchemaExists(const AKeyName: string): Boolean;
     function AddSchema(const AKeyName: string): TOpenAPISchema;
     function AddResponse(const AKeyName, ADescription: string): TOpenAPIResponse;
     function AddParameter(const AKeyName, AName, ALocation: string): TOpenAPIparameter;
@@ -1822,6 +1823,13 @@ begin
   FSchemas.Free;
 
   inherited;
+end;
+
+function TOpenAPIComponents.SchemaExists(const AKeyName: string): Boolean;
+var
+  LSchema: TOpenAPISchema;
+begin
+  Result := FSchemas.TryGetValue(AKeyName, LSchema);
 end;
 
 { TOpenAPILink }
