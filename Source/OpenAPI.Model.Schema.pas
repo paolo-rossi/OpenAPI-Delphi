@@ -24,7 +24,7 @@ unit OpenAPI.Model.Schema;
 interface
 
 uses
-  System.Classes, System.Generics.Collections, System.JSON,
+  System.Classes, System.Generics.Collections, System.JSON, System.Rtti,
 
   Neon.Core.Attributes,
   Neon.Core.Nullables,
@@ -131,6 +131,9 @@ type
   public
     function AddProperty(const AKeyName: string): TOpenAPISchema;
     procedure SetJSONObject(AJSON: TJSONObject);
+    procedure SetSchemaReference(const AReference: string);
+
+    //procedure SetSchemaJSON(const AReference: string); overload;
 
     [NeonIgnore]
     property JSONObject: TJSONObject read FJSONObject write FJSONObject;
@@ -439,6 +442,11 @@ end;
 procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject);
 begin
   FJSONObject := AJSON;
+end;
+
+procedure TOpenAPISchema.SetSchemaReference(const AReference: string);
+begin
+  Reference.Ref := '#/components/schemas/' + AReference;
 end;
 
 { TOpenAPISchemaMap }

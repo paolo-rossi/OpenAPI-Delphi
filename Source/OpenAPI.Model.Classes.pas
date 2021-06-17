@@ -229,13 +229,13 @@ type
   /// </summary>
   TOpenAPILicense = class(TOpenAPIModel)
   private
-    FName: string;
+    FName: NullString;
     FUrl: NullString;
   public
     /// <summary>
     /// REQUIRED. The license name used for the API.
     /// </summary>
-    property Name: string read FName write FName;
+    property Name: NullString read FName write FName;
 
     /// <summary>
     /// The Url pointing to the contact information. MUST be in the format of a Url.
@@ -1597,7 +1597,7 @@ type
     constructor Create(const AVersion: string);
     destructor Destroy; override;
   public
-    function AddServer: TOpenAPIServer;
+    function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddPath(const AKeyName: string): TOpenAPIPathItem;
     function AddTag(const AName, ADescription: string): TOpenAPITag;
     procedure AddSecurity(ASchemeName: string; AParams: TArray<string>);
@@ -1878,9 +1878,12 @@ begin
     raise EOpenAPIException.CreateFmt('The scheme [%s] does not exists in securityDefinitions', [ASchemeName]);
 end;
 
-function TOpenAPIDocument.AddServer: TOpenAPIServer;
+function TOpenAPIDocument.AddServer(const AURL, ADescription: string): TOpenAPIServer;
 begin
   Result := TOpenAPIServer.Create;
+  Result.Url := AURL;
+  if not ADescription.IsEmpty then
+    Result.Description := ADescription;
   FServers.Add(Result);
 end;
 
