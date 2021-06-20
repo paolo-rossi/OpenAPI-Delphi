@@ -47,8 +47,10 @@ type
     actJSONReplace: TAction;
     actCompAddParameters: TAction;
     actCompAddRequestBodies: TAction;
+    actAddInfoExtensions: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure actAddInfoExecute(Sender: TObject);
+    procedure actAddInfoExtensionsExecute(Sender: TObject);
     procedure actAddServersExecute(Sender: TObject);
     procedure actAddPathsExecute(Sender: TObject);
     procedure actCompAddResponsesExecute(Sender: TObject);
@@ -80,11 +82,24 @@ end;
 procedure TfrmMain.actAddInfoExecute(Sender: TObject);
 begin
   FDocument.Info.Title := 'OpenAPI Demo';
+  FDocument.Info.Version := '1.0.2';
   FDocument.Info.Description := 'OpenAPI Demo Description';
   FDocument.Info.Contact.Name := 'Paolo Rossi';
   FDocument.Info.Contact.URL := 'https://github.com/paolo-rossi';
   FDocument.Info.License.Name := 'Apache-2.0';
   FDocument.Info.License.URL := 'http://www.apache.org/licenses/';
+end;
+
+procedure TfrmMain.actAddInfoExtensionsExecute(Sender: TObject);
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  LJSON.AddPair('url', '/images/wirl.png');
+  LJSON.AddPair('backgroundColor', '#000000');
+  LJSON.AddPair('altText', 'WiRL Logo');
+
+  FDocument.Info.Extensions.AddPair('x-logo', LJSON);
 end;
 
 procedure TfrmMain.actAddServersExecute(Sender: TObject);

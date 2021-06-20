@@ -1347,6 +1347,7 @@ type
     FTermsOfService: NullString;
     FTitle: string;
     FVersion: string;
+    FExtensions: TJSONObject;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1382,6 +1383,12 @@ type
     /// REQUIRED. The version of the OpenAPI document.
     /// </summary>
     property Version: string read FVersion write FVersion;
+
+    /// <summary>
+    /// This object MAY be extended with Specification Extensions.
+    /// </summary>
+    [NeonUnwrapped] [NeonInclude(IncludeIf.NotEmpty)]
+    property Extensions: TJSONObject read FExtensions write FExtensions;
   end;
 
   /// <summary>
@@ -1943,10 +1950,12 @@ constructor TOpenAPIInfo.Create;
 begin
   FContact := TOpenAPIContact.Create;
   FLicense := TOpenAPILicense.Create;
+  FExtensions := TJSONObject.Create;
 end;
 
 destructor TOpenAPIInfo.Destroy;
 begin
+  FExtensions.Free;
   FLicense.Free;
   FContact.Free;
 

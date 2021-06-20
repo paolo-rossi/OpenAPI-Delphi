@@ -49,7 +49,7 @@ object frmMain: TfrmMain
       object CategoryButtons1: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 194
+        Width = 196
         Height = 415
         Align = alClient
         ButtonFlow = cbfVertical
@@ -62,6 +62,9 @@ object frmMain: TfrmMain
             Items = <
               item
                 Action = actAddInfo
+              end
+              item
+                Action = actAddInfoExtensions
               end
               item
                 Action = actAddServers
@@ -112,7 +115,7 @@ object frmMain: TfrmMain
       object CategoryButtons2: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 194
+        Width = 196
         Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
@@ -124,7 +127,7 @@ object frmMain: TfrmMain
       object catJSON: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 194
+        Width = 196
         Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
@@ -155,6 +158,10 @@ object frmMain: TfrmMain
     object actAddInfo: TAction
       Caption = 'Add Info Object'
       OnExecute = actAddInfoExecute
+    end
+    object actAddInfoExtensions: TAction
+      Caption = 'Add Info Object Extensions'
+      OnExecute = actAddInfoExtensionsExecute
     end
     object actAddServers: TAction
       Caption = 'Add Servers'

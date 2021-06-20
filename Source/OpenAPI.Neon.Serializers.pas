@@ -9,6 +9,7 @@ uses
   Neon.Core.Persistence,
   Neon.Core.Types,
   Neon.Core.Nullables,
+  Neon.Core.Serializers.RTL,
 
   OpenAPI.Model.Any,
   OpenAPI.Model.Base,
@@ -327,6 +328,9 @@ begin
   Result.SetMemberCase(TNeonCase.CamelCase)
     .SetPrettyPrint(True)
     .GetSerializers
+      //Neon Serializers
+      .RegisterSerializer(TJSONValueSerializer)
+      //Neon Serializers
       .RegisterSerializer(TNullableStringSerializer)
       .RegisterSerializer(TNullableBooleanSerializer)
       .RegisterSerializer(TNullableIntegerSerializer)
