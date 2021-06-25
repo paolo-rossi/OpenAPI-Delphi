@@ -492,6 +492,9 @@ end;
 
 procedure RegisterOpenAPISerializers(ARegistry: TNeonSerializerRegistry);
 begin
+  //Neon Serializers
+  ARegistry.RegisterSerializer(TJSONValueSerializer);
+
   ARegistry.RegisterSerializer(TNullableStringSerializer);
   ARegistry.RegisterSerializer(TNullableBooleanSerializer);
   ARegistry.RegisterSerializer(TNullableIntegerSerializer);

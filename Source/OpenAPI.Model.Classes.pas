@@ -1587,6 +1587,13 @@ type
     constructor Create;
   end;
 
+
+  TOpenAPIVersion = (v303, v310);
+  TOpenAPIVersionHelper = record helper for TOpenAPIVersion
+  public
+    function ToString: string;
+  end;
+
   /// <summary>
   ///   A document (or set of documents) that defines or describes an API. An Openapi
   ///   definition uses and conforms to the Openapi Specification
@@ -1601,14 +1608,16 @@ type
     FSecurity: TOpenAPISecurityRequirements;
     FTags: TOpenAPITags;
     FExternalDocs: TOpenAPIExternalDocs;
+    FExtensions: TJSONObject;
   public
-    constructor Create(const AVersion: string);
+    constructor Create(AVersion: TOpenAPIVersion);
     destructor Destroy; override;
   public
     function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddPath(const AKeyName: string): TOpenAPIPathItem;
     function AddTag(const AName, ADescription: string): TOpenAPITag;
     procedure AddSecurity(ASchemeName: string; AParams: TArray<string>);
+    procedure ReplaceInfo(AInfo: TOpenAPIInfo);
   public
     /// <summary>
     ///   REQUIRED. This string MUST be the semantic version number of the Openapi
@@ -1659,7 +1668,8 @@ type
     /// <summary>
     /// This object MAY be extended with Specification Extensions.
     /// </summary>
-    //property Extensions: TObjectDictionary<string, IOpenApiExtension>;
+    [NeonUnwrapped] [NeonInclude(IncludeIf.NotEmpty)]
+    property Extensions: TJSONObject read FExtensions write FExtensions;
   end;
 
 
@@ -1911,9 +1921,9 @@ begin
   FTags.Add(Result);
 end;
 
-constructor TOpenAPIDocument.Create(const AVersion: string);
+constructor TOpenAPIDocument.Create(AVersion: TOpenAPIVersion);
 begin
-  FOpenapi := AVersion;
+  FOpenapi := AVersion.ToString;
 
   FInfo := TOpenAPIInfo.Create;
   FPaths := TOpenAPIPathMap.Create;
@@ -1922,6 +1932,7 @@ begin
   FSecurity := TOpenAPISecurityRequirements.Create;
   FTags := TOpenAPITags.Create;
   //FExternalDocs := TOpenAPIExternalDocs.Create;
+  FExtensions := TJSONObject.Create;
 end;
 
 destructor TOpenAPIDocument.Destroy;
@@ -1933,8 +1944,16 @@ begin
   FServers.Free;
   FPaths.Free;
   FInfo.Free;
+  FExtensions.Free;
 
   inherited;
+end;
+
+procedure TOpenAPIDocument.ReplaceInfo(AInfo: TOpenAPIInfo);
+begin
+  if Assigned(FInfo) then
+    FInfo.Free;
+  FInfo := AInfo;
 end;
 
 { TOpenAPIPathMap }
@@ -2451,6 +2470,17 @@ begin
   end
   else
     raise EOpenAPIException.CreateFmt('The scheme [%s] does not exists in securityDefinitions', [ASchemeName]);
+end;
+
+{ TOpenAPIVersionHelper }
+
+function TOpenAPIVersionHelper.ToString: string;
+begin
+  Result := '';
+  case Self of
+    TOpenAPIVersion.v303: Result := '3.0.3';
+    TOpenAPIVersion.v310: Result := '3.1.0';
+  end;
 end;
 
 end.
