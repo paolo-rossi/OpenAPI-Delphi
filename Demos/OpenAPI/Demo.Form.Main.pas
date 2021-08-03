@@ -100,6 +100,12 @@ begin
   LJSON.AddPair('altText', 'WiRL Logo');
 
   FDocument.Info.Extensions.AddPair('x-logo', LJSON);
+
+  FDocument.Info.Ext.Add('test', 'prova');
+  FDocument.Info.Ext.Add('xyz', TStringList.Create.Add('Prova Item 1'));
+
+
+
 end;
 
 procedure TfrmMain.actAddServersExecute(Sender: TObject);
@@ -224,7 +230,7 @@ end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
-  FDocument := TOpenAPIDocument.Create('3.0.3');
+  FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
 end;
 
 end.

@@ -3,7 +3,7 @@ unit OpenAPI.Model.Base;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
 
   Neon.Core.Types,
   Neon.Core.Attributes,
@@ -31,6 +31,11 @@ type
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
+  TOpenAPIExtension = class(TObjectDictionary<string, TValue>)
+  public
+    constructor Create;
+  end;
+
 implementation
 
 { TOpenAPIModel }
@@ -43,6 +48,13 @@ end;
 function TOpenAPIModel.InternalCheckModel: Boolean;
 begin
   Result := True;
+end;
+
+{ TOpenAPIExtension }
+
+constructor TOpenAPIExtension.Create;
+begin
+  inherited Create();
 end;
 
 end.
