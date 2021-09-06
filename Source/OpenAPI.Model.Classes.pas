@@ -1348,7 +1348,7 @@ type
     FTitle: string;
     FVersion: string;
     FExtensions: TJSONObject;
-    FExt: TOpenAPIExtension;
+    //FExt: TOpenAPIExtension;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1391,7 +1391,7 @@ type
     [NeonUnwrapped] [NeonInclude(IncludeIf.NotEmpty)]
     property Extensions: TJSONObject read FExtensions write FExtensions;
 
-    property Ext: TOpenAPIExtension read FExt write FExt;
+    //property Ext: TOpenAPIExtension read FExt write FExt;
   end;
 
   /// <summary>
@@ -1973,12 +1973,12 @@ begin
   FContact := TOpenAPIContact.Create;
   FLicense := TOpenAPILicense.Create;
   FExtensions := TJSONObject.Create;
-  FExt := TOpenAPIExtension.Create;
+  //FExt := TOpenAPIExtension.Create;
 end;
 
 destructor TOpenAPIInfo.Destroy;
 begin
-  FExt.Free;
+  //FExt.Free;
   FExtensions.Free;
   FLicense.Free;
   FContact.Free;
