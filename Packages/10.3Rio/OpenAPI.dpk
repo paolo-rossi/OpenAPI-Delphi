@@ -47,7 +47,7 @@ package OpenAPI;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Delphi OpenAPI 3 Library'}
-{$LIBSUFFIX '280'}
+{$LIBSUFFIX '260'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -68,3 +68,4 @@ contains
   OpenAPI.Neon.Serializers in '..\..\Source\OpenAPI.Neon.Serializers.pas';
 
 end.
+
