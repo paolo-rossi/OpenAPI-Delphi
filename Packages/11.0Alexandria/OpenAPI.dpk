@@ -19,16 +19,52 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
-unit OpenAPI.Core.Exceptions;
+package OpenAPI;
 
-interface
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Delphi JOSE JWT Library'}
+{$LIBSUFFIX '280'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
 
-uses
-  System.SysUtils, System.Classes;
+requires
+  rtl,
+  Neon;
 
-type
-  EOpenAPIException = class(Exception);
-
-implementation
+contains
+  OpenAPI.Core.Exceptions in '..\..\Source\OpenAPI.Core.Exceptions.pas',
+  OpenAPI.Core.Interfaces in '..\..\Source\OpenAPI.Core.Interfaces.pas',
+  OpenAPI.Model.Any in '..\..\Source\OpenAPI.Model.Any.pas',
+  OpenAPI.Model.Base in '..\..\Source\OpenAPI.Model.Base.pas',
+  OpenAPI.Model.Classes in '..\..\Source\OpenAPI.Model.Classes.pas',
+  OpenAPI.Model.Expressions in '..\..\Source\OpenAPI.Model.Expressions.pas',
+  OpenAPI.Model.JsonPointer in '..\..\Source\OpenAPI.Model.JsonPointer.pas',
+  OpenAPI.Model.Reference in '..\..\Source\OpenAPI.Model.Reference.pas',
+  OpenAPI.Model.Schema in '..\..\Source\OpenAPI.Model.Schema.pas',
+  OpenAPI.Neon.Serializers in '..\..\Source\OpenAPI.Neon.Serializers.pas';
 
 end.

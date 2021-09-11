@@ -10,7 +10,6 @@ object frmMain: TfrmMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -49,7 +48,7 @@ object frmMain: TfrmMain
       object CategoryButtons1: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 196
+        Width = 194
         Height = 415
         Align = alClient
         ButtonFlow = cbfVertical
@@ -115,7 +114,7 @@ object frmMain: TfrmMain
       object CategoryButtons2: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 196
+        Width = 194
         Height = 94
         Align = alClient
         ButtonFlow = cbfVertical
@@ -127,7 +126,7 @@ object frmMain: TfrmMain
       object catJSON: TCategoryButtons
         Left = 0
         Top = 0
-        Width = 196
+        Width = 194
         Height = 94
         Align = alClient
         ButtonFlow = cbfVertical

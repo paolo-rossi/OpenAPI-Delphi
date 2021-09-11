@@ -101,10 +101,9 @@ begin
 
   FDocument.Info.Extensions.AddPair('x-logo', LJSON);
 
-  FDocument.Info.Ext.Add('test', 'prova');
-  FDocument.Info.Ext.Add('xyz', TStringList.Create.Add('Prova Item 1'));
-
-
+  // Testing the Dictionary serialization for Extensions
+  //FDocument.Info.Ext.Add('test', 'prova');
+  //FDocument.Info.Ext.Add('xyz', TStringList.Create.Add('Prova Item 1'));
 
 end;
 
