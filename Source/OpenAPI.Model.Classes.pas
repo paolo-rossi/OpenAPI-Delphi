@@ -288,6 +288,8 @@ type
     constructor Create(const AName, ALocation: string); overload;
 
     destructor Destroy; override;
+
+    function GetHash: string;
   public
     /// <summary>
     /// REQUIRED. The name of the parameter. Parameter names are case sensitive.
@@ -402,8 +404,15 @@ type
   end;
 
   TOpenAPIParameters = class(TObjectList<TOpenAPIParameter>)
+  public
+    function ParamExists(AParam: TOpenAPIParameter): Boolean; overload;
+    function ParamExists(const AName, ALocation: string): Boolean; overload;
+    function FindParam(const AName, ALocation: string): TOpenAPIParameter;
   end;
 
+  /// <summary>
+  /// Used only in Components
+  /// </summary>
   TOpenAPIParameterMap = class(TObjectDictionary<string, TOpenAPIParameter>)
   public
     constructor Create;
@@ -1506,7 +1515,7 @@ type
   public
     function AddOperation(const AType: TOperationType): TOpenAPIOperation;
     function AddServer(const AKeyName: string): TOpenAPIServer;
-    function AddParameter(const AName: string): TOpenAPIParameter;
+    function AddParameter(const AName, ALocation: string): TOpenAPIParameter;
   public
     /// <summary>
     /// An optional, string summary, intended to apply to all operations in this path.
@@ -2061,11 +2070,15 @@ begin
   end;
 end;
 
-function TOpenAPIPathItem.AddParameter(const AName: string): TOpenAPIParameter;
+function TOpenAPIPathItem.AddParameter(const AName, ALocation: string): TOpenAPIParameter;
 begin
-  Result := TOpenAPIParameter.Create;
-  Result.Name := AName;
-  FParameters.Add(Result);
+  Result := FParameters.FindParam(AName, ALocation);
+
+  if not Assigned(Result) then
+  begin
+    Result := TOpenAPIParameter.Create(AName, ALocation);
+    FParameters.Add(Result);
+  end;
 end;
 
 function TOpenAPIPathItem.AddServer(const AKeyName: string): TOpenAPIServer;
@@ -2111,8 +2124,13 @@ end;
 
 function TOpenAPIOperation.AddParameter(const AName, ALocation: string): TOpenAPIParameter;
 begin
-  Result := TOpenAPIParameter.Create(AName, ALocation);
-  FParameters.Add(Result);
+  Result := FParameters.FindParam(AName, ALocation);
+
+  if not Assigned(Result) then
+  begin
+    Result := TOpenAPIParameter.Create(AName, ALocation);
+    FParameters.Add(Result);
+  end;
 end;
 
 function TOpenAPIOperation.AddRequestBody(const ADescription: string): TOpenAPIRequestBody;
@@ -2308,6 +2326,11 @@ begin
   inherited;
 end;
 
+function TOpenAPIParameter.GetHash: string;
+begin
+  Result := FName + '#' + FIn_;
+end;
+
 { TOpenAPICallback }
 
 constructor TOpenAPICallback.Create;
@@ -2475,6 +2498,38 @@ begin
   end
   else
     raise EOpenAPIException.CreateFmt('The scheme [%s] does not exists in securityDefinitions', [ASchemeName]);
+end;
+
+{ TOpenAPIParameters }
+
+function TOpenAPIParameters.ParamExists(AParam: TOpenAPIParameter): Boolean;
+var
+  LParam: TOpenAPIParameter;
+begin
+  Result := False;
+  for LParam in Self do
+    if LParam.GetHash = AParam.GetHash then
+      Exit(True);
+end;
+
+function TOpenAPIParameters.FindParam(const AName, ALocation: string): TOpenAPIParameter;
+var
+  LParam: TOpenAPIParameter;
+begin
+  Result := nil;
+  for LParam in Self do
+    if (LParam.Name = AName) and (LParam.In_ = ALocation) then
+      Exit(LParam);
+end;
+
+function TOpenAPIParameters.ParamExists(const AName, ALocation: string): Boolean;
+var
+  LParam: TOpenAPIParameter;
+begin
+  Result := False;
+  for LParam in Self do
+    if (LParam.Name = AName) and (LParam.In_ = ALocation) then
+      Exit(True);
 end;
 
 { TOpenAPIVersionHelper }
