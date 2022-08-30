@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{6C9DE12E-3603-42EF-921C-877D0FB57D60}</ProjectGuid>
+        <ProjectGuid>{511659C1-0C7F-4B9E-BEDF-0B30D8057D8D}</ProjectGuid>
         <MainSource>OpenAPI.dpk</MainSource>
         <ProjectVersion>19.3</ProjectVersion>
         <FrameworkType>None</FrameworkType>
