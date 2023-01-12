@@ -194,11 +194,11 @@ object frmMain: TfrmMain
       Caption = 'Add RequestBodies'
     end
     object actJSONGenerate: TAction
-      Caption = 'Generate SON'
+      Caption = 'Generate JSON'
       OnExecute = actJSONGenerateExecute
     end
     object actJSONReplace: TAction
-      Caption = 'Replace Ecaped Slash "/"'
+      Caption = 'Replace Escaped Slash "/"'
       OnExecute = actJSONReplaceExecute
     end
   end
