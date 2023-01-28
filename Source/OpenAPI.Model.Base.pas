@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2021 Paolo Rossi                                         }
+{  Copyright (c) 2018-2023 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -28,6 +28,7 @@ uses
 
   Neon.Core.Types,
   Neon.Core.Attributes,
+  OpenAPI.Core.Exceptions,
   OpenAPI.Model.Reference;
 
 type
@@ -36,7 +37,13 @@ type
   /// </summary>
   TOpenAPIModel = class
   protected
+    FSubObjects: TObjectList<TObject>;
     function InternalCheckModel: Boolean; virtual;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function CreateSubObject<T: class, constructor>: T;
+    function AddSubObject<T: class>(Value: T): T;
   public
     function CheckModel: Boolean; inline;
   end;
@@ -61,9 +68,32 @@ implementation
 
 { TOpenAPIModel }
 
+function TOpenAPIModel.AddSubObject<T>(Value: T): T;
+begin
+  FSubObjects.Add(Value);
+  Result := Value;
+end;
+
 function TOpenAPIModel.CheckModel: Boolean;
 begin
   Result := InternalCheckModel;
+end;
+
+constructor TOpenAPIModel.Create;
+begin
+  FSubObjects := TObjectList<TObject>.Create(True);
+end;
+
+function TOpenAPIModel.CreateSubObject<T>: T;
+begin
+  Result := T.Create;
+  FSubObjects.Add(Result);
+end;
+
+destructor TOpenAPIModel.Destroy;
+begin
+  FSubObjects.Free;
+  inherited;
 end;
 
 function TOpenAPIModel.InternalCheckModel: Boolean;

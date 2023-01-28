@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2021 Paolo Rossi                                         }
+{  Copyright (c) 2018-2023 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -287,8 +287,6 @@ type
     constructor Create; overload;
     constructor Create(const AName, ALocation: string); overload;
 
-    destructor Destroy; override;
-
     function GetHash: string;
   public
     /// <summary>
@@ -405,6 +403,7 @@ type
 
   TOpenAPIParameters = class(TObjectList<TOpenAPIParameter>)
   public
+    constructor Create;
     function ParamExists(AParam: TOpenAPIParameter): Boolean; overload;
     function ParamExists(const AName, ALocation: string): Boolean; overload;
     function FindParam(const AName, ALocation: string): TOpenAPIParameter;
@@ -431,7 +430,6 @@ type
     FValue: TOpenAPIAny;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// Short description for the example.
@@ -491,7 +489,6 @@ type
     FExample: TOpenAPIAny;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// The schema defining the type used for the request body.
@@ -555,7 +552,6 @@ type
     FExample: TOpenAPIAny;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// Indicates if object is populated with data or is just a reference to the data
@@ -649,7 +645,6 @@ type
     FAllowReserved: NullBoolean;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// The Content-Type for encoding a specific property.
@@ -728,7 +723,6 @@ type
     FReference: TOpenAPIReference;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// The name of the tag.
@@ -775,7 +769,6 @@ type
     FContent: TOpenAPIMediaTypeMap;
   public
     constructor Create;
-    destructor Destroy; override;
     function AddMediaType(const AKeyName: string): TOpenAPIMediaType;
   public
     /// <summary>
@@ -847,6 +840,8 @@ type
   end;
 
   TOpenAPIServerVariableMap = class(TObjectDictionary<string, TOpenAPIServerVariable>)
+  public
+    constructor Create;
   end;
 
   /// <summary>
@@ -860,7 +855,6 @@ type
   public
     constructor Create; overload;
     constructor Create(const AURL, ADescription: string); overload;
-    destructor Destroy; override;
   public
     /// <summary>
     /// An optional string describing the host designated by the Url. CommonMark syntax MAY be used for rich text representation.
@@ -904,7 +898,6 @@ type
     FServer: TOpenAPIServer;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// A relative or absolute reference to an OAS operation.
@@ -960,7 +953,6 @@ type
     FHeaders: TOpenAPIHeaderMap;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     function AddHeader(const AKeyName: string): TOpenAPIHeader;
     function AddMediaType(const AKeyName: string): TOpenAPIMediaType;
@@ -1007,7 +999,6 @@ type
     FReference: TOpenAPIReference;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// A Path Item Object used to define a callback request and expected responses.
@@ -1047,7 +1038,6 @@ type
     FScopes: TDictionary<string, string>;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// REQUIRED. The authorization Url to be used for this flow.
@@ -1086,7 +1076,6 @@ type
     FAuthorizationCode: TOpenAPIOAuthFlow;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// Configuration for the OAuth Implicit flow
@@ -1131,8 +1120,6 @@ type
     FReference: TOpenAPIReference;
   public
     constructor Create;
-    destructor Destroy; override;
-
     function ShouldInclude(const AContext: TNeonIgnoreIfContext): Boolean;
   public
     /// <summary>
@@ -1236,7 +1223,6 @@ type
     FResponses: TOpenAPIResponseMap;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     procedure AddTag(const AName: string);
     function AddResponse(ACode: Integer): TOpenAPIResponse; overload;
@@ -1360,7 +1346,6 @@ type
     //FExt: TOpenAPIExtension;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     /// <summary>
     /// REQUIRED. The title of the application.
@@ -1420,7 +1405,6 @@ type
     function AddSecurityScheme(const AName, ADescription: string; AType: TSecurityScheme): TOpenAPISecurityScheme;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     function SchemaExists(const AKeyName: string): Boolean;
     function AddSchema(const AKeyName: string): TOpenAPISchema;
@@ -1511,7 +1495,6 @@ type
     FOptions: TOpenAPIOperation;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     function AddOperation(const AType: TOperationType): TOpenAPIOperation;
     function AddServer(const AKeyName: string): TOpenAPIServer;
@@ -1623,7 +1606,6 @@ type
     FExtensions: TJSONObject;
   public
     constructor Create(AVersion: TOpenAPIVersion);
-    destructor Destroy; override;
   public
     function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddPath(const AKeyName: string): TOpenAPIPathItem;
@@ -1691,20 +1673,18 @@ implementation
 
 constructor TOpenAPIServer.Create;
 begin
-  FVariables := TOpenAPIServerVariableMap.Create([doOwnsValues]);
+  inherited Create;
+
+  FVariables := CreateSubObject<TOpenAPIServerVariableMap>;
 end;
 
 constructor TOpenAPIServer.Create(const AURL, ADescription: string);
 begin
+  Create;
+
   FUrl := AURL;
   if not ADescription.IsEmpty then
     FDescription := ADescription;
-end;
-
-destructor TOpenAPIServer.Destroy;
-begin
-  FVariables.Free;
-  inherited;
 end;
 
 { TOpenAPIResponse }
@@ -1729,18 +1709,11 @@ end;
 
 constructor TOpenAPIResponse.Create;
 begin
-  FHeaders := TOpenAPIHeaderMap.Create;
-  FContent := TOpenAPIMediaTypeMap.Create;
-  FLinks := TOpenAPILinkMap.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIResponse.Destroy;
-begin
-  FLinks.Free;
-  FContent.Free;
-  FHeaders.Free;
-
-  inherited;
+  FHeaders := CreateSubObject<TOpenAPIHeaderMap>;
+  FContent := CreateSubObject<TOpenAPIMediaTypeMap>;
+  FLinks := CreateSubObject<TOpenAPILinkMap>;
 end;
 
 function TOpenAPIResponse.AddHeader(const AKeyName: string): TOpenAPIHeader;
@@ -1828,30 +1801,17 @@ end;
 
 constructor TOpenAPIComponents.Create;
 begin
-  FSchemas := TOpenAPISchemaMap.Create;
-  FResponses := TOpenAPIResponseMap.Create;
-  FParameters := TOpenAPIParameterMap.Create;
-  FExamples := TOpenAPIExampleMap.Create;
-  FRequestBodies := TOpenAPIRequestBodyMap.Create;
-  FHeaders := TOpenAPIHeaderMap.Create;
-  FSecuritySchemes := TOpenAPISecuritySchemeMap.Create;
-  FLinks := TOpenAPILinkMap.Create;
-  FCallbacks := TOpenAPICallbackMap.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIComponents.Destroy;
-begin
-  FCallbacks.Free;
-  FLinks.Free;
-  FSecuritySchemes.Free;
-  FHeaders.Free;
-  FRequestBodies.Free;
-  FExamples.Free;
-  FParameters.Free;
-  FResponses.Free;
-  FSchemas.Free;
-
-  inherited;
+  FSchemas := CreateSubObject<TOpenAPISchemaMap>;
+  FResponses := CreateSubObject<TOpenAPIResponseMap>;
+  FParameters := CreateSubObject<TOpenAPIParameterMap>;
+  FExamples := CreateSubObject<TOpenAPIExampleMap>;
+  FRequestBodies := CreateSubObject<TOpenAPIRequestBodyMap>;
+  FHeaders := CreateSubObject<TOpenAPIHeaderMap>;
+  FSecuritySchemes := CreateSubObject<TOpenAPISecuritySchemeMap>;
+  FLinks := CreateSubObject<TOpenAPILinkMap>;
+  FCallbacks := CreateSubObject<TOpenAPICallbackMap>;
 end;
 
 function TOpenAPIComponents.SchemaExists(const AKeyName: string): Boolean;
@@ -1865,18 +1825,11 @@ end;
 
 constructor TOpenAPILink.Create;
 begin
-  //FRequestBody := TRuntimeExpression.Create;
-  FParameters := TRuntimeExpressionMap.Create;;
-  FServer := TOpenAPIServer.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPILink.Destroy;
-begin
-  FServer.Free;
-  FParameters.Free;
-  FRequestBody.Free;
-
-  inherited;
+  //FRequestBody := CreateSubObject<TRuntimeExpression>;
+  FParameters := CreateSubObject<TRuntimeExpressionMap>;
+  FServer := CreateSubObject<TOpenAPIServer>;
 end;
 
 { TOpenAPIParameterMap }
@@ -1935,30 +1888,18 @@ end;
 
 constructor TOpenAPIDocument.Create(AVersion: TOpenAPIVersion);
 begin
+  inherited Create;
+
   FOpenapi := AVersion.ToString;
 
-  FInfo := TOpenAPIInfo.Create;
-  FPaths := TOpenAPIPathMap.Create;
-  FServers := TOpenAPIServers.Create;
-  FComponents := TOpenAPIComponents.Create;
-  FSecurity := TOpenAPISecurityRequirements.Create;
-  FTags := TOpenAPITags.Create;
-  //FExternalDocs := TOpenAPIExternalDocs.Create;
-  FExtensions := TJSONObject.Create;
-end;
-
-destructor TOpenAPIDocument.Destroy;
-begin
-  //FExternalDocs.Free;
-  FTags.Free;
-  FSecurity.Free;
-  FComponents.Free;
-  FServers.Free;
-  FPaths.Free;
-  FInfo.Free;
-  FExtensions.Free;
-
-  inherited;
+  FInfo := CreateSubObject<TOpenAPIInfo>;
+  FPaths := CreateSubObject<TOpenAPIPathMap>;
+  FServers := CreateSubObject<TOpenAPIServers>;
+  FComponents := CreateSubObject<TOpenAPIComponents>;
+  FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
+  FTags := CreateSubObject<TOpenAPITags>;
+  //FExternalDocs := CreateSubObject<TOpenAPIExternalDocs>;
+  FExtensions := CreateSubObject<TJSONObject>;
 end;
 
 procedure TOpenAPIDocument.ReplaceInfo(AInfo: TOpenAPIInfo);
@@ -1979,20 +1920,12 @@ end;
 
 constructor TOpenAPIInfo.Create;
 begin
-  FContact := TOpenAPIContact.Create;
-  FLicense := TOpenAPILicense.Create;
-  FExtensions := TJSONObject.Create;
-  //FExt := TOpenAPIExtension.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIInfo.Destroy;
-begin
-  //FExt.Free;
-  FExtensions.Free;
-  FLicense.Free;
-  FContact.Free;
-
-  inherited;
+  FContact := CreateSubObject<TOpenAPIContact>;
+  FLicense := CreateSubObject<TOpenAPILicense>;
+  FExtensions := CreateSubObject<TJSONObject>;
+  //FExt := CreateSubObject<TOpenAPIExtension>;
 end;
 
 { TOpenAPIServers }
@@ -2051,7 +1984,7 @@ function TOpenAPIPathItem.AddOperation(const AType: TOperationType): TOpenAPIOpe
   function GetOrCreate(var ASource: TOpenAPIOperation): TOpenAPIOperation;
   begin
     if not Assigned(ASource) then
-      ASource := TOpenAPIOperation.Create;
+      ASource := CreateSubObject<TOpenAPIOperation>;
     Result := ASource;
   end;
 
@@ -2092,25 +2025,10 @@ end;
 
 constructor TOpenAPIPathItem.Create;
 begin
-  FServers := TOpenAPIServerMap.Create;
-  FParameters := TOpenAPIParameters.Create(True);
-end;
+  inherited Create;
 
-destructor TOpenAPIPathItem.Destroy;
-begin
-  FParameters.Free;
-  FServers.Free;
-
-  FGet.Free;
-  FPut.Free;
-  FPost.Free;
-  FHead.Free;
-  FPatch.Free;
-  FTrace.Free;
-  FDelete.Free;
-  FOptions.Free;
-
-  inherited;
+  FServers := CreateSubObject<TOpenAPIServerMap>;
+  FParameters := CreateSubObject<TOpenAPIParameters>;
 end;
 
 { TOpenAPIOperationMap }
@@ -2165,41 +2083,25 @@ end;
 
 constructor TOpenAPIOperation.Create;
 begin
-  //FExternalDocs: TOpenAPIExternalDocumentation;
-  FParameters := TOpenAPIParameters.Create;
-  //FRequestBody := TOpenAPIRequestBody.Create;
-  FCallbacks := TOpenAPICallbackMap.Create;
-  FSecurity := TOpenAPISecurityRequirements.Create;
-  FServers := TOpenAPIServers.Create;
-  FResponses := TOpenAPIResponseMap.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIOperation.Destroy;
-begin
-  FParameters.Free;
-  FExternalDocs.Free;
-  FRequestBody.Free;
-  FCallbacks.Free;
-  FSecurity.Free;
-  FServers.Free;
-  FResponses.Free;
-
-  inherited;
+  //FExternalDocs: CreateSubObject<TOpenAPIExternalDocumentation>;
+  FParameters := CreateSubObject<TOpenAPIParameters>;
+  //FRequestBody := CreateSubObject<TOpenAPIRequestBody>;
+  FCallbacks := CreateSubObject<TOpenAPICallbackMap>;
+  FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
+  FServers := CreateSubObject<TOpenAPIServers>;
+  FResponses := CreateSubObject<TOpenAPIResponseMap>;
 end;
 
 { TOpenAPIRequestBody }
 
 constructor TOpenAPIRequestBody.Create;
 begin
-  FReference := TOpenAPIReference.Create;
-  FContent := TOpenAPIMediaTypeMap.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIRequestBody.Destroy;
-begin
-  FReference.Free;
-  FContent.Free;
-  inherited;
+  FReference := CreateSubObject<TOpenAPIReference>;
+  FContent := CreateSubObject<TOpenAPIMediaTypeMap>;
 end;
 
 function TOpenAPIRequestBody.AddMediaType(const AKeyName: string): TOpenAPIMediaType;
@@ -2215,98 +2117,66 @@ end;
 
 constructor TOpenAPITag.Create;
 begin
-  //FExternalDocs: TOpenAPIExternalDocs;
-  FReference := TOpenAPIReference.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPITag.Destroy;
-begin
-  FReference.Free;
-  FExternalDocs.Free;
-
-  inherited;
+  //FExternalDocs: CreateSubObject<TOpenAPIExternalDocs>;
+  FReference := CreateSubObject<TOpenAPIReference>;
 end;
 
 { TOpenAPIExample }
 
 constructor TOpenAPIExample.Create;
 begin
-  FReference := TOpenAPIReference.Create;
-  FValue := TOpenAPIAny.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIExample.Destroy;
-begin
-  FValue.Free;
-  FReference.Free;
-
-  inherited;
+  FReference := CreateSubObject<TOpenAPIReference>;
+  FValue := CreateSubObject<TOpenAPIAny>;
 end;
 
 { TOpenAPIMediaType }
 
 constructor TOpenAPIMediaType.Create;
 begin
-  FSchema := TOpenAPISchema.Create;
-  FExamples := TOpenAPIExampleMap.Create;
-  FEncoding := TOpenAPIEncodingMap.Create;
-  FExample := TOpenAPIAny.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIMediaType.Destroy;
-begin
-  FSchema.Free;
-  FExamples.Free;
-  FEncoding.Free;
-  FExample.Free;
-
-  inherited;
+  FSchema := CreateSubObject<TOpenAPISchema>;
+  FExamples := CreateSubObject<TOpenAPIExampleMap>;
+  FEncoding := CreateSubObject<TOpenAPIEncodingMap>;
+  FExample := CreateSubObject<TOpenAPIAny>;
 end;
 
 { TOpenAPIHeader }
 
 constructor TOpenAPIHeader.Create;
 begin
-  FReference := TOpenAPIReference.Create;
-  FSchema := TOpenAPISchema.Create;
-  FExamples := TOpenAPIExampleMap.Create;
-  FContent := TOpenAPIMediaTypeMap.Create;
-  FExample := TOpenAPIAny.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIHeader.Destroy;
-begin
-  FReference.Free;
-  FSchema.Free;
-  FExamples.Free;
-  FContent.Free;
-  FExample.Free;
-
-  inherited;
+  FReference := CreateSubObject<TOpenAPIReference>;
+  FSchema := CreateSubObject<TOpenAPISchema>;
+  FExamples := CreateSubObject<TOpenAPIExampleMap>;
+  FContent := CreateSubObject<TOpenAPIMediaTypeMap>;
+  FExample := CreateSubObject<TOpenAPIAny>;
 end;
 
 { TOpenAPIEncoding }
 
 constructor TOpenAPIEncoding.Create;
 begin
-  FHeaders := TOpenAPIHeaderMap.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIEncoding.Destroy;
-begin
-  FHeaders.Free;
-
-  inherited;
+  FHeaders := CreateSubObject<TOpenAPIHeaderMap>;
 end;
 
 { TOpenAPIParameter }
 
 constructor TOpenAPIParameter.Create;
 begin
-  FSchema := TOpenAPISchema.Create;
-  FExamples := TOpenApiExamples.Create;
-  FContent := TOpenApiMediaTypeMap.Create;
-  FExample := TOpenAPIAny.Create;
+  inherited Create;
+
+  FSchema := CreateSubObject<TOpenAPISchema>;
+  FExamples := CreateSubObject<TOpenApiExamples>;
+  FContent := CreateSubObject<TOpenApiMediaTypeMap>;
+  FExample := CreateSubObject<TOpenAPIAny>;
 end;
 
 constructor TOpenAPIParameter.Create(const AName, ALocation: string);
@@ -2314,16 +2184,6 @@ begin
   Create;
   FName := AName;
   FIn_ := ALocation;
-end;
-
-destructor TOpenAPIParameter.Destroy;
-begin
-  FSchema.Free;
-  FExamples.Free;
-  FContent.Free;
-  FExample.Free;
-
-  inherited;
 end;
 
 function TOpenAPIParameter.GetHash: string;
@@ -2335,64 +2195,38 @@ end;
 
 constructor TOpenAPICallback.Create;
 begin
-  FReference := TOpenAPIReference.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPICallback.Destroy;
-begin
-  FReference.Free;
-
-  inherited;
+  FReference := CreateSubObject<TOpenAPIReference>;
 end;
 
 { TOpenAPIOAuthFlow }
 
 constructor TOpenAPIOAuthFlow.Create;
 begin
-  FScopes := TDictionary<string, string>.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPIOAuthFlow.Destroy;
-begin
-  FScopes.Free;
-
-  inherited;
+  FScopes := CreateSubObject<TDictionary<string, string>>;
 end;
 
 { TOpenAPIOAuthFlows }
 
 constructor TOpenAPIOAuthFlows.Create;
 begin
-  FImplicit := TOpenAPIOAuthFlow.Create;
-  FPassword := TOpenAPIOAuthFlow.Create;
-  FClientCredentials := TOpenAPIOAuthFlow.Create;
-  FAuthorizationCode := TOpenAPIOAuthFlow.Create;
-end;
-
-destructor TOpenAPIOAuthFlows.Destroy;
-begin
-  FImplicit.Free;
-  FPassword.Free;
-  FClientCredentials.Free;
-  FAuthorizationCode.Free;
-
-  inherited;
+  FImplicit := CreateSubObject<TOpenAPIOAuthFlow>;
+  FPassword := CreateSubObject<TOpenAPIOAuthFlow>;
+  FClientCredentials := CreateSubObject<TOpenAPIOAuthFlow>;
+  FAuthorizationCode := CreateSubObject<TOpenAPIOAuthFlow>;
 end;
 
 { TOpenAPISecurityScheme }
 
 constructor TOpenAPISecurityScheme.Create;
 begin
-  FFlows := TOpenAPIOAuthFlows.Create;
-  FReference := TOpenAPIReference.Create;
-end;
+  inherited Create;
 
-destructor TOpenAPISecurityScheme.Destroy;
-begin
-  FFlows.Free;
-  FReference.Free;
-
-  inherited;
+  FFlows := CreateSubObject<TOpenAPIOAuthFlows>;
+  FReference := CreateSubObject<TOpenAPIReference>;
 end;
 
 function TOpenAPISecurityScheme.ShouldInclude(const AContext: TNeonIgnoreIfContext): Boolean;
@@ -2512,6 +2346,11 @@ begin
       Exit(True);
 end;
 
+constructor TOpenAPIParameters.Create;
+begin
+  inherited Create(True);
+end;
+
 function TOpenAPIParameters.FindParam(const AName, ALocation: string): TOpenAPIParameter;
 var
   LParam: TOpenAPIParameter;
@@ -2541,6 +2380,13 @@ begin
     TOpenAPIVersion.v303: Result := '3.0.3';
     TOpenAPIVersion.v310: Result := '3.1.0';
   end;
+end;
+
+{ TOpenAPIServerVariableMap }
+
+constructor TOpenAPIServerVariableMap.Create;
+begin
+  inherited Create([doOwnsValues]);
 end;
 
 end.
