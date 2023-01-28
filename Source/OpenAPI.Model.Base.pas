@@ -25,8 +25,10 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Generics.Collections,
+  System.JSON,
 
   Neon.Core.Types,
+  Neon.Core.Nullables,
   Neon.Core.Attributes,
   OpenAPI.Core.Exceptions,
   OpenAPI.Model.Reference;
@@ -48,6 +50,11 @@ type
     function CheckModel: Boolean; inline;
   end;
 
+  /// <summary>
+  ///   Class for the <c>Reference Object</c>. The Reference Object is defined
+  ///   by <see cref="https://datatracker.ietf.org/doc/html/draft-pbryan-zyp-json-ref-03">
+  ///   JSON Reference</see> and follows the same structure, behavior and rules.
+  /// </summary>
   TOpenAPIModelReference = class(TOpenAPIModel)
   protected
     FReference: TOpenAPIReference;
@@ -59,9 +66,53 @@ type
     property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
+  /// <summary>
+  ///   Class for a property extension
+  /// </summary>
+  /// <remarks>
+  ///   Deprecated, use TOpenAPIExtensions
+  /// </remarks>
   TOpenAPIExtension = class(TObjectDictionary<string, TValue>)
   public
     constructor Create;
+  end;
+
+  /// <summary>
+  ///   Class for <c>OpenAPI Extensions</c>. Extensions are custom properties
+  ///   and they can be used to describe extra functionality that is not
+  ///   covered by the standard <c>OpenAPI</c> Specification.
+  /// </summary>
+  TOpenAPIExtensions = class(TOpenAPIModel)
+  private
+    FValues: TJSONObject;
+    procedure CheckName(const AName: string);
+  public
+    constructor Create;
+
+    procedure AddValue(const AName: string; const AValue: NullString); overload;
+    procedure AddValue(const AName: string; const AValue: NullDouble); overload;
+    procedure AddValue(const AName: string; const AValue: NullInteger); overload;
+    procedure AddValue(const AName: string; const AValue: NullBoolean); overload;
+
+    procedure AddObject(const AName: string; AValue: TJSONObject);
+    procedure AddArray(const AName: string; AValue: TJSONArray);
+  public
+    property Values: TJSONObject read FValues write FValues;
+  end;
+
+  /// <summary>
+  ///   Base class for OpenAPI classes that are Extensible ( <c>OpenAPIInfo,
+  ///   OpenAPIPaths, OpenAPIPathItem, OpenAPIOperation, OpenAPIParameter,
+  ///   OpenAPIResponses, OpenAPITag, OpenAPISecurityScheme</c>)
+  /// </summary>
+  TOpenAPIExtensible = class(TOpenAPIModel)
+  private
+    FExtensions: TOpenAPIExtensions;
+  public
+    constructor Create;
+
+    [NeonUnwrapped] [NeonInclude(IncludeIf.NotEmpty)]
+    property Extensions: TOpenAPIExtensions read FExtensions write FExtensions;
   end;
 
 implementation
@@ -106,6 +157,64 @@ end;
 constructor TOpenAPIExtension.Create;
 begin
   inherited Create();
+end;
+
+{ TOpenAPIExtensions }
+
+procedure TOpenAPIExtensions.AddArray(const AName: string; AValue: TJSONArray);
+begin
+  CheckName(AName);
+  FValues.AddPair(AName, AValue.Clone as TJSONValue);
+end;
+
+procedure TOpenAPIExtensions.AddObject(const AName: string; AValue: TJSONObject);
+begin
+  CheckName(AName);
+  FValues.AddPair(AName, AValue.Clone as TJSONValue);
+end;
+
+procedure TOpenAPIExtensions.AddValue(const AName: string; const AValue: NullString);
+begin
+  CheckName(AName);
+  FValues.AddPair(AName, AValue.Value);
+end;
+
+procedure TOpenAPIExtensions.AddValue(const AName: string; const AValue: NullDouble);
+begin
+  CheckName(AName);
+  FValues.AddPair(AName, AValue.Value);
+end;
+
+procedure TOpenAPIExtensions.AddValue(const AName: string; const AValue: NullInteger);
+begin
+  CheckName(AName);
+  FValues.AddPair(AName, AValue.Value);
+end;
+
+procedure TOpenAPIExtensions.AddValue(const AName: string; const AValue: NullBoolean);
+begin
+  CheckName(AName);
+  FValues.AddPair(AName, AValue.Value);
+end;
+
+procedure TOpenAPIExtensions.CheckName(const AName: string);
+begin
+  if not AName.StartsWith('x-') then
+    raise EOpenAPIException.Create('An extension must start with "x-"');
+end;
+
+constructor TOpenAPIExtensions.Create;
+begin
+  inherited Create;
+  FValues := CreateSubObject<TJSONObject>;
+end;
+
+{ TOpenAPIExtensible }
+
+constructor TOpenAPIExtensible.Create;
+begin
+  inherited Create;
+  FExtensions := CreateSubObject<TOpenAPIExtensions>;
 end;
 
 end.
