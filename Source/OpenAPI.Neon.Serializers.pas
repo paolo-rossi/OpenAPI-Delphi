@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2021 Paolo Rossi                                         }
+{  Copyright (c) 2018-2023 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -35,6 +35,7 @@ uses
   OpenAPI.Model.Any,
   OpenAPI.Model.Base,
   OpenAPI.Model.Classes,
+  OpenAPI.Model.Reference,
   OpenAPI.Model.Schema;
 
 type
@@ -106,6 +107,24 @@ type
   end;
 
   TOpenAPIReferenceSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
+  TOpenAPIPathItemSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
+  TOpenAPIExtensionsSerializer = class(TCustomSerializer)
   protected
     class function GetTargetInfo: PTypeInfo; override;
     class function CanHandle(AType: PTypeInfo): Boolean; override;
@@ -359,9 +378,11 @@ begin
       .RegisterSerializer(TNullableDoubleSerializer)
       .RegisterSerializer(TNullableTDateTimeSerializer)
       // OpenAPI Models
-      //.RegisterSerializer(TOpenAPIAnySerializer)
       .RegisterSerializer(TOpenAPIReferenceSerializer)
       .RegisterSerializer(TOpenAPISchemaSerializer)
+      .RegisterSerializer(TOpenAPIAnySerializer)
+      .RegisterSerializer(TOpenAPIPathItemSerializer)
+      .RegisterSerializer(TOpenAPIExtensionsSerializer)
   ;
 end;
 
@@ -377,8 +398,29 @@ end;
 
 function TOpenAPIAnySerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+var
+  LType: TRttiType;
+  LAny: TOpenAPIAny;
 begin
-  Result := nil;
+  Result := AData;
+
+  LAny := AData.AsObject as TOpenAPIAny;
+
+  if AValue is TJSONNumber then
+  begin
+    LType := TRttiUtils.Context.GetType(TypeInfo(Double));
+    LAny.ValueFrom<Double>((AValue as TJSONNumber).AsDouble);
+  end
+  else if AValue is TJSONString then
+  begin
+    LType := TRttiUtils.Context.GetType(TypeInfo(string));
+    LAny.ValueFrom<string>((AValue as TJSONString).Value);
+  end
+  else if AValue is TJSONBool then
+  begin
+    LType := TRttiUtils.Context.GetType(TypeInfo(Boolean));
+    LAny.ValueFrom<Boolean>((AValue as TJSONBool).AsBoolean);
+  end;
 end;
 
 class function TOpenAPIAnySerializer.GetTargetInfo: PTypeInfo;
@@ -417,8 +459,25 @@ end;
 
 function TOpenAPIReferenceSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+var
+  LType: TRttiType;
+  LRef: TOpenAPIModelReference;
+  LJSON: TJSONObject;
 begin
-  Result := nil;
+  Result := AData;
+  LRef := AData.AsObject as TOpenAPIModelReference;
+  LJSON := AValue as TJSONObject;
+
+  if Assigned(LJSON.Values['$ref']) then
+  begin
+    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
+    AContext.ReadDataMember(AValue, LType, LRef.Reference, False);
+  end
+  else
+  begin
+    LType := TRttiUtils.Context.GetType(AData.AsObject.ClassType);
+    AContext.ReadDataMember(AValue, LType, AData, False);
+  end;
 end;
 
 class function TOpenAPIReferenceSerializer.GetTargetInfo: PTypeInfo;
@@ -437,8 +496,7 @@ begin
     Exit(nil);
 
   if Assigned(LRefObj.Reference) and not (LRefObj.Reference.Ref.IsEmpty) then
-    Result := TJSONString.Create(LRefObj.Reference.Ref)
-    //AContext.WriteDataMember(LRefObj.Reference)
+    Exit(TJSONString.Create(LRefObj.Reference.Ref))
   else
   begin
     LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
@@ -466,8 +524,27 @@ end;
 function TOpenAPISchemaSerializer.Deserialize(AValue: TJSONValue;
   const AData: TValue; ANeonObject: TNeonRttiObject;
   AContext: IDeserializerContext): TValue;
+var
+  LType: TRttiType;
+  LSchema: TOpenAPISchema;
+  LJSONSchema: TJSONObject;
 begin
+  Result := AData;
 
+  LSchema := Result.AsObject as TOpenAPISchema;
+  LJSONSchema := AValue as TJSONObject;
+
+  if Assigned(LJSONSchema.Values['$ref']) then
+  begin
+    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
+    AContext.ReadDataMember(AValue, LType, LSchema.Reference, False);
+  end
+  else
+  begin
+    LType := TRttiUtils.Context.GetType(TOpenAPISchema);
+    //AContext.ReadDataMember(AValue, LType, Result, True);
+    AContext.ReadMembers(LType, LSchema, LJSONSchema);
+  end;
 end;
 
 class function TOpenAPISchemaSerializer.GetTargetInfo: PTypeInfo;
@@ -486,12 +563,12 @@ begin
   if LSchema = nil then
     Exit(nil);
 
-  // It's also a reference object
-  if Assigned(LSchema.Reference) and not (LSchema.Reference.Ref.IsEmpty) then
-  begin
-    Result := AContext.WriteDataMember(LSchema.Reference);
-    Exit;
-  end;
+  if LSchema.IsEmpty then
+    Exit(nil);
+
+  // The Schema has a reference
+  if LSchema.IsReference then
+    Exit(AContext.WriteDataMember(LSchema.Reference, False));
 
   if Assigned(LSchema.JSONObject) then
     Result := LSchema.JSONObject.Clone as TJSONObject
@@ -511,11 +588,105 @@ begin
   end;
 end;
 
+{ TOpenAPIPathItemSerializer }
+
+class function TOpenAPIPathItemSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPIPathItemSerializer.Deserialize(AValue: TJSONValue;
+  const AData: TValue; ANeonObject: TNeonRttiObject;
+  AContext: IDeserializerContext): TValue;
+var
+  LPath: TOpenAPIPathItem;
+  LOperation: TOpenAPIOperation;
+  LJSONPath: TJSONObject;
+  LOpType: TOperationType;
+  LType: TRttiType;
+  LJSONVal: TJSONValue;
+begin
+  Result := AData;
+  LPath := AData.AsObject as TOpenAPIPathItem;
+  LJSONPath := AValue as TJSONObject;
+  LType := TRttiUtils.Context.GetType(TOpenAPIOperation);
+
+  for LOpType := Low(TOperationType) to High(TOperationType) do
+  begin
+    LJSONVal := LJSONPath.Values[LOpType.ToString];
+    if Assigned(LJSONVal) then
+    begin
+      LOperation := LPath.AddOperation(LOpType);
+      AContext.ReadDataMember(LJSONVal, LType, LOperation, False);
+    end;
+  end;
+end;
+
+class function TOpenAPIPathItemSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPIPathItem.ClassInfo;
+end;
+
+function TOpenAPIPathItemSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+begin
+  Result := AContext.WriteDataMember(AValue, False);
+end;
+
+{ TOpenAPIExtensionsSerializer }
+
+class function TOpenAPIExtensionsSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPIExtensionsSerializer.Deserialize(AValue: TJSONValue;
+  const AData: TValue; ANeonObject: TNeonRttiObject;
+  AContext: IDeserializerContext): TValue;
+var
+  LExt: TOpenAPIExtensions;
+  LJSONValues: TJSONObject;
+  LPair: TJSONPair;
+begin
+  Result := AData;
+  LExt := AData.AsObject as TOpenAPIExtensions;
+  LJSONValues := AValue as TJSONObject;
+
+  for LPair in LJSONValues do
+  begin
+    if LPair.JsonString.Value.StartsWith('x-') then
+      LExt.Values.AddPair(LPair.Clone as TJSONPair);
+  end;
+end;
+
+class function TOpenAPIExtensionsSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPIExtensions.ClassInfo;
+end;
+
+function TOpenAPIExtensionsSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LExt: TOpenAPIExtensions;
+begin
+  LExt := AValue.AsType<TOpenAPIExtensions>;
+
+  if LExt = nil then
+    Exit(nil);
+
+  if LExt.Values.Count = 0 then
+    Exit(nil);
+
+  Result := AContext.WriteDataMember(LExt.Values, True);
+end;
+
 procedure RegisterOpenAPISerializers(ARegistry: TNeonSerializerRegistry);
 begin
   //Neon Serializers
   ARegistry.RegisterSerializer(TJSONValueSerializer);
+  //ARegistry.RegisterSerializer(TTValueSerializer);
 
+  //Nullable Serializers
   ARegistry.RegisterSerializer(TNullableStringSerializer);
   ARegistry.RegisterSerializer(TNullableBooleanSerializer);
   ARegistry.RegisterSerializer(TNullableIntegerSerializer);
@@ -523,8 +694,12 @@ begin
   ARegistry.RegisterSerializer(TNullableDoubleSerializer);
   ARegistry.RegisterSerializer(TNullableTDateTimeSerializer);
 
+  //OpenAPI Serializers
+  ARegistry.RegisterSerializer(TOpenAPIAnySerializer);
+  ARegistry.RegisterSerializer(TOpenAPIPathItemSerializer);
   ARegistry.RegisterSerializer(TOpenAPIReferenceSerializer);
   ARegistry.RegisterSerializer(TOpenAPISchemaSerializer);
+  ARegistry.RegisterSerializer(TOpenAPIExtensionsSerializer);
 end;
 
 end.

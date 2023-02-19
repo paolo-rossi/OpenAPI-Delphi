@@ -24,7 +24,7 @@ unit OpenAPI.Model.Schema;
 interface
 
 uses
-  System.Classes, System.Generics.Collections, System.JSON, System.Rtti,
+  System.SysUtils, System.Classes, System.Generics.Collections, System.JSON, System.Rtti,
 
   Neon.Core.Attributes,
   Neon.Core.Nullables,
@@ -54,7 +54,6 @@ type
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Mapping: TDictionary<string, string> read FMapping write FMapping;
-
   end;
 
   TOpenAPISchemaBase = class
@@ -90,17 +89,14 @@ type
     property Description: NullString read FDescription write FDescription;
   end;
 
-  TOpenAPISchemas = class(TObjectList<TOpenAPISchema>)
-  public
-    constructor Create;
-  end;
+  TOpenAPISchemas = class(TOpenAPIModelList<TOpenAPISchema>);
+  TOpenAPISchemaMap = class(TOpenAPIModelMap<TOpenAPISchema>);
 
-  TOpenAPISchemaMap = class(TObjectDictionary<string, TOpenAPISchema>)
-  public
-    constructor Create;
-  end;
+  TOpenAPIEnum = class(TOpenAPIModelList<TOpenAPIAny>);
 
   TOpenAPISchema = class(TOpenAPIModelReference)
+  private
+    FJSONObject: TJSONObject;
   private
     FFormat: NullString;
     FTitle: NullString;
@@ -131,20 +127,19 @@ type
     FAdditionalPropertiesAllowed: NullBoolean;
     FAdditionalProperties: TOpenAPISchema;
     FNullable: NullBoolean;
-    FUnresolvedReference: NullBoolean;
-    FReference: TOpenAPIReference;
-    //FDefault_: TOpenAPISchema;
-    FEnum: TOpenAPIAny;
+    FDefault_: TOpenAPIAny;
+    FEnum: TOpenAPIEnum;
     FDiscriminator: TOpenAPIDiscriminator;
-    FJSONObject: TJSONObject;
   public
     constructor Create;
+    destructor Destroy; override;
   public
     function AddProperty(const AKeyName: string): TOpenAPISchema;
+    function AddEnum(const AValue: TValue): TOpenAPIAny;
+
     procedure SetJSONObject(AJSON: TJSONObject);
     procedure SetSchemaReference(const AReference: string);
-
-    //procedure SetSchemaJSON(const AReference: string); overload;
+    function IsEmpty: Boolean;
 
     [NeonIgnore]
     property JSONObject: TJSONObject read FJSONObject write FJSONObject;
@@ -221,9 +216,8 @@ type
     /// Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level.
     /// For example, if type is string, then default can be "foo" but cannot be 1.
     /// </summary>
-    //[NeonProperty('default')] [NeonInclude(IncludeIf.NotEmpty)]
-    //property Default_: TOpenAPISchema read FDefault_ write FDefault_;
-    { TODO -opaolo -c : Il risultato è un valore (Any) 21/05/2019 14:47:36 }
+    [NeonProperty('default')] [NeonInclude(IncludeIf.NotEmpty)]
+    property Default_: TOpenAPIAny read FDefault_ write FDefault_;
 
     /// <summary>
     /// Relevant only for Schema "properties" definitions. Declares the property as "read only".
@@ -274,6 +268,7 @@ type
     /// </summary>
     [NeonInclude(IncludeIf.NotNull)]
     [NeonProperty('not')]
+    [NeonAutoCreate]
     property Not_: TOpenAPISchema read FNot_ write FNot_;
 
     /// <summary>
@@ -288,6 +283,7 @@ type
     /// and not a standard JSON Schema. items MUST be present if the type is array.
     /// </summary>
     [NeonInclude(IncludeIf.NotNull)]
+    [NeonAutoCreate]
     property Items: TOpenAPISchema read FItems write FItems;
 
     /// <summary>
@@ -333,6 +329,7 @@ type
     /// MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
     [NeonInclude(IncludeIf.NotNull)]
+    [NeonAutoCreate]
     property AdditionalProperties: TOpenAPISchema read FAdditionalProperties write FAdditionalProperties;
 
     /// <summary>
@@ -347,13 +344,14 @@ type
     /// To represent examples that cannot be naturally represented in JSON or YAML,
     /// a string value can be used to contain the example with escaping where necessary.
     /// </summary>
-    //public IOpenApiAny Example
+    //property Example IOpenApiAny
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Enum: TOpenAPIAny read FEnum write FEnum;
+    //property Enum: TOpenAPIAny read FEnum write FEnum;
+    property Enum: TOpenAPIEnum read FEnum write FEnum;
 
     /// <summary>
     /// Allows sending a null value for the defined schema. Default value is false.
@@ -364,22 +362,6 @@ type
     /// Additional external documentation for this schema.
     /// </summary>
     //ExternalDocs: TOpenApiExternalDocs;
-
-    /// <summary>
-    /// This object MAY be extended with Specification Extensions.
-    /// </summary>
-    //public IDictionary<string, IOpenApiExtension> Extensions  = new Dictionary<string, IOpenApiExtension>();
-
-    /// <summary>
-    /// Indicates object is a placeholder reference to an actual object and does not contain valid data.
-    /// </summary>
-    property UnresolvedReference: NullBoolean read FUnresolvedReference write FUnresolvedReference;
-
-    /// <summary>
-    /// Reference object.
-    /// </summary>
-    [NeonInclude(IncludeIf.NotEmpty)]
-    property Reference: TOpenAPIReference read FReference write FReference;
   end;
 
 implementation
@@ -399,6 +381,13 @@ end;
 
 { TOpenAPISchema }
 
+function TOpenAPISchema.AddEnum(const AValue: TValue): TOpenAPIAny;
+begin
+  Result := TOpenAPIAny.Create;
+  Result.Value := AValue;
+  FEnum.Add(Result);
+end;
+
 function TOpenAPISchema.AddProperty(const AKeyName: string): TOpenAPISchema;
 begin
   Result := TOpenAPISchema.Create;
@@ -410,7 +399,6 @@ constructor TOpenAPISchema.Create;
 begin
   inherited Create;
 
-  //FDefault_ := CreateSubObject<TOpenAPISchema>;
   FAllOf := CreateSubObject<TOpenAPISchemas>;
   FOneOf := CreateSubObject<TOpenAPISchemas>;
   FAnyOf := CreateSubObject<TOpenAPISchemas>;
@@ -419,8 +407,25 @@ begin
   FProperties := CreateSubObject<TOpenAPISchemaMap>;
   FDiscriminator := CreateSubObject<TOpenAPIDiscriminator>;
   //FAdditionalProperties := CreateSubObject<TOpenAPISchema>;
-  FReference := CreateSubObject<TOpenAPIReference>;
-  FEnum := CreateSubObject<TOpenAPIAny>;
+  FDefault_ := CreateSubObject<TOpenAPIAny>;
+  FEnum := CreateSubObject<TOpenAPIEnum>;
+end;
+
+destructor TOpenAPISchema.Destroy;
+begin
+  // You need to destroy these in case Neon creates them
+  FNot_.Free;
+  FItems.Free;
+  FAdditionalProperties.Free;
+
+  inherited;
+end;
+
+function TOpenAPISchema.IsEmpty: Boolean;
+begin
+  Result := FType_.IsNull and FTitle.IsNull and FFormat.IsNull and
+    FAllOf.IsEmpty and FAnyOf.IsEmpty and FOneOf.IsEmpty and FProperties.IsEmpty and
+    not IsReference();
 end;
 
 procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject);
@@ -428,25 +433,12 @@ begin
   if Assigned(FJSONObject) then
     FJSONObject.Free;
   FJSONObject := AJSON;
+  AddSubObject<TJSONObject>(FJSONObject);
 end;
 
 procedure TOpenAPISchema.SetSchemaReference(const AReference: string);
 begin
   Reference.Ref := '#/components/schemas/' + AReference;
-end;
-
-{ TOpenAPISchemaMap }
-
-constructor TOpenAPISchemaMap.Create;
-begin
-  inherited Create([doOwnsValues]);
-end;
-
-{ TOpenAPISchemas }
-
-constructor TOpenAPISchemas.Create;
-begin
-  inherited Create(True);
 end;
 
 end.

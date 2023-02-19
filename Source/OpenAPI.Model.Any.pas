@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2021 Paolo Rossi                                         }
+{  Copyright (c) 2018-2023 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -27,7 +27,8 @@ uses
   System.Rtti,
 
   Neon.Core.Attributes,
-  Neon.Core.Nullables;
+  Neon.Core.Nullables,
+  OpenAPI.Model.Base;
 
 {$SCOPEDENUMS ON}
 
@@ -179,6 +180,9 @@ type
     constructor Create(const AValue: string);
   end;
 
+  /// <summary>
+  ///   Class for representing... any value
+  /// </summary>
   TOpenAPIAny = class
   private
     FValue: TValue;
@@ -188,6 +192,9 @@ type
     [NeonInclude(IncludeIf.NotEmpty)]
     property Value: TValue read FValue write FValue;
   end;
+
+  TOpenAPIAnyValue = TValue;
+  TOpenAPIAnyValues = TOpenAPIList<TOpenAPIAnyValue>;
 
 implementation
 
