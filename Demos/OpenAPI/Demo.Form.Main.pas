@@ -29,9 +29,9 @@ type
   TfrmMain = class(TForm)
     memoDocument: TMemo;
     catMenu: TCategoryPanelGroup;
-    panGeneral: TCategoryPanel;
+    pnlSections: TCategoryPanel;
     CategoryButtons1: TCategoryButtons;
-    CategoryPanel1: TCategoryPanel;
+    pnlDocument: TCategoryPanel;
     CategoryButtons2: TCategoryButtons;
     catJSON: TCategoryButtons;
     aclCommands: TActionList;
@@ -48,6 +48,13 @@ type
     actCompAddParameters: TAction;
     actCompAddRequestBodies: TAction;
     actAddInfoExtensions: TAction;
+    actDocumentOpen: TAction;
+    actDocumentSave: TAction;
+    dlgOpenJSON: TOpenDialog;
+    actDocumentNew: TAction;
+    actDocumentClose: TAction;
+    dlgSaveDocument: TSaveDialog;
+    procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure actAddInfoExecute(Sender: TObject);
     procedure actAddInfoExtensionsExecute(Sender: TObject);
@@ -58,10 +65,14 @@ type
     procedure actCompAddSecurityDefsExecute(Sender: TObject);
     procedure actAddSecurityExecute(Sender: TObject);
     procedure actCompAddParametersExecute(Sender: TObject);
+    procedure actDocumentCloseExecute(Sender: TObject);
+    procedure actDocumentNewExecute(Sender: TObject);
     procedure actJSONGenerateExecute(Sender: TObject);
+    procedure actDocumentOpenExecute(Sender: TObject);
+    procedure actDocumentSaveExecute(Sender: TObject);
     procedure actJSONReplaceExecute(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
   private
+    FDocumentName: string;
     FDocument: TOpenAPIDocument;
   public
     { Public declarations }
@@ -72,7 +83,15 @@ var
 
 implementation
 
+uses
+  System.IOUtils;
+
 {$R *.dfm}
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+begin
+  dlgOpenJSON.InitialDir := TPath.GetDirectoryName(TPath.GetDirectoryName(Application.ExeName)) + '\Data\samples\';
+end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
@@ -99,7 +118,7 @@ begin
   LJSON.AddPair('backgroundColor', '#000000');
   LJSON.AddPair('altText', 'WiRL Logo');
 
-  FDocument.Info.Extensions.AddPair('x-logo', LJSON);
+  FDocument.Info.Extensions.Add('x-logo', LJSON);
 
   // Testing the Dictionary serialization for Extensions
   //FDocument.Info.Ext.Add('test', 'prova');
@@ -130,18 +149,19 @@ begin
       LParameter := LOperation.AddParameter('id', 'query');
       LParameter.Description := 'Customer ID';
       LParameter.Schema.Type_ := 'string';
-      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
 
       LParameter := LOperation.AddParameter('country', 'query');
       LParameter.Description := 'Country Code';
       LParameter.Schema.Type_ := 'string';
-      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
+      LParameter.Schema.AddEnum('it');
+      LParameter.Schema.AddEnum('br');
+      LParameter.Schema.AddEnum('us');
+      LParameter.Schema.AddEnum('uk');
 
       LParameter := LOperation.AddParameter('date', 'query');
       LParameter.Description := 'Date';
       LParameter.Schema.Type_ := 'string';
       LParameter.Schema.Format := 'date-time';
-      LParameter.Schema.Enum.ValueFrom<TArray<string>>(['it', 'en', 'de', 'ch', 'fr']);
 
       // Uses a JSON schema already existing as a TJSONObject
       LParameter := LOperation.AddParameter('person', 'query');
@@ -151,7 +171,7 @@ begin
       // Uses #ref
       LParameter := LOperation.AddParameter('order', 'query');
       LParameter.Description := 'Order Entity';
-      LParameter.Schema.Reference.Ref := '#comp/deidjed/';
+      LParameter.Schema.Reference.Ref := '#components/schemas/order';
 end;
 
 procedure TfrmMain.actCompAddResponsesExecute(Sender: TObject);
@@ -211,8 +231,21 @@ begin
   LParameter := FDocument.Components.AddParameter('idParam', 'id', 'query');
   LParameter.Description := 'Customer ID';
   LParameter.Schema.Type_ := 'string';
-  LParameter.Schema.Enum.ValueFrom<TArray<string>>(['enum1', 'enum2']);
-  LParameter.Schema.MaxLength := 123;
+  LParameter.Schema.MaxLength := 20;
+end;
+
+procedure TfrmMain.actDocumentCloseExecute(Sender: TObject);
+begin
+  FreeAndNil(FDocument);
+  memoDocument.Clear;
+  pnlSections.Visible := False;
+end;
+
+procedure TfrmMain.actDocumentNewExecute(Sender: TObject);
+begin
+  FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
+  pnlSections.Visible := True;
+  FDocumentName := 'MyAPI';
 end;
 
 procedure TfrmMain.actJSONGenerateExecute(Sender: TObject);
@@ -221,15 +254,47 @@ begin
     TNeon.ObjectToJSONString(FDocument, TOpenAPISerializer.GetNeonConfig);
 end;
 
+procedure TfrmMain.actDocumentOpenExecute(Sender: TObject);
+var
+  LDocument: TOpenAPIDocument;
+  LJSON: TJSONObject;
+  LConfig: INeonConfiguration;
+begin
+  if not dlgOpenJSON.Execute() then
+    Exit;
+
+  LDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
+  try
+    LJSON := TJSONObject.ParseJSONValue(TFile.ReadAllText(dlgOpenJSON.FileName)) as TJSONObject;
+    try
+      LConfig := TOpenAPISerializer.GetNeonConfig;
+
+      TNeon.JSONToObject(LDocument, LJSON, LConfig);
+    finally
+      LJSON.Free;
+    end;
+
+    // Serialization in order to see the document loaded
+    memoDocument.Text := TNeon.ObjectToJSONString(LDocument, LConfig);
+  finally
+    LDocument.Free;
+  end;
+  FDocumentName := TPath.GetFileNameWithoutExtension(dlgOpenJSON.FileName);
+end;
+
+procedure TfrmMain.actDocumentSaveExecute(Sender: TObject);
+begin
+  dlgSaveDocument.FileName := FDocumentName + '.json';
+  if not dlgSaveDocument.Execute then
+    Exit;
+
+  memoDocument.Lines.SaveToFile(dlgSaveDocument.FileName, TEncoding.UTF8);
+end;
+
 procedure TfrmMain.actJSONReplaceExecute(Sender: TObject);
 begin
   memoDocument.Lines.Text :=
     StringReplace(memoDocument.Lines.Text, '\/', '/', [rfReplaceAll]);
-end;
-
-procedure TfrmMain.FormCreate(Sender: TObject);
-begin
-  FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
 end;
 
 end.

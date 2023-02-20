@@ -12,7 +12,6 @@ object frmMain: TfrmMain
   Font.Style = []
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object memoDocument: TMemo
     Left = 200
@@ -28,6 +27,7 @@ object frmMain: TfrmMain
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 0
+    ExplicitLeft = 203
   end
   object catMenu: TCategoryPanelGroup
     Left = 0
@@ -40,16 +40,17 @@ object frmMain: TfrmMain
     HeaderFont.Name = 'Tahoma'
     HeaderFont.Style = []
     TabOrder = 1
-    object panGeneral: TCategoryPanel
-      Top = 0
-      Height = 441
-      Caption = 'OpenAPI Document'
+    object pnlSections: TCategoryPanel
+      Top = 192
+      Height = 369
+      Caption = 'Fill Document Sections'
       TabOrder = 0
+      Visible = False
       object CategoryButtons1: TCategoryButtons
         Left = 0
         Top = 0
         Width = 194
-        Height = 415
+        Height = 343
         Align = alClient
         ButtonFlow = cbfVertical
         ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boUsePlusMinus]
@@ -97,25 +98,33 @@ object frmMain: TfrmMain
               end
               item
                 Action = actAddSecurity
-              end
+              end>
+          end
+          item
+            Caption = 'Serialization'
+            Color = 16777194
+            Collapsed = False
+            Items = <
               item
+                Action = actJSONGenerate
               end>
           end>
         RegularButtonColor = clWhite
         SelectedButtonColor = 15132390
         TabOrder = 0
+        ExplicitHeight = 327
       end
     end
-    object CategoryPanel1: TCategoryPanel
-      Top = 441
-      Height = 120
-      Caption = 'JSON Generation'
+    object pnlDocument: TCategoryPanel
+      Top = 0
+      Height = 192
+      Caption = 'OpenAPI Document'
       TabOrder = 1
       object CategoryButtons2: TCategoryButtons
         Left = 0
         Top = 0
         Width = 194
-        Height = 94
+        Height = 166
         Align = alClient
         ButtonFlow = cbfVertical
         Categories = <>
@@ -127,19 +136,34 @@ object frmMain: TfrmMain
         Left = 0
         Top = 0
         Width = 194
-        Height = 94
+        Height = 166
         Align = alClient
         ButtonFlow = cbfVertical
         ButtonOptions = [boFullSize, boGradientFill, boShowCaptions, boUsePlusMinus]
         Categories = <
           item
-            Caption = 'Generation'
+            Caption = 'Document'
             Color = 15466474
             Collapsed = False
             Items = <
               item
-                Action = actJSONGenerate
+                Action = actDocumentNew
               end
+              item
+                Action = actDocumentClose
+              end
+              item
+                Action = actDocumentOpen
+              end
+              item
+                Action = actDocumentSave
+              end>
+          end
+          item
+            Caption = 'General'
+            Color = 16771818
+            Collapsed = False
+            Items = <
               item
                 Action = actJSONReplace
               end>
@@ -152,8 +176,8 @@ object frmMain: TfrmMain
   end
   object aclCommands: TActionList
     Images = imgCommands
-    Left = 64
-    Top = 144
+    Left = 176
+    Top = 168
     object actAddInfo: TAction
       Caption = 'Add Info Object'
       OnExecute = actAddInfoExecute
@@ -171,7 +195,7 @@ object frmMain: TfrmMain
       OnExecute = actAddPathsExecute
     end
     object actAddSecurity: TAction
-      Caption = 'actAddSecurity'
+      Caption = 'Add Security'
       OnExecute = actAddSecurityExecute
     end
     object actCompAddSchemas: TAction
@@ -194,16 +218,43 @@ object frmMain: TfrmMain
       Caption = 'Add RequestBodies'
     end
     object actJSONGenerate: TAction
-      Caption = 'Generate JSON'
+      Caption = 'Generate JSON Document'
       OnExecute = actJSONGenerateExecute
     end
     object actJSONReplace: TAction
       Caption = 'Replace Escaped Slash "/"'
       OnExecute = actJSONReplaceExecute
     end
+    object actDocumentOpen: TAction
+      Caption = 'Load Document (JSON)'
+      OnExecute = actDocumentOpenExecute
+    end
+    object actDocumentSave: TAction
+      Caption = 'Save Document (JSON)'
+      OnExecute = actDocumentSaveExecute
+    end
+    object actDocumentNew: TAction
+      Caption = 'New Document'
+      OnExecute = actDocumentNewExecute
+    end
+    object actDocumentClose: TAction
+      Caption = 'Close Document'
+      OnExecute = actDocumentCloseExecute
+    end
   end
   object imgCommands: TImageList
-    Left = 72
+    Left = 184
     Top = 216
+  end
+  object dlgOpenJSON: TOpenDialog
+    Filter = 'Schema Documents|*.json|All Files|*.*'
+    Left = 440
+    Top = 296
+  end
+  object dlgSaveDocument: TSaveDialog
+    DefaultExt = 'json'
+    Filter = 'OpenAPI Document|*.json'
+    Left = 440
+    Top = 360
   end
 end
