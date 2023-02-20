@@ -444,7 +444,7 @@ begin
   case ANeonObject.NeonInclude.Value of
     IncludeIf.NotEmpty, IncludeIf.NotDefault:
     begin
-      if (Result as TJSONObject).Count = 0 then
+      if not TJSONUtils.IsNotDefault(Result) then
         FreeAndNil(Result);
     end;
   end;
@@ -617,7 +617,7 @@ begin
     if Assigned(LJSONVal) then
     begin
       LOperation := LPath.AddOperation(LOpType);
-      AContext.ReadDataMember(LJSONVal, LType, LOperation, False);
+      AContext.ReadMembers(LType, LOperation, LJSONVal as TJSONObject);
     end;
   end;
 end;
