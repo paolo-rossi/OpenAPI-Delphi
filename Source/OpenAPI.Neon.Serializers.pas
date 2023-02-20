@@ -399,28 +399,17 @@ end;
 function TOpenAPIAnySerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
-  LType: TRttiType;
   LAny: TOpenAPIAny;
 begin
   Result := AData;
-
   LAny := AData.AsObject as TOpenAPIAny;
 
   if AValue is TJSONNumber then
-  begin
-    LType := TRttiUtils.Context.GetType(TypeInfo(Double));
-    LAny.ValueFrom<Double>((AValue as TJSONNumber).AsDouble);
-  end
+    LAny.ValueFrom<Double>((AValue as TJSONNumber).AsDouble)
   else if AValue is TJSONString then
-  begin
-    LType := TRttiUtils.Context.GetType(TypeInfo(string));
-    LAny.ValueFrom<string>((AValue as TJSONString).Value);
-  end
+    LAny.ValueFrom<string>((AValue as TJSONString).Value)
   else if AValue is TJSONBool then
-  begin
-    LType := TRttiUtils.Context.GetType(TypeInfo(Boolean));
     LAny.ValueFrom<Boolean>((AValue as TJSONBool).AsBoolean);
-  end;
 end;
 
 class function TOpenAPIAnySerializer.GetTargetInfo: PTypeInfo;
