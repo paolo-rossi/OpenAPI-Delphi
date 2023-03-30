@@ -1039,13 +1039,13 @@ type
     FResponses: TOpenAPIResponseMap;
   public
     constructor Create;
-    destructor Destroy; override;
   public
     procedure AddTag(const AName: string);
     function AddResponse(ACode: Integer): TOpenAPIResponse; overload;
     function AddResponse(const AName: string): TOpenAPIResponse; overload;
-    function AddRequestBody(const ADescription: string): TOpenAPIRequestBody;
     function AddParameter(const AName, ALocation: string): TOpenAPIParameter;
+
+    function SetRequestBody(const ADescription: string): TOpenAPIRequestBody;
   public
     /// <summary>
     /// A list of tags for API documentation control.
@@ -1756,10 +1756,10 @@ begin
   end;
 end;
 
-function TOpenAPIOperation.AddRequestBody(const ADescription: string): TOpenAPIRequestBody;
+function TOpenAPIOperation.SetRequestBody(const ADescription: string): TOpenAPIRequestBody;
 begin
   if not Assigned(FRequestBody) then
-    FRequestBody := TOpenAPIRequestBody.Create;
+    FRequestBody := CreateSubObject<TOpenAPIRequestBody>;
 
   FRequestBody.Description := ADescription;
   FRequestBody.Required := True;
@@ -1797,12 +1797,6 @@ begin
   FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
   FServers := CreateSubObject<TOpenAPIServers>;
   FResponses := CreateSubObject<TOpenAPIResponseMap>;
-end;
-
-destructor TOpenAPIOperation.Destroy;
-begin
-  FRequestBody.Free;
-  inherited;
 end;
 
 { TOpenAPIRequestBody }
