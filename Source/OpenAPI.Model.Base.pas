@@ -46,6 +46,7 @@ type
     destructor Destroy; override;
     function CreateSubObject<T: class, constructor>: T;
     function AddSubObject<T: class>(Value: T): T;
+    function RemoveSubObject<T: class>(const Value: T): Integer;
   public
     function CheckModel: Boolean; inline;
   end;
@@ -102,9 +103,7 @@ type
   end;
 
   /// <summary>
-  ///   Class for the <c>Reference Object</c>. The Reference Object is defined
-  ///   by <see cref="https://datatracker.ietf.org/doc/html/draft-pbryan-zyp-json-ref-03">
-  ///   JSON Reference</see> and follows the same structure, behavior and rules.
+  ///   Class for the <c>Reference Object</c>
   /// </summary>
   TOpenAPIModelReference = class(TOpenAPIExtensible)
   protected
@@ -215,6 +214,11 @@ end;
 function TOpenAPIModel.InternalCheckModel: Boolean;
 begin
   Result := True;
+end;
+
+function TOpenAPIModel.RemoveSubObject<T>(const Value: T): Integer;
+begin
+  Result := FSubObjects.Remove(Value);
 end;
 
 { TOpenAPIExtension }
