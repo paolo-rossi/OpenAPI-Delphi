@@ -24,10 +24,14 @@ unit OpenAPI.Model.Schema;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections, System.JSON, System.Rtti,
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  System.JSON, System.Rtti, System.TypInfo,
 
+  Neon.Core.Types,
   Neon.Core.Attributes,
   Neon.Core.Nullables,
+  Neon.Core.Persistence,
+  Neon.Core.Persistence.JSON.Schema,
 
   OpenAPI.Model.Any,
   OpenAPI.Model.Base,
@@ -95,8 +99,11 @@ type
   TOpenAPIEnum = class(TOpenAPIModelList<TOpenAPIAny>);
 
   TOpenAPISchema = class(TOpenAPIModelReference)
+  private class var
+    FNeonConfig: INeonConfiguration;
   private
     FJSONObject: TJSONObject;
+    FJSONOwned: Boolean;
   private
     FFormat: NullString;
     FTitle: NullString;
@@ -130,6 +137,8 @@ type
     FDefault_: TOpenAPIAny;
     FEnum: TOpenAPIEnum;
     FDiscriminator: TOpenAPIDiscriminator;
+  private
+    class function GetNeonConfig: INeonConfiguration; static;
   public
     constructor Create;
     destructor Destroy; override;
@@ -137,7 +146,10 @@ type
     function AddProperty(const AKeyName: string): TOpenAPISchema;
     function AddEnum(const AValue: TValue): TOpenAPIAny;
 
-    procedure SetJSONObject(AJSON: TJSONObject);
+    procedure SetJSONObject(AJSON: TJSONObject; AOwned: Boolean = True);
+    procedure SetJSONFromType(AType: TRttiType);
+    procedure SetJSONFromClass(AClass: TClass);
+
     procedure SetSchemaReference(const AReference: string);
     function IsEmpty: Boolean;
 
@@ -417,23 +429,45 @@ begin
   FNot_.Free;
   FItems.Free;
   FAdditionalProperties.Free;
+  if FJSONOwned then
+    FJSONObject.Free;
 
   inherited;
 end;
 
+class function TOpenAPISchema.GetNeonConfig: INeonConfiguration;
+begin
+  if not Assigned(FNeonConfig) then
+    FNeonConfig := TNeonConfiguration.Camel
+      .SetVisibility([mvPublic, mvPublished])
+      .SetPrettyPrint(True);
+  Result := FNeonConfig;
+end;
+
 function TOpenAPISchema.IsEmpty: Boolean;
 begin
-  Result := FType_.IsNull and FTitle.IsNull and FFormat.IsNull and
+  Result := not Assigned(FJSONObject) and FType_.IsNull and FTitle.IsNull and FFormat.IsNull and
     FAllOf.IsEmpty and FAnyOf.IsEmpty and FOneOf.IsEmpty and FProperties.IsEmpty and
     not IsReference();
 end;
 
-procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject);
+procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject; AOwned: Boolean);
 begin
-  if Assigned(FJSONObject) then
+  if Assigned(FJSONObject) and FJSONOwned then
     FJSONObject.Free;
+
   FJSONObject := AJSON;
-  AddSubObject<TJSONObject>(FJSONObject);
+  FJSONOwned := AOwned;
+end;
+
+procedure TOpenAPISchema.SetJSONFromClass(AClass: TClass);
+begin
+  SetJSONObject(TNeonSchemaGenerator.ClassToJSONSchema(AClass, GetNeonConfig));
+end;
+
+procedure TOpenAPISchema.SetJSONFromType(AType: TRttiType);
+begin
+  SetJSONObject(TNeonSchemaGenerator.TypeToJSONSchema(AType, GetNeonConfig));
 end;
 
 procedure TOpenAPISchema.SetSchemaReference(const AReference: string);
