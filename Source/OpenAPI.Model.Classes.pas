@@ -1039,6 +1039,7 @@ type
     FResponses: TOpenAPIResponseMap;
   public
     constructor Create;
+    destructor Destroy; override;
   public
     procedure AddTag(const AName: string);
     function AddResponse(ACode: Integer): TOpenAPIResponse; overload;
@@ -1759,7 +1760,7 @@ end;
 function TOpenAPIOperation.SetRequestBody(const ADescription: string): TOpenAPIRequestBody;
 begin
   if not Assigned(FRequestBody) then
-    FRequestBody := CreateSubObject<TOpenAPIRequestBody>;
+    FRequestBody := TOpenAPIRequestBody.Create;
 
   FRequestBody.Description := ADescription;
   FRequestBody.Required := True;
@@ -1797,6 +1798,13 @@ begin
   FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
   FServers := CreateSubObject<TOpenAPIServers>;
   FResponses := CreateSubObject<TOpenAPIResponseMap>;
+end;
+
+destructor TOpenAPIOperation.Destroy;
+begin
+  FRequestBody.Free;
+
+  inherited;
 end;
 
 { TOpenAPIRequestBody }
