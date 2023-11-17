@@ -98,10 +98,12 @@ type
 
   TOpenAPIEnum = class(TOpenAPIModelList<TOpenAPIAny>);
 
+  /// <summary>
+  ///   JSON Schema Object: https://json-schema.org/
+  /// </summary>
   TOpenAPISchema = class(TOpenAPIModelReference)
-  private class var
-    FNeonConfig: INeonConfiguration;
   private
+    FNeonConfig: INeonConfiguration;
     FJSONObject: TJSONObject;
     FJSONOwned: Boolean;
   private
@@ -138,15 +140,18 @@ type
     FEnum: TOpenAPIEnum;
     FDiscriminator: TOpenAPIDiscriminator;
   private
-    class function GetNeonConfig: INeonConfiguration; static;
+    function GetNeonConfig: INeonConfiguration;
   public
     constructor Create;
     destructor Destroy; override;
   public
+    function WithNeonConfig(AConfig: INeonConfiguration): TOpenAPISchema;
+
     function AddProperty(const AKeyName: string): TOpenAPISchema;
     function AddEnum(const AValue: TValue): TOpenAPIAny;
 
     procedure SetJSONObject(AJSON: TJSONObject; AOwned: Boolean = True);
+
     procedure SetJSONFromType(AType: TRttiType);
     procedure SetJSONFromClass(AClass: TClass);
 
@@ -435,12 +440,10 @@ begin
   inherited;
 end;
 
-class function TOpenAPISchema.GetNeonConfig: INeonConfiguration;
+function TOpenAPISchema.GetNeonConfig: INeonConfiguration;
 begin
   if not Assigned(FNeonConfig) then
-    FNeonConfig := TNeonConfiguration.Camel
-      .SetVisibility([mvPublic, mvPublished])
-      .SetPrettyPrint(True);
+    FNeonConfig := TNeonConfiguration.Camel;
   Result := FNeonConfig;
 end;
 
@@ -473,6 +476,12 @@ end;
 procedure TOpenAPISchema.SetSchemaReference(const AReference: string);
 begin
   Reference.Ref := '#/components/schemas/' + AReference;
+end;
+
+function TOpenAPISchema.WithNeonConfig(AConfig: INeonConfiguration): TOpenAPISchema;
+begin
+  FNeonConfig := AConfig;
+  Result := Self;
 end;
 
 end.
