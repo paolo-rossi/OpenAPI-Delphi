@@ -20,6 +20,10 @@
 - Full Support for enum of any type (:star2: new in 2.0)
 - Use 1-line code (using the [Neon](https://github.com/paolo-rossi/delphi-neon) library) to transform from and to JSON documents
 
+## Delphi Compatibility
+This library has been tested with **Delphi 12 Athens**, **Delphi 11 Alexandria**, **Delphi 10.4 Sydney**, **Delphi 10.3 Rio**, **Delphi 10.2 Tokyo**.
+
+
 ## Todo
 - Full validation for the OpenAPI models
 
