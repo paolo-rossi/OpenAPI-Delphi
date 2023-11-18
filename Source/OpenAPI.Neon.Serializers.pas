@@ -339,7 +339,7 @@ function TNullableTDateTimeSerializer.Deserialize(AValue: TJSONValue; const ADat
 var
   LNullValue: NullDateTime;
 begin
-  LNullValue := TJSONUtils.JSONToDate(AValue.Value, AContext.GetConfiguration.GetUseUTCDate);
+  LNullValue := TJSONUtils.JSONToDateTime(AValue.Value, AContext.GetConfiguration.GetUseUTCDate);
   Result := TValue.From<NullDateTime>(LNullValue);
 end;
 
@@ -356,7 +356,7 @@ begin
   Result := nil;
   LValue := AValue.AsType<NullDateTime>;
   if LValue.HasValue then
-    Result := TJSONString.Create(TJSONUtils.DateToJSON(LValue.Value, AContext.GetConfiguration.GetUseUTCDate));
+    Result := TJSONString.Create(TJSONUtils.DateTimeToJSON(LValue.Value, AContext.GetConfiguration.GetUseUTCDate));
 end;
 
 { TOpenAPISerializer }
