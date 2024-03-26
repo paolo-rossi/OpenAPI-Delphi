@@ -237,19 +237,19 @@ end;
 procedure TOpenAPIExtensions.Add(const AName: string; const AValue: NullDouble);
 begin
   CheckName(AName);
-  FValues.AddPair(AName, AValue.Value);
+  FValues.AddPair(AName, TJSONNumber.Create(AValue.Value));
 end;
 
 procedure TOpenAPIExtensions.Add(const AName: string; const AValue: NullInteger);
 begin
   CheckName(AName);
-  FValues.AddPair(AName, AValue.Value);
+  FValues.AddPair(AName, TJSONNumber.Create(AValue.Value));
 end;
 
 procedure TOpenAPIExtensions.Add(const AName: string; const AValue: NullBoolean);
 begin
   CheckName(AName);
-  FValues.AddPair(AName, AValue.Value);
+  FValues.AddPair(AName, TJSONBool.Create(AValue.Value));
 end;
 
 procedure TOpenAPIExtensions.CheckName(const AName: string);
