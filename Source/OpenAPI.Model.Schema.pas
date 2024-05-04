@@ -407,9 +407,11 @@ end;
 
 function TOpenAPISchema.AddProperty(const AKeyName: string): TOpenAPISchema;
 begin
-  Result := TOpenAPISchema.Create;
-
-  FProperties.Add(AKeyName, Result);
+  if not FProperties.TryGetValue(AKeyName, Result) then
+  begin
+    Result := TOpenAPISchema.Create;
+    FProperties.Add(AKeyName, Result);
+  end;
 end;
 
 constructor TOpenAPISchema.Create;
