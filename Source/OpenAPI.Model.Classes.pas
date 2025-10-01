@@ -1370,7 +1370,7 @@ type
 
   TOpenAPIPathMap = class(TOpenAPIModelExtensibleMap<TOpenAPIPathItem>);
 
-  TOpenAPIVersion = (v303, v310);
+  TOpenAPIVersion = (v303, v304, v310, v311);
   TOpenAPIVersionHelper = record helper for TOpenAPIVersion
   public
     function ToString: string;
@@ -1671,7 +1671,7 @@ begin
   FComponents := CreateSubObject<TOpenAPIComponents>;
   FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
   FTags := CreateSubObject<TOpenAPITags>;
-  //FExternalDocs := CreateSubObject<TOpenAPIExternalDocs>;
+  FExternalDocs := CreateSubObject<TOpenAPIExternalDocs>;
 end;
 
 procedure TOpenAPIDocument.ReplaceInfo(AInfo: TOpenAPIInfo);
@@ -2067,7 +2067,9 @@ begin
   Result := '';
   case Self of
     TOpenAPIVersion.v303: Result := '3.0.3';
+    TOpenAPIVersion.v304: Result := '3.0.4';
     TOpenAPIVersion.v310: Result := '3.1.0';
+    TOpenAPIVersion.v311: Result := '3.1.1';
   end;
 end;
 
