@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2019 Paolo Rossi                                         }
+{  Copyright (c) 2018-2025 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -23,21 +23,37 @@ unit OpenAPI.Model.Reference;
 
 interface
 
+{$SCOPEDENUMS ON}
+
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
 
   Neon.Core.Attributes;
 
 type
+  TOpenAPIReferenceTarget = (
+    Schemas,
+    Responses,
+    Parameters,
+    Examples,
+    RequestBodies,
+    Headers,
+    SecuritySchemes,
+    Links,
+    Callbacks
+  );
+  TOpenAPIReferenceTargetHelper = record helper for TOpenAPIReferenceTarget
+    function ToString: string;
+  end;
+
   /// <summary>
   /// A simple object to allow referencing other components in the specification, internally and externally.
   /// </summary>
   TOpenAPIReference = class
   private
     FId: string;
-    FRef: string;
-    FRefType: string;
     FExternalResource: string;
+    FTarget: TOpenAPIReferenceTarget;
   public
     /// <summary>
     /// Gets a flag indicating whether this reference is an external reference.
@@ -48,7 +64,11 @@ type
     /// Gets a flag indicating whether this reference is a local reference.
     /// </summary>
     function IsLocal: Boolean;
+
   public
+    procedure SetReference(const AId: string; ATarget: TOpenAPIReferenceTarget);
+    function GetFullReference: string;
+
     /// <summary>
     /// The identifier of the reusable component of one particular ReferenceType.
     /// If ExternalResource is present, this is the path to the component after the '#/'.
@@ -60,11 +80,16 @@ type
     property Id: string read FId write FId;
 
     /// <summary>
-    /// The element type referenced.
+    ///   <para>
+    ///     The target in the components section for the Id. Can be:
+    ///   </para>
+    ///   <para>
+    ///     Schemas, Responses, Parameters, Examples, RequestBodies,
+    ///     Headers, SecuritySchemes, Links, Callbacks.
+    ///   </para>
     /// </summary>
-    /// <remarks>This must be present if <see cref="ExternalResource"/> is not present.</remarks>
     [NeonIgnore]
-    property RefType: string read FRefType write FRefType;
+    property Target: TOpenAPIReferenceTarget read FTarget write FTarget;
 
     /// <summary>
     /// External resource in the reference.
@@ -74,25 +99,49 @@ type
     /// </summary>
     [NeonIgnore]
     property ExternalResource: string read FExternalResource write FExternalResource;
-
-    [NeonProperty('$ref')][NeonInclude(IncludeIf.NotEmpty)]
-    property Ref: string read FRef write FRef;
   end;
 
 implementation
 
 { TOpenAPIReference }
 
+function TOpenAPIReference.GetFullReference: string;
+begin
+  // Default is: #/components/schemas
+  Result := Format('#/components/%s/%s', [FTarget.ToString, FId]);
+end;
+
 function TOpenAPIReference.IsExternal: Boolean;
 begin
-  { TODO -opaolo -c : to finish 31/03/2019 18:47:51 }
   Result := not FExternalResource.IsEmpty;
 end;
 
 function TOpenAPIReference.IsLocal: Boolean;
 begin
-  { TODO -opaolo -c : to finish 31/03/2019 18:47:51 }
   Result := FExternalResource.IsEmpty;
+end;
+
+procedure TOpenAPIReference.SetReference(const AId: string; ATarget: TOpenAPIReferenceTarget);
+begin
+  FId := AId;
+  FTarget := ATarget;
+end;
+
+{ TOpenAPIReferenceTargetHelper }
+
+function TOpenAPIReferenceTargetHelper.ToString: string;
+begin
+  case Self  of
+    TOpenAPIReferenceTarget.Schemas:         Result := 'schemas';
+    TOpenAPIReferenceTarget.Responses:       Result := 'responses';
+    TOpenAPIReferenceTarget.Parameters:      Result := 'parameters';
+    TOpenAPIReferenceTarget.Examples:        Result := 'examples';
+    TOpenAPIReferenceTarget.RequestBodies:   Result := 'requestBodies';
+    TOpenAPIReferenceTarget.Headers:         Result := 'headers';
+    TOpenAPIReferenceTarget.SecuritySchemes: Result := 'securitySchemes';
+    TOpenAPIReferenceTarget.Links:           Result := 'links';
+    TOpenAPIReferenceTarget.Callbacks:       Result := 'callbacks';
+  end;
 end;
 
 end.

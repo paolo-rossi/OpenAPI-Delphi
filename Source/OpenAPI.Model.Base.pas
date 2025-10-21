@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2023 Paolo Rossi                                         }
+{  Copyright (c) 2018-2025 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -107,18 +107,11 @@ type
   /// </summary>
   TOpenAPIModelReference = class(TOpenAPIExtensible)
   protected
-    FUnresolvedReference: NullBoolean;
     FReference: TOpenAPIReference;
   public
     constructor Create;
 
     function IsReference: Boolean;
-
-    /// <summary>
-    /// Indicates object is a placeholder reference to an actual object and does not contain valid data.
-    /// </summary>
-    [NeonIgnore]
-    property UnresolvedReference: NullBoolean read FUnresolvedReference write FUnresolvedReference;
 
     /// <summary>
     /// Reference object.
@@ -291,7 +284,7 @@ end;
 
 function TOpenAPIModelReference.IsReference: Boolean;
 begin
-  Result := not FReference.Ref.IsEmpty;
+  Result := not FReference.Id.IsEmpty;
 end;
 
 { TOpenAPIModelExtensibleMap<T> }

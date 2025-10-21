@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2023 Paolo Rossi                                         }
+{  Copyright (c) 2018-2025 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -240,25 +240,6 @@ type
     /// The Url pointing to the contact information. MUST be in the format of a Url.
     /// </summary>
     property Url: NullString read FUrl write FUrl;
-  end;
-
-  /// <summary>
-  /// ExternalDocs object
-  /// </summary>
-  TOpenAPIExternalDocumentation = class(TOpenAPIExtensible)
-  private
-    FDescription: NullString;
-    FUrl: string;
-  public
-    /// <summary>
-    /// A short description of the target documentation.
-    /// </summary>
-    property Description: NullString read FDescription write FDescription;
-
-    /// <summary>
-    /// REQUIRED. The Url for the target documentation. Value MUST be in the format of a Url.
-    /// </summary>
-    property Url: string read FUrl write FUrl;
   end;
 
   TOpenAPIExamples = class;
@@ -648,6 +629,9 @@ type
     FExternalDocs: TOpenAPIExternalDocs;
   public
     constructor Create;
+    destructor Destroy; override;
+
+    procedure SetExternalDocs(const AURL, ADescription: string);
   public
     /// <summary>
     /// The name of the tag.
@@ -662,6 +646,9 @@ type
     /// <summary>
     /// Additional external documentation for this tag.
     /// </summary>
+    /// <remarks>
+    ///   This is an optional object. It's not created by the class
+    /// </remarks>
     [NeonInclude(IncludeIf.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
   end;
@@ -1029,7 +1016,7 @@ type
     FSummary: NullString;
     FOperationId: NullString;
     FDescription: NullString;
-    FExternalDocs: TOpenAPIExternalDocumentation;
+    FExternalDocs: TOpenAPIExternalDocs;
     FParameters: TOpenAPIParameters;
     FRequestBody: TOpenAPIRequestBody;
     FCallbacks: TOpenAPICallbackMap;
@@ -1040,11 +1027,13 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
   public
     procedure AddTag(const AName: string);
     function AddResponse(ACode: Integer): TOpenAPIResponse; overload;
     function AddResponse(const AName: string): TOpenAPIResponse; overload;
     function AddParameter(const AName, ALocation: string): TOpenAPIParameter;
+    procedure SetExternalDocs(const AURL, ADescription: string);
 
     function SetRequestBody(const ADescription: string): TOpenAPIRequestBody;
   public
@@ -1069,8 +1058,11 @@ type
     /// <summary>
     /// Additional external documentation for this operation.
     /// </summary>
-    [NeonInclude(IncludeIf.NotEmpty)]
-    property ExternalDocs: TOpenAPIExternalDocumentation read FExternalDocs write FExternalDocs;
+    /// <remarks>
+    ///   This is an optional object. It's not created by the class
+    /// </remarks>
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotEmpty)]
+    property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
 
     /// <summary>
     /// Unique string used to identify the operation. The id MUST be unique among all operations described in the API.
@@ -1094,8 +1086,7 @@ type
     /// has explicitly defined semantics for request bodies.
     /// In other cases where the HTTP spec is vague, requestBody SHALL be ignored by consumers.
     /// </summary>
-    [NeonInclude(IncludeIf.NotEmpty)]
-    [NeonAutoCreate]
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotEmpty)]
     property RequestBody: TOpenAPIRequestBody read FRequestBody write FRequestBody;
 
     /// <summary>
@@ -1392,12 +1383,13 @@ type
     FExternalDocs: TOpenAPIExternalDocs;
   public
     constructor Create(AVersion: TOpenAPIVersion);
+    destructor Destroy; override;
   public
     function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddPath(const AKeyName: string): TOpenAPIPathItem;
     function AddTag(const AName, ADescription: string): TOpenAPITag;
     procedure AddSecurity(ASchemeName: string; AParams: TArray<string>);
-    procedure ReplaceInfo(AInfo: TOpenAPIInfo);
+    procedure SetExternalDocs(const AURL, ADescription: string);
   public
     /// <summary>
     ///   REQUIRED. This string MUST be the semantic version number of the Openapi
@@ -1440,9 +1432,12 @@ type
     property Tags: TOpenAPITags read FTags write FTags;
 
     /// <summary>
-    /// Additional external documentation.
+    ///   Additional external documentation.
     /// </summary>
-    [NeonInclude(IncludeIf.NotEmpty)]
+    /// <remarks>
+    ///   This is an optional object. It's not created by the class
+    /// </remarks>
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotEmpty)]
     property ExternalDocs: TOpenAPIExternalDocs read FExternalDocs write FExternalDocs;
   end;
 
@@ -1671,17 +1666,24 @@ begin
   FComponents := CreateSubObject<TOpenAPIComponents>;
   FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
   FTags := CreateSubObject<TOpenAPITags>;
-  FExternalDocs := CreateSubObject<TOpenAPIExternalDocs>;
+  //FExternalDocs := CreateSubObject<TOpenAPIExternalDocs>;
 end;
 
-procedure TOpenAPIDocument.ReplaceInfo(AInfo: TOpenAPIInfo);
+destructor TOpenAPIDocument.Destroy;
 begin
-  if Assigned(FInfo) then
-    FInfo.Free;
-  FInfo := AInfo;
+  FExternalDocs.Free;
+
+  inherited;
 end;
 
-{ TOpenAPIInfo }
+procedure TOpenAPIDocument.SetExternalDocs(const AURL, ADescription: string);
+begin
+  if not Assigned(FExternalDocs) then
+    FExternalDocs := TOpenAPIExternalDocs.Create;
+
+  FExternalDocs.Url := AURL;
+  FExternalDocs.Description := ADescription;
+end;
 
 constructor TOpenAPIInfo.Create;
 begin
@@ -1791,7 +1793,7 @@ constructor TOpenAPIOperation.Create;
 begin
   inherited Create;
 
-  //FExternalDocs: CreateSubObject<TOpenAPIExternalDocumentation>;
+  //FExternalDocs := CreateSubObject<TOpenAPIExternalDocs>;
   FParameters := CreateSubObject<TOpenAPIParameters>;
   //FRequestBody := CreateSubObject<TOpenAPIRequestBody>;
   FCallbacks := CreateSubObject<TOpenAPICallbackMap>;
@@ -1803,8 +1805,18 @@ end;
 destructor TOpenAPIOperation.Destroy;
 begin
   FRequestBody.Free;
+  FExternalDocs.Free;
 
   inherited;
+end;
+
+procedure TOpenAPIOperation.SetExternalDocs(const AURL, ADescription: string);
+begin
+  if not Assigned(FExternalDocs) then
+    FExternalDocs := TOpenAPIExternalDocs.Create;
+
+  FExternalDocs.Url := AURL;
+  FExternalDocs.Description := ADescription;
 end;
 
 { TOpenAPIRequestBody }
@@ -1830,8 +1842,21 @@ end;
 constructor TOpenAPITag.Create;
 begin
   inherited Create;
+end;
 
-  //FExternalDocs: CreateSubObject<TOpenAPIExternalDocs>;
+destructor TOpenAPITag.Destroy;
+begin
+  FExternalDocs.Free;
+  inherited;
+end;
+
+procedure TOpenAPITag.SetExternalDocs(const AURL, ADescription: string);
+begin
+  if not Assigned(FExternalDocs) then
+    FExternalDocs := TOpenAPIExternalDocs.Create;
+
+  FExternalDocs.Url := AURL;
+  FExternalDocs.Description := ADescription;
 end;
 
 { TOpenAPIExample }

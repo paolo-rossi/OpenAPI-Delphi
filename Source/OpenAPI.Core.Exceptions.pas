@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2021 Paolo Rossi                                         }
+{  Copyright (c) 2018-2025 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -28,6 +28,8 @@ uses
 
 type
   EOpenAPIException = class(Exception);
+  EOpenAPISchemaException = class(EOpenAPIException);
+
 
 implementation
 

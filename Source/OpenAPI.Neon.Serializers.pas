@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2023 Paolo Rossi                                         }
+{  Copyright (c) 2018-2025 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -450,17 +450,19 @@ function TOpenAPIReferenceSerializer.Deserialize(AValue: TJSONValue; const AData
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LType: TRttiType;
-  LRef: TOpenAPIModelReference;
+  LRef: TOpenAPIReference;
   LJSON: TJSONObject;
 begin
+  raise Exception.Create('Deserialization not implemented');
+
   Result := AData;
-  LRef := AData.AsObject as TOpenAPIModelReference;
+  LRef := AData.AsObject as TOpenAPIReference;
   LJSON := AValue as TJSONObject;
 
   if Assigned(LJSON.Values['$ref']) then
   begin
     LType := TRttiUtils.Context.GetType(TOpenAPIReference);
-    AContext.ReadDataMember(AValue, LType, LRef.Reference, False);
+    AContext.ReadDataMember(AValue, LType, LRef, False);
   end
   else
   begin
@@ -471,36 +473,22 @@ end;
 
 class function TOpenAPIReferenceSerializer.GetTargetInfo: PTypeInfo;
 begin
-  Result := TOpenAPIModelReference.ClassInfo;
+  Result := TOpenAPIReference.ClassInfo;
 end;
 
 function TOpenAPIReferenceSerializer.Serialize(const AValue: TValue;
     ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
 var
-  LRefObj: TOpenAPIModelReference;
-  LType: TRttiType;
+  LRef: TOpenAPIReference;
 begin
-  LRefObj := AValue.AsType<TOpenAPIModelReference>;
-  if LRefObj = nil then
-    Exit(nil);
+  Result := nil;
 
-  if Assigned(LRefObj.Reference) and not (LRefObj.Reference.Ref.IsEmpty) then
-    Exit(TJSONString.Create(LRefObj.Reference.Ref))
-  else
-  begin
-    LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
-    Result := TJSONObject.Create;
-    AContext.WriteMembers(LType, AValue.AsObject, Result);
-  end;
+  LRef := AValue.AsType<TOpenAPIReference>;
+  if LRef = nil then
+    Exit;
 
-  case ANeonObject.NeonInclude.Value of
-    IncludeIf.NotEmpty, IncludeIf.NotDefault:
-    begin
-      if (Result as TJSONObject).Count = 0 then
-        FreeAndNil(Result);
-    end;
-  end;
-
+  if not LRef.Id.IsEmpty then
+    Exit(TJSONString.Create(LRef.GetFullReference))
 end;
 
 { TOpenAPISchemaSerializer }
@@ -546,6 +534,7 @@ function TOpenAPISchemaSerializer.Serialize(const AValue: TValue;
 var
   LSchema: TOpenAPISchema;
   LType: TRttiType;
+  LJSON: TJSONObject;
 begin
   LSchema := AValue.AsType<TOpenAPISchema>;
 
@@ -557,7 +546,11 @@ begin
 
   // The Schema has a reference
   if LSchema.IsReference then
-    Exit(AContext.WriteDataMember(LSchema.Reference, False));
+  begin
+    LJSON := TJSONObject.Create;
+    LJSON.AddPair('$ref', AContext.WriteDataMember(LSchema.Reference, True));
+    Exit(LJSON);
+  end;
 
   if Assigned(LSchema.JSONObject) then
     Result := LSchema.JSONObject.Clone as TJSONObject

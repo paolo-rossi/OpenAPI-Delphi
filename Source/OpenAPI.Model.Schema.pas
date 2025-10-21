@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2023 Paolo Rossi                                         }
+{  Copyright (c) 2018-2025 Paolo Rossi                                         }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
 {******************************************************************************}
@@ -59,6 +59,26 @@ type
     [NeonInclude(IncludeIf.NotEmpty)]
     property Mapping: TDictionary<string, string> read FMapping write FMapping;
   end;
+
+  /// <summary>
+  /// ExternalDocs for Schemas
+  /// </summary>
+  TOpenAPISchemaExternalDoc = class(TOpenAPIExtensible)
+  private
+    FDescription: NullString;
+    FUrl: string;
+  public
+    /// <summary>
+    /// A short description of the target documentation.
+    /// </summary>
+    property Description: NullString read FDescription write FDescription;
+
+    /// <summary>
+    /// REQUIRED. The Url for the target documentation. Value MUST be in the format of a Url.
+    /// </summary>
+    property Url: string read FUrl write FUrl;
+  end;
+
 
   TOpenAPISchemaBase = class
   protected
@@ -139,7 +159,8 @@ type
     FDefault_: TOpenAPIAny;
     FEnum: TOpenAPIEnum;
     FDiscriminator: TOpenAPIDiscriminator;
-  private
+    FExternalDocs: TOpenAPISchemaExternalDoc;
+
     function GetNeonConfig: INeonConfiguration;
   public
     constructor Create;
@@ -149,6 +170,8 @@ type
 
     function AddProperty(const AKeyName: string): TOpenAPISchema;
     function AddEnum(const AValue: TValue): TOpenAPIAny;
+
+    procedure SetExternalDocs(const AURL, ADescription: string);
 
     procedure SetJSONObject(AJSON: TJSONObject; AOwned: Boolean = True);
 
@@ -233,7 +256,7 @@ type
     /// Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object defined at the same level.
     /// For example, if type is string, then default can be "foo" but cannot be 1.
     /// </summary>
-    [NeonProperty('default')] [NeonInclude(IncludeIf.NotEmpty)]
+    [NeonProperty('default'), NeonInclude(IncludeIf.NotEmpty)]
     property Default_: TOpenAPIAny read FDefault_ write FDefault_;
 
     /// <summary>
@@ -283,9 +306,7 @@ type
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(IncludeIf.NotNull)]
-    [NeonProperty('not')]
-    [NeonAutoCreate]
+    [NeonProperty('not'), NeonAutoCreate, NeonInclude(IncludeIf.NotNull)]
     property Not_: TOpenAPISchema read FNot_ write FNot_;
 
     /// <summary>
@@ -299,8 +320,7 @@ type
     /// Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object
     /// and not a standard JSON Schema. items MUST be present if the type is array.
     /// </summary>
-    [NeonInclude(IncludeIf.NotNull)]
-    [NeonAutoCreate]
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotNull)]
     property Items: TOpenAPISchema read FItems write FItems;
 
     /// <summary>
@@ -345,8 +365,7 @@ type
     /// Value can be boolean or object. Inline or referenced schema
     /// MUST be of a Schema Object and not a standard JSON Schema.
     /// </summary>
-    [NeonInclude(IncludeIf.NotNull)]
-    [NeonAutoCreate]
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotNull)]
     property AdditionalProperties: TOpenAPISchema read FAdditionalProperties write FAdditionalProperties;
 
     /// <summary>
@@ -361,13 +380,12 @@ type
     /// To represent examples that cannot be naturally represented in JSON or YAML,
     /// a string value can be used to contain the example with escaping where necessary.
     /// </summary>
-    //property Example IOpenApiAny
+    //property Example TOpenApiAny
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    //property Enum: TOpenAPIAny read FEnum write FEnum;
     property Enum: TOpenAPIEnum read FEnum write FEnum;
 
     /// <summary>
@@ -378,7 +396,11 @@ type
     /// <summary>
     /// Additional external documentation for this schema.
     /// </summary>
-    //ExternalDocs: TOpenApiExternalDocs;
+    /// <remarks>
+    ///   This is an optional object. It's not created by the class
+    /// </remarks>
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotEmpty)]
+    property ExternalDocs: TOpenAPISchemaExternalDoc read FExternalDocs write FExternalDocs;
   end;
 
 implementation
@@ -421,13 +443,11 @@ begin
   FAllOf := CreateSubObject<TOpenAPISchemas>;
   FOneOf := CreateSubObject<TOpenAPISchemas>;
   FAnyOf := CreateSubObject<TOpenAPISchemas>;
-  //FNot_ := CreateSubObject<TOpenAPISchema>;
-  //FItems := CreateSubObject<TOpenAPISchema>;
   FProperties := CreateSubObject<TOpenAPISchemaMap>;
   FDiscriminator := CreateSubObject<TOpenAPIDiscriminator>;
-  //FAdditionalProperties := CreateSubObject<TOpenAPISchema>;
   FDefault_ := CreateSubObject<TOpenAPIAny>;
   FEnum := CreateSubObject<TOpenAPIEnum>;
+  //FExternalDocs := CreateSubObject<TOpenAPISchemaExternalDoc>;
 end;
 
 destructor TOpenAPISchema.Destroy;
@@ -436,6 +456,8 @@ begin
   FNot_.Free;
   FItems.Free;
   FAdditionalProperties.Free;
+  FExternalDocs.Free;
+
   if FJSONOwned then
     FJSONObject.Free;
 
@@ -465,6 +487,15 @@ begin
   FJSONOwned := AOwned;
 end;
 
+procedure TOpenAPISchema.SetExternalDocs(const AURL, ADescription: string);
+begin
+  if not Assigned(FExternalDocs) then
+    FExternalDocs := TOpenAPISchemaExternalDoc.Create;
+
+  FExternalDocs.Url := AURL;
+  FExternalDocs.Description := ADescription;
+end;
+
 procedure TOpenAPISchema.SetJSONFromClass(AClass: TClass);
 begin
   SetJSONObject(TNeonSchemaGenerator.ClassToJSONSchema(AClass, GetNeonConfig));
@@ -477,7 +508,7 @@ end;
 
 procedure TOpenAPISchema.SetSchemaReference(const AReference: string);
 begin
-  Reference.Ref := '#/components/schemas/' + AReference;
+  FReference.SetReference(AReference, TOpenAPIReferenceTarget.Schemas);
 end;
 
 function TOpenAPISchema.WithNeonConfig(AConfig: INeonConfiguration): TOpenAPISchema;
