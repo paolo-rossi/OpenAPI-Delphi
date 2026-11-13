@@ -81,6 +81,9 @@ begin
     LDoc.Info.License.Name := 'Apache-2.0';
     LDoc.Info.License.Identifier := 'Apache-2.0';
 
+    // Optional: written only when set (unset means the OAS base dialect)
+    LDoc.JsonSchemaDialect := TOpenAPIDocument.DefaultJsonSchemaDialect;
+
     // Schema keyword checks
     LSchema := LDoc.Components.AddSchema('Nullable');
     LSchema.Types := ['string', 'null'];

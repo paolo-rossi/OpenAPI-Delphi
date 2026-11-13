@@ -12,7 +12,7 @@ unit OpenAPI.Tests.Document;
 interface
 
 uses
-  System.SysUtils, DUnitX.TestFramework,
+  System.SysUtils, System.JSON, DUnitX.TestFramework,
 
   OpenAPI.Model.Classes,
 
@@ -41,10 +41,16 @@ type
     procedure TestOpenapiVersionString311;
 
     [Test]
-    procedure TestJsonSchemaDialectIsDefaultedOnCreate;
+    procedure TestJsonSchemaDialectIsNotSetOnCreate;
 
     [Test]
     procedure TestJsonSchemaDialectIsOverridable;
+
+    [Test]
+    procedure TestJsonSchemaDialectIsNotWrittenWhenUnset;
+
+    [Test]
+    procedure TestJsonSchemaDialectRoundTrip;
 
     [Test]
     procedure TestInfoSummarySerializes;
@@ -94,17 +100,66 @@ begin
   Assert.AreEqual('3.1.1', FDocument.Openapi);
 end;
 
-procedure TTestOpenAPIDocument31.TestJsonSchemaDialectIsDefaultedOnCreate;
+procedure TTestOpenAPIDocument31.TestJsonSchemaDialectIsNotSetOnCreate;
 begin
-  Assert.IsFalse(FDocument.JsonSchemaDialect.IsNull);
-  Assert.IsTrue(FDocument.JsonSchemaDialect.Value.Contains('2020-12') or
-    FDocument.JsonSchemaDialect.Value.Contains('3.1'));
+  // Optional: unset means the OAS base dialect applies
+  Assert.IsTrue(FDocument.JsonSchemaDialect.IsNull);
+  Assert.AreEqual('https://spec.openapis.org/oas/3.1/dialect/base', FDocument.EffectiveJsonSchemaDialect);
+  Assert.AreEqual(TOpenAPIDocument.DefaultJsonSchemaDialect, FDocument.EffectiveJsonSchemaDialect);
 end;
 
 procedure TTestOpenAPIDocument31.TestJsonSchemaDialectIsOverridable;
 begin
   FDocument.JsonSchemaDialect := 'https://example.com/my-dialect';
   Assert.AreEqual('https://example.com/my-dialect', FDocument.JsonSchemaDialect.Value);
+  Assert.AreEqual('https://example.com/my-dialect', FDocument.EffectiveJsonSchemaDialect);
+end;
+
+procedure TTestOpenAPIDocument31.TestJsonSchemaDialectIsNotWrittenWhenUnset;
+var
+  LJSON: string;
+begin
+  FDocument.Info.Title := 'Test API';
+  FDocument.Info.Version := '1.0.0';
+  LJSON := TOpenAPITestUtils.SerializeDocument(FDocument);
+  Assert.IsFalse(LJSON.Contains('jsonSchemaDialect'), LJSON);
+
+  FDocument.JsonSchemaDialect := 'https://example.com/my-dialect';
+  LJSON := TOpenAPITestUtils.SerializeDocument(FDocument);
+  Assert.IsTrue(LJSON.Contains('"jsonSchemaDialect"'));
+  Assert.IsTrue(LJSON.Contains('https://example.com/my-dialect'));
+end;
+
+procedure TTestOpenAPIDocument31.TestJsonSchemaDialectRoundTrip;
+var
+  LDoc: TOpenAPIDocument;
+  LOut: TJSONObject;
+begin
+  // A document without jsonSchemaDialect is written back without it
+  TOpenAPITestUtils.DeserializeIntoDocument(
+    '{"openapi":"3.1.1","info":{"title":"t","version":"1"},"paths":{}}', FDocument);
+  Assert.IsTrue(FDocument.JsonSchemaDialect.IsNull);
+  LOut := TJSONObject.ParseJSONValue(TOpenAPITestUtils.SerializeDocument(FDocument)) as TJSONObject;
+  try
+    Assert.IsNull(LOut.Values['jsonSchemaDialect']);
+  finally
+    LOut.Free;
+  end;
+
+  // A document with it keeps it, even when it's the default value
+  LDoc := TOpenAPITestUtils.NewDocument;
+  try
+    TOpenAPITestUtils.DeserializeIntoDocument('{"openapi":"3.1.1","info":{"title":"t","version":"1"},' +
+      '"jsonSchemaDialect":"https://spec.openapis.org/oas/3.1/dialect/base","paths":{}}', LDoc);
+    LOut := TJSONObject.ParseJSONValue(TOpenAPITestUtils.SerializeDocument(LDoc)) as TJSONObject;
+    try
+      Assert.AreEqual('https://spec.openapis.org/oas/3.1/dialect/base', LOut.Values['jsonSchemaDialect'].Value);
+    finally
+      LOut.Free;
+    end;
+  finally
+    LDoc.Free;
+  end;
 end;
 
 procedure TTestOpenAPIDocument31.TestInfoSummarySerializes;

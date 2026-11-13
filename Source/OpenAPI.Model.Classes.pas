@@ -1394,6 +1394,11 @@ type
   ///   definition uses and conforms to the Openapi Specification
   /// </summary>
   TOpenAPIDocument = class(TOpenAPIExtensible)
+  public const
+    /// <summary>
+    ///   The dialect Schema Objects use when "jsonSchemaDialect" is not set (OAS 3.1)
+    /// </summary>
+    DefaultJsonSchemaDialect = 'https://spec.openapis.org/oas/3.1/dialect/base';
   private
     FInfo: TOpenAPIInfo;
     FOpenapi: string;
@@ -1415,6 +1420,12 @@ type
     function AddTag(const AName, ADescription: string): TOpenAPITag;
     procedure AddSecurity(ASchemeName: string; AParams: TArray<string>);
     procedure SetExternalDocs(const AURL, ADescription: string);
+
+    /// <summary>
+    ///   The dialect that applies to the Schema Objects: JsonSchemaDialect when set, otherwise
+    ///   DefaultJsonSchemaDialect
+    /// </summary>
+    function EffectiveJsonSchemaDialect: string;
   public
     /// <summary>
     ///   REQUIRED. This string MUST be the semantic version number of the Openapi
@@ -1424,7 +1435,9 @@ type
 
     /// <summary>
     ///   The default value for the $schema keyword within Schema Objects contained within this
-    ///   OAS document.
+    ///   OAS document. Optional: not set by default, so it's written only when read from a
+    ///   document or set by code. When not set, DefaultJsonSchemaDialect applies (see
+    ///   EffectiveJsonSchemaDialect).
     /// </summary>
     property JsonSchemaDialect: NullString read FJsonSchemaDialect write FJsonSchemaDialect;
 
@@ -1711,12 +1724,19 @@ begin
   FTags.Add(Result);
 end;
 
+function TOpenAPIDocument.EffectiveJsonSchemaDialect: string;
+begin
+  if FJsonSchemaDialect.IsNull or FJsonSchemaDialect.Value.IsEmpty then
+    Result := DefaultJsonSchemaDialect
+  else
+    Result := FJsonSchemaDialect.Value;
+end;
+
 constructor TOpenAPIDocument.Create(AVersion: TOpenAPIVersion);
 begin
   inherited Create;
 
   FOpenapi := AVersion.ToString;
-  FJsonSchemaDialect := 'https://spec.openapis.org/oas/3.1/dialect/base';
 
   FInfo := CreateSubObject<TOpenAPIInfo>;
   FPaths := CreateSubObject<TOpenAPIPathMap>;
