@@ -34,7 +34,8 @@ uses
   OpenAPI.Tests.ReferenceIO in 'Source\OpenAPI.Tests.ReferenceIO.pas',
   OpenAPI.Tests.Any in 'Source\OpenAPI.Tests.Any.pas',
   OpenAPI.Tests.Security in 'Source\OpenAPI.Tests.Security.pas',
-  OpenAPI.Tests.Maps in 'Source\OpenAPI.Tests.Maps.pas';
+  OpenAPI.Tests.Maps in 'Source\OpenAPI.Tests.Maps.pas',
+  OpenAPI.Tests.Xml in 'Source\OpenAPI.Tests.Xml.pas';
 
 var
   runner : ITestRunner;

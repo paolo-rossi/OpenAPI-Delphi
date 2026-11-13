@@ -62,6 +62,12 @@ type
 
     [Test]
     procedure TestNullSecurityIsIgnored;
+
+    [Test]
+    procedure TestMutualTLSRoundTrip;
+
+    [Test]
+    procedure TestMutualTLSFromCode;
   end;
 
 implementation
@@ -242,6 +248,41 @@ begin
   LJSON := Save;
   try
     Assert.IsNull(LJSON.FindValue('paths./a.get.security'));
+  finally
+    LJSON.Free;
+  end;
+end;
+
+procedure TTestOpenAPISecurity.TestMutualTLSRoundTrip;
+var
+  LJSON: TJSONObject;
+begin
+  Load(DocHeader + '"paths":{},"components":{"securitySchemes":{"mtls":{"type":"mutualTLS","description":"Client certificate"}}}}');
+
+  Assert.IsTrue(FDocument.Components.SecuritySchemes['mtls'].Type_.Value = TSecurityScheme.MutualTLS);
+
+  LJSON := Save;
+  try
+    Assert.AreEqual('{"type":"mutualTLS","description":"Client certificate"}',
+      LJSON.FindValue('components.securitySchemes.mtls').ToJSON);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+procedure TTestOpenAPISecurity.TestMutualTLSFromCode;
+var
+  LJSON: TJSONObject;
+begin
+  FDocument.Info.Title := 't';
+  FDocument.Info.Version := '1';
+  FDocument.Components.AddSecurityMutualTLS('mtls', 'Client certificate');
+
+  LJSON := Save;
+  try
+    // No type-specific member (name, in, scheme, flows, ...) is written for mutualTLS
+    Assert.AreEqual('{"type":"mutualTLS","description":"Client certificate"}',
+      LJSON.FindValue('components.securitySchemes.mtls').ToJSON);
   finally
     LJSON.Free;
   end;

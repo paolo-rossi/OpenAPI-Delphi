@@ -49,6 +49,46 @@ type
   end;
 
   /// <summary>
+  ///   XML Object: how a schema (or a property) is represented in XML, for APIs that send or
+  ///   receive XML. Without it, a property becomes a child element named after the property
+  /// </summary>
+  TOpenAPIXML = class(TOpenAPIExtensible)
+  private
+    FName: NullString;
+    FNamespace: NullString;
+    FPrefix: NullString;
+    FAttribute: NullBoolean;
+    FWrapped: NullBoolean;
+  public
+    /// <summary>
+    ///   The name of the element or attribute, instead of the schema or property name. On an
+    ///   array's items it names each item element
+    /// </summary>
+    property Name: NullString read FName write FName;
+
+    /// <summary>
+    ///   The URI of the namespace definition (an absolute URI)
+    /// </summary>
+    property Namespace: NullString read FNamespace write FNamespace;
+
+    /// <summary>
+    ///   The prefix to use for the name
+    /// </summary>
+    property Prefix: NullString read FPrefix write FPrefix;
+
+    /// <summary>
+    ///   True to write the property as an attribute instead of an element. Default false
+    /// </summary>
+    property Attribute: NullBoolean read FAttribute write FAttribute;
+
+    /// <summary>
+    ///   For arrays only: true to wrap the items in an outer element (e.g. &lt;tags&gt;&lt;tag/&gt;&lt;/tags&gt;).
+    ///   Default false
+    /// </summary>
+    property Wrapped: NullBoolean read FWrapped write FWrapped;
+  end;
+
+  /// <summary>
   /// ExternalDocs for Schemas
   /// </summary>
   TOpenAPISchemaExternalDoc = class(TOpenAPIExtensible)
@@ -157,6 +197,7 @@ type
     FExamples: TOpenAPIEnum;
     FDiscriminator: TOpenAPIDiscriminator;
     FExternalDocs: TOpenAPISchemaExternalDoc;
+    FXml: TOpenAPIXML;
 
     function GetNeonConfig: INeonConfiguration;
   public
@@ -171,6 +212,11 @@ type
     function AddPatternProperty(const APattern: string): TOpenAPISchema;
 
     procedure SetExternalDocs(const AURL, ADescription: string);
+
+    /// <summary>
+    ///   Returns the XML Object, creating it if needed
+    /// </summary>
+    function AddXml: TOpenAPIXML;
 
     procedure SetJSONObject(AJSON: TJSONObject; AOwned: Boolean = True);
 
@@ -456,6 +502,15 @@ type
     /// </remarks>
     [NeonAutoCreate, NeonInclude(IncludeIf.NotEmpty)]
     property ExternalDocs: TOpenAPISchemaExternalDoc read FExternalDocs write FExternalDocs;
+
+    /// <summary>
+    ///   How the schema is represented in XML (for XML media types).
+    /// </summary>
+    /// <remarks>
+    ///   This is an optional object. It's not created by the class: use AddXml
+    /// </remarks>
+    [NeonProperty('xml'), NeonAutoCreate, NeonInclude(IncludeIf.NotEmpty)]
+    property Xml: TOpenAPIXML read FXml write FXml;
   end;
 
 implementation
@@ -533,6 +588,7 @@ begin
   FPropertyNames.Free;
   FAdditionalProperties.Free;
   FExternalDocs.Free;
+  FXml.Free;
 
   if FJSONOwned then
     FJSONObject.Free;
@@ -561,7 +617,8 @@ begin
     FMaxProperties.IsNull and FMinProperties.IsNull and
     FAdditionalPropertiesAllowed.IsNull and not Assigned(FAdditionalProperties) and
     FConst_.IsEmpty and FDefault_.IsEmpty and FEnum.IsEmpty and FExamples.IsEmpty and
-    (FDiscriminator.Mapping.Count = 0) and FDiscriminator.PropertyName.IsNull and not Assigned(FExternalDocs);
+    (FDiscriminator.Mapping.Count = 0) and FDiscriminator.PropertyName.IsNull and not Assigned(FExternalDocs) and
+    not Assigned(FXml);
 end;
 
 procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject; AOwned: Boolean);
@@ -571,6 +628,13 @@ begin
 
   FJSONObject := AJSON;
   FJSONOwned := AOwned;
+end;
+
+function TOpenAPISchema.AddXml: TOpenAPIXML;
+begin
+  if not Assigned(FXml) then
+    FXml := TOpenAPIXML.Create;
+  Result := FXml;
 end;
 
 procedure TOpenAPISchema.SetExternalDocs(const AURL, ADescription: string);

@@ -70,7 +70,7 @@ type
     DeepObject
   );
 
-  [NeonEnumNames('apiKey,http,oauth2,openIdConnect')]
+  [NeonEnumNames('apiKey,http,oauth2,openIdConnect,mutualTLS')]
   TSecurityScheme = (
     /// <summary>
     /// Use API key
@@ -90,7 +90,12 @@ type
     /// <summary>
     /// Use OAuth2 with OpenId Connect Url to discover OAuth2 configuration value.
     /// </summary>
-    OpenIdConnect
+    OpenIdConnect,
+
+    /// <summary>
+    /// Use mutual TLS (client certificates). OAS 3.1
+    /// </summary>
+    MutualTLS
   );
 
   [NeonEnumNames('query,header,cookie')]
@@ -1221,6 +1226,7 @@ type
     function AddSecurityHttp(const AKeyName, ADescription, AScheme, ABearerFormat: string): TOpenAPISecurityScheme;
     function AddSecurityApiKey(const AKeyName, ADescription, AHeaderName: string; ALocation: TAPIKeyLocation): TOpenAPISecurityScheme;
     function AddSecurityOpenID(const AKeyName, ADescription, AURL: string): TOpenAPISecurityScheme;
+    function AddSecurityMutualTLS(const AKeyName, ADescription: string): TOpenAPISecurityScheme;
     function AddSecurityOAuth2(const AKeyName, ADescription: string; AFlow: TOpenAPIOAuthFlows): TOpenAPISecurityScheme;
   public
     /// <summary>
@@ -1604,6 +1610,11 @@ function TOpenAPIComponents.AddSecurityOAuth2(const AKeyName,
 begin
   Result := AddSecurityScheme(AKeyName, ADescription, TSecurityScheme.OAuth2);
   Result.Flows := AFlow;
+end;
+
+function TOpenAPIComponents.AddSecurityMutualTLS(const AKeyName, ADescription: string): TOpenAPISecurityScheme;
+begin
+  Result := AddSecurityScheme(AKeyName, ADescription, TSecurityScheme.MutualTLS);
 end;
 
 function TOpenAPIComponents.AddSecurityOpenID(const AKeyName, ADescription,
