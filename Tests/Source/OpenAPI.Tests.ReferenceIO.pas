@@ -85,6 +85,18 @@ type
 
     [Test]
     procedure TestSampleDocumentsKeepEveryReference;
+
+    [Test]
+    procedure TestReferenceSummaryAndDescriptionRoundTrip;
+
+    [Test]
+    procedure TestReferenceDescriptionFromCode;
+
+    [Test]
+    procedure TestReferenceOtherSiblingsAreIgnored;
+
+    [Test]
+    procedure TestPathItemReferenceSummaryAndDescription;
   end;
 
 implementation
@@ -476,6 +488,98 @@ begin
   end;
 
   Assert.IsTrue(LCount > 0, 'No sample documents found in ' + LDir);
+end;
+
+procedure TTestOpenAPIReferenceIO.TestReferenceSummaryAndDescriptionRoundTrip;
+var
+  LResponse: TOpenAPIResponse;
+  LParam: TOpenAPIParameter;
+  LJSON: TJSONObject;
+begin
+  // OAS 3.1 Reference Object: "summary" and "description" next to "$ref" override the
+  // referenced component's, and belong to the reference
+  Load(DocHeader + '"paths":{"/a":{"get":{' +
+    '"parameters":[{"$ref":"#/components/parameters/Id","description":"Local"}],' +
+    '"responses":{"200":{"$ref":"#/components/responses/Ok","summary":"S","description":"D"}}}}}}');
+
+  LParam := FDocument.Paths['/a'].Get.Parameters[0];
+  Assert.AreEqual('Id', LParam.Reference.Id);
+  Assert.AreEqual('Local', LParam.Reference.Description.Value);
+  Assert.IsTrue(LParam.Reference.Summary.IsNull);
+  Assert.IsTrue(LParam.Description.IsNull, 'The parameter''s own description is not set');
+
+  LResponse := FDocument.Paths['/a'].Get.Responses['200'];
+  Assert.AreEqual('S', LResponse.Reference.Summary.Value);
+  Assert.AreEqual('D', LResponse.Reference.Description.Value);
+
+  LJSON := Save;
+  try
+    Assert.AreEqual('{"$ref":"#/components/parameters/Id","description":"Local"}',
+      JSONAt(LJSON, ['paths', '/a', 'get', 'parameters', '0']).ToJSON);
+    Assert.AreEqual('{"$ref":"#/components/responses/Ok","summary":"S","description":"D"}',
+      JSONAt(LJSON, ['paths', '/a', 'get', 'responses', '200']).ToJSON);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+procedure TTestOpenAPIReferenceIO.TestReferenceDescriptionFromCode;
+var
+  LParam: TOpenAPIParameter;
+  LJSON: TJSONObject;
+begin
+  FDocument.Info.Title := 't';
+  FDocument.Info.Version := '1';
+  LParam := FDocument.AddPath('/a').AddParameter('ignored', 'query');
+  LParam.Reference.SetReference('Id', TOpenAPIReferenceTarget.Parameters);
+  LParam.Reference.Description := 'Overrides the component''s description';
+
+  LJSON := Save;
+  try
+    Assert.AreEqual('{"$ref":"#/components/parameters/Id","description":"Overrides the component''s description"}',
+      JSONAt(LJSON, ['paths', '/a', 'parameters', '0']).ToJSON);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+procedure TTestOpenAPIReferenceIO.TestReferenceOtherSiblingsAreIgnored;
+var
+  LJSON: TJSONObject;
+begin
+  // Only summary and description are Reference Object fields
+  Load(DocHeader + '"paths":{"/a":{"get":{' +
+    '"parameters":[{"$ref":"#/components/parameters/Id","name":"x","in":"query","required":true}],' +
+    '"responses":{"200":{"description":"ok"}}}}}}');
+
+  LJSON := Save;
+  try
+    Assert.AreEqual('{"$ref":"#/components/parameters/Id"}',
+      JSONAt(LJSON, ['paths', '/a', 'get', 'parameters', '0']).ToJSON);
+  finally
+    LJSON.Free;
+  end;
+end;
+
+procedure TTestOpenAPIReferenceIO.TestPathItemReferenceSummaryAndDescription;
+var
+  LJSON: TJSONObject;
+begin
+  // A path item "$ref" isn't a Reference Object: summary and description are the path
+  // item's own fields, allowed next to "$ref"
+  Load(DocHeader + '"webhooks":{"ping":{"$ref":"#/components/pathItems/Ping","summary":"PS","description":"PD"}}}');
+
+  Assert.AreEqual('Ping', FDocument.Webhooks['ping'].Reference.Id);
+  Assert.AreEqual('PS', FDocument.Webhooks['ping'].Summary.Value);
+  Assert.AreEqual('PD', FDocument.Webhooks['ping'].Description.Value);
+
+  LJSON := Save;
+  try
+    Assert.AreEqual('{"$ref":"#/components/pathItems/Ping","summary":"PS","description":"PD"}',
+      JSONAt(LJSON, ['webhooks', 'ping']).ToJSON);
+  finally
+    LJSON.Free;
+  end;
 end;
 
 initialization

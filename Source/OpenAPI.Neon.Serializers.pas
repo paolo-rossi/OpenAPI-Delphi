@@ -693,10 +693,16 @@ begin
   LModel := AData.AsObject as TOpenAPIModelReference;
   LJSON := TJSONObject(AValue);
 
-  // A Reference Object: its siblings aren't part of the referencing object
+  // A Reference Object: besides "$ref" it can only have "summary" and "description" (OAS 3.1),
+  // which belong to the reference (they override the referenced component's). Other siblings
+  // aren't part of the referencing object, and are ignored
   if LJSON.Values['$ref'] is TJSONString then
   begin
     LModel.Reference.SetFullReference(LJSON.Values['$ref'].Value);
+    if LJSON.Values['summary'] is TJSONString then
+      LModel.Reference.Summary := LJSON.Values['summary'].Value;
+    if LJSON.Values['description'] is TJSONString then
+      LModel.Reference.Description := LJSON.Values['description'].Value;
     Exit;
   end;
 
@@ -719,11 +725,16 @@ begin
 
   Result := TJSONObject.Create;
 
-  // A Reference Object is written alone: the members a referencing object must have
-  // (e.g. a parameter's name and in) would otherwise be written next to it, empty
+  // A Reference Object is written alone, with only its own "summary" and "description": the
+  // members a referencing object must have (e.g. a parameter's name and in) would otherwise be
+  // written next to it, empty
   if LModel.IsReference then
   begin
     TJSONObject(Result).AddPair('$ref', AContext.WriteDataMember(LModel.Reference, True));
+    if not LModel.Reference.Summary.IsNull then
+      TJSONObject(Result).AddPair('summary', LModel.Reference.Summary.Value);
+    if not LModel.Reference.Description.IsNull then
+      TJSONObject(Result).AddPair('description', LModel.Reference.Description.Value);
     Exit;
   end;
 
@@ -814,11 +825,16 @@ begin
   LPath := AData.AsObject as TOpenAPIPathItem;
   LJSONPath := AValue as TJSONObject;
 
-  // Path Item $ref is Reference Object semantics (exclusive of siblings), not JSON Schema
-  // vocabulary: read only the reference
+  // A referenced path item: read the reference and the path item's own summary and description
+  // (the spec allows them next to "$ref"). Operations next to "$ref" aren't read: their merge
+  // with the referenced path item is undefined in the spec
   if LJSONPath.Values['$ref'] is TJSONString then
   begin
     LPath.Reference.SetFullReference(LJSONPath.Values['$ref'].Value);
+    if LJSONPath.Values['summary'] is TJSONString then
+      LPath.Summary := LJSONPath.Values['summary'].Value;
+    if LJSONPath.Values['description'] is TJSONString then
+      LPath.Description := LJSONPath.Values['description'].Value;
     Exit;
   end;
 
@@ -863,6 +879,10 @@ begin
   begin
     LJSON := TJSONObject.Create;
     LJSON.AddPair('$ref', AContext.WriteDataMember(LPath.Reference, True));
+    if not LPath.Summary.IsNull then
+      LJSON.AddPair('summary', LPath.Summary.Value);
+    if not LPath.Description.IsNull then
+      LJSON.AddPair('description', LPath.Description.Value);
     Exit(LJSON);
   end;
 

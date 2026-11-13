@@ -16,7 +16,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
 
-  Neon.Core.Attributes;
+  Neon.Core.Attributes,
+  Neon.Core.Nullables;
 
 type
   TOpenAPIReferenceTarget = (
@@ -44,6 +45,8 @@ type
     FExternalResource: string;
     FTarget: TOpenAPIReferenceTarget;
     FRawReference: string;
+    FSummary: NullString;
+    FDescription: NullString;
     procedure SetId(const AValue: string);
     procedure SetExternalResource(const AValue: string);
     procedure SetTarget(const AValue: TOpenAPIReferenceTarget);
@@ -105,6 +108,20 @@ type
     /// 2. a Url, for example: http://localhost/pet.json
     /// </summary>
     [NeonIgnore] property ExternalResource: string read FExternalResource write SetExternalResource;
+
+    /// <summary>
+    ///   OAS 3.1 Reference Object "summary": overrides the summary of the referenced component
+    ///   (no effect if that component has no summary). Written next to "$ref" when set.
+    ///   Not part of the reference itself: IsEmpty and SetFullReference ignore it
+    /// </summary>
+    [NeonIgnore] property Summary: NullString read FSummary write FSummary;
+
+    /// <summary>
+    ///   OAS 3.1 Reference Object "description": overrides the description of the referenced
+    ///   component (no effect if that component has no description). Written next to "$ref"
+    ///   when set. Not part of the reference itself: IsEmpty and SetFullReference ignore it
+    /// </summary>
+    [NeonIgnore] property Description: NullString read FDescription write FDescription;
   end;
 
 implementation
