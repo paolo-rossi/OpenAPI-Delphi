@@ -1,22 +1,10 @@
 {******************************************************************************}
 {                                                                              }
-{  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2025 Paolo Rossi                                         }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
-{******************************************************************************}
-{                                                                              }
-{  Licensed under the Apache License, Version 2.0 (the "License");             }
-{  you may not use this file except in compliance with the License.            }
-{  You may obtain a copy of the License at                                     }
-{                                                                              }
-{      http://www.apache.org/licenses/LICENSE-2.0                              }
-{                                                                              }
-{  Unless required by applicable law or agreed to in writing, software         }
-{  distributed under the License is distributed on an "AS IS" BASIS,           }
-{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
-{  See the License for the specific language governing permissions and         }
-{  limitations under the License.                                              }
+{  Licensed under the MIT license                                              }
 {                                                                              }
 {******************************************************************************}
 unit OpenAPI.Model.Schema;
@@ -126,15 +114,16 @@ type
     FNeonConfig: INeonConfiguration;
     FJSONObject: TJSONObject;
     FJSONOwned: Boolean;
+    FExplicit: Boolean;
   private
     FFormat: NullString;
     FTitle: NullString;
     FType_: NullString;
     FDescription: NullString;
     FMaximum: NullDouble;
-    FExclusiveMaximum: NullBoolean;
+    FExclusiveMaximum: NullDouble;
     FMinimum: NullDouble;
-    FExclusiveMinimum: NullBoolean;
+    FExclusiveMinimum: NullDouble;
     FMaxLength: NullInteger;
     FMinLength: NullInteger;
     FPattern: NullString;
@@ -150,14 +139,22 @@ type
     FMaxItems: NullInteger;
     FMinItems: NullInteger;
     FUniqueItems: NullBoolean;
+    FPrefixItems: TOpenAPISchemas;
+    FContains: TOpenAPISchema;
+    FMinContains: NullInteger;
+    FMaxContains: NullInteger;
     FProperties: TOpenAPISchemaMap;
+    FPatternProperties: TOpenAPISchemaMap;
+    FPropertyNames: TOpenAPISchema;
     FMaxProperties: NullInteger;
     FMinProperties: NullInteger;
     FAdditionalPropertiesAllowed: NullBoolean;
     FAdditionalProperties: TOpenAPISchema;
-    FNullable: NullBoolean;
+    FTypes: TArray<string>;
+    FConst_: TOpenAPIAny;
     FDefault_: TOpenAPIAny;
     FEnum: TOpenAPIEnum;
+    FExamples: TOpenAPIEnum;
     FDiscriminator: TOpenAPIDiscriminator;
     FExternalDocs: TOpenAPISchemaExternalDoc;
 
@@ -170,6 +167,8 @@ type
 
     function AddProperty(const AKeyName: string): TOpenAPISchema;
     function AddEnum(const AValue: TValue): TOpenAPIAny;
+    function AddPrefixItem: TOpenAPISchema;
+    function AddPatternProperty(const APattern: string): TOpenAPISchema;
 
     procedure SetExternalDocs(const AURL, ADescription: string);
 
@@ -183,6 +182,16 @@ type
 
     [NeonIgnore]
     property JSONObject: TJSONObject read FJSONObject write FJSONObject;
+
+    /// <summary>
+    ///   Marks the schema as present even when it has no keywords, so that a member schema
+    ///   (e.g. a media type's "schema") is written as {} - the schema that accepts any value -
+    ///   instead of being omitted. Set automatically when the schema is read from JSON.
+    ///   Schemas inside maps and lists (e.g. components/schemas, properties, allOf) are
+    ///   always written, as {} when empty, so they don't need it
+    /// </summary>
+    [NeonIgnore]
+    property Explicit: Boolean read FExplicit write FExplicit;
   public
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -197,11 +206,21 @@ type
     property Title: NullString read FTitle write FTitle;
 
     /// <summary>
-    /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
-    /// Value MUST be a string. Multiple types via an array are not supported.
+    /// JSON Schema 2020-12 "type" keyword, single-type form. Value MUST be a string.
+    /// Mutually exclusive with <see cref="Types"/> (used for the multi-type/nullable form).
+    /// Both are [NeonIgnore]d: mapping both to the same 'type' JSON key confuses Neon's generic
+    /// deserializer (it tries to populate both from the same value), so TOpenAPISchemaSerializer
+    /// reads/writes 'type' explicitly instead.
     /// </summary>
-    [NeonProperty('type')]
+    [NeonIgnore]
     property Type_: NullString read FType_ write FType_;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "type" keyword, multi-type form (e.g. ['string', 'null']).
+    /// Mutually exclusive with <see cref="Type_"/>. See remarks on <see cref="Type_"/>.
+    /// </summary>
+    [NeonIgnore]
+    property Types: TArray<string> read FTypes write FTypes;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -215,9 +234,9 @@ type
     property Maximum: NullDouble read FMaximum write FMaximum;
 
     /// <summary>
-    /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
+    /// JSON Schema 2020-12: numeric exclusive upper bound (replaces the OAS 3.0 boolean modifier).
     /// </summary>
-    property ExclusiveMaximum: NullBoolean read FExclusiveMaximum write FExclusiveMaximum;
+    property ExclusiveMaximum: NullDouble read FExclusiveMaximum write FExclusiveMaximum;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -225,9 +244,9 @@ type
     property Minimum: NullDouble read FMinimum write FMinimum;
 
     /// <summary>
-    /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
+    /// JSON Schema 2020-12: numeric exclusive lower bound (replaces the OAS 3.0 boolean modifier).
     /// </summary>
-    property ExclusiveMinimum: NullBoolean read FExclusiveMinimum write FExclusiveMinimum;
+    property ExclusiveMinimum: NullDouble read FExclusiveMinimum write FExclusiveMinimum;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -258,6 +277,12 @@ type
     /// </summary>
     [NeonProperty('default'), NeonInclude(IncludeIf.NotEmpty)]
     property Default_: TOpenAPIAny read FDefault_ write FDefault_;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "const" keyword: the instance must equal this value exactly.
+    /// </summary>
+    [NeonProperty('const'), NeonInclude(IncludeIf.NotEmpty)]
+    property Const_: TOpenAPIAny read FConst_ write FConst_;
 
     /// <summary>
     /// Relevant only for Schema "properties" definitions. Declares the property as "read only".
@@ -339,11 +364,47 @@ type
     property UniqueItems: NullBoolean read FUniqueItems write FUniqueItems;
 
     /// <summary>
+    /// JSON Schema 2020-12 "prefixItems": tuple validation. Each entry validates the array item
+    /// at the corresponding position; <see cref="Items"/> then applies to any remaining items.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property PrefixItems: TOpenAPISchemas read FPrefixItems write FPrefixItems;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "contains": at least one array item must validate against this schema.
+    /// </summary>
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotNull)]
+    property Contains: TOpenAPISchema read FContains write FContains;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "minContains".
+    /// </summary>
+    property MinContains: NullInteger read FMinContains write FMinContains;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "maxContains".
+    /// </summary>
+    property MaxContains: NullInteger read FMaxContains write FMaxContains;
+
+    /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or referenced).
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Properties: TOpenAPISchemaMap read FProperties write FProperties;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "patternProperties": maps a regular expression to a schema; properties
+    /// whose name matches the pattern must validate against the corresponding schema.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property PatternProperties: TOpenAPISchemaMap read FPatternProperties write FPatternProperties;
+
+    /// <summary>
+    /// JSON Schema 2020-12 "propertyNames": every property name must validate against this schema.
+    /// </summary>
+    [NeonAutoCreate, NeonInclude(IncludeIf.NotNull)]
+    property PropertyNames: TOpenAPISchema read FPropertyNames write FPropertyNames;
 
     /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
@@ -389,9 +450,10 @@ type
     property Enum: TOpenAPIEnum read FEnum write FEnum;
 
     /// <summary>
-    /// Allows sending a null value for the defined schema. Default value is false.
+    /// JSON Schema 2020-12 "examples" keyword (plural, array form).
     /// </summary>
-    property Nullable: NullBoolean read FNullable write FNullable;
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Examples: TOpenAPIEnum read FExamples write FExamples;
 
     /// <summary>
     /// Additional external documentation for this schema.
@@ -436,6 +498,21 @@ begin
   end;
 end;
 
+function TOpenAPISchema.AddPrefixItem: TOpenAPISchema;
+begin
+  Result := TOpenAPISchema.Create;
+  FPrefixItems.Add(Result);
+end;
+
+function TOpenAPISchema.AddPatternProperty(const APattern: string): TOpenAPISchema;
+begin
+  if not FPatternProperties.TryGetValue(APattern, Result) then
+  begin
+    Result := TOpenAPISchema.Create;
+    FPatternProperties.Add(APattern, Result);
+  end;
+end;
+
 constructor TOpenAPISchema.Create;
 begin
   inherited Create;
@@ -443,10 +520,14 @@ begin
   FAllOf := CreateSubObject<TOpenAPISchemas>;
   FOneOf := CreateSubObject<TOpenAPISchemas>;
   FAnyOf := CreateSubObject<TOpenAPISchemas>;
+  FPrefixItems := CreateSubObject<TOpenAPISchemas>;
   FProperties := CreateSubObject<TOpenAPISchemaMap>;
+  FPatternProperties := CreateSubObject<TOpenAPISchemaMap>;
   FDiscriminator := CreateSubObject<TOpenAPIDiscriminator>;
   FDefault_ := CreateSubObject<TOpenAPIAny>;
+  FConst_ := CreateSubObject<TOpenAPIAny>;
   FEnum := CreateSubObject<TOpenAPIEnum>;
+  FExamples := CreateSubObject<TOpenAPIEnum>;
   //FExternalDocs := CreateSubObject<TOpenAPISchemaExternalDoc>;
 end;
 
@@ -455,6 +536,8 @@ begin
   // You need to destroy these in case Neon creates them
   FNot_.Free;
   FItems.Free;
+  FContains.Free;
+  FPropertyNames.Free;
   FAdditionalProperties.Free;
   FExternalDocs.Free;
 
@@ -473,9 +556,19 @@ end;
 
 function TOpenAPISchema.IsEmpty: Boolean;
 begin
-  Result := not Assigned(FJSONObject) and FType_.IsNull and FTitle.IsNull and FFormat.IsNull and
-    FAllOf.IsEmpty and FAnyOf.IsEmpty and FOneOf.IsEmpty and FProperties.IsEmpty and
-    not IsReference();
+  Result := not Assigned(FJSONObject) and not IsReference and
+    FType_.IsNull and (Length(FTypes) = 0) and FTitle.IsNull and FFormat.IsNull and FDescription.IsNull and
+    FMaximum.IsNull and FExclusiveMaximum.IsNull and FMinimum.IsNull and FExclusiveMinimum.IsNull and
+    FMaxLength.IsNull and FMinLength.IsNull and FPattern.IsNull and FMultipleOf.IsNull and
+    FReadOnly_.IsNull and FWriteOnly_.IsNull and
+    FAllOf.IsEmpty and FOneOf.IsEmpty and FAnyOf.IsEmpty and not Assigned(FNot_) and
+    (Length(FRequired) = 0) and not Assigned(FItems) and FMaxItems.IsNull and FMinItems.IsNull and FUniqueItems.IsNull and
+    FPrefixItems.IsEmpty and not Assigned(FContains) and FMinContains.IsNull and FMaxContains.IsNull and
+    FProperties.IsEmpty and FPatternProperties.IsEmpty and not Assigned(FPropertyNames) and
+    FMaxProperties.IsNull and FMinProperties.IsNull and
+    FAdditionalPropertiesAllowed.IsNull and not Assigned(FAdditionalProperties) and
+    FConst_.Value.IsEmpty and FDefault_.Value.IsEmpty and FEnum.IsEmpty and FExamples.IsEmpty and
+    (FDiscriminator.Mapping.Count = 0) and FDiscriminator.PropertyName.IsNull and not Assigned(FExternalDocs);
 end;
 
 procedure TOpenAPISchema.SetJSONObject(AJSON: TJSONObject; AOwned: Boolean);
@@ -498,12 +591,12 @@ end;
 
 procedure TOpenAPISchema.SetJSONFromClass(AClass: TClass);
 begin
-  SetJSONObject(TNeonSchemaGenerator.ClassToJSONSchema(AClass, GetNeonConfig));
+  SetJSONObject(TNeonSchemaGenerator.ClassToJSONSchema(AClass, TNeonSchemaConfiguration.Wrap(GetNeonConfig)));
 end;
 
 procedure TOpenAPISchema.SetJSONFromType(AType: TRttiType);
 begin
-  SetJSONObject(TNeonSchemaGenerator.TypeToJSONSchema(AType, GetNeonConfig));
+  SetJSONObject(TNeonSchemaGenerator.TypeToJSONSchema(AType, TNeonSchemaConfiguration.Wrap(GetNeonConfig)));
 end;
 
 procedure TOpenAPISchema.SetSchemaReference(const AReference: string);

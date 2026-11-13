@@ -1,22 +1,10 @@
 {******************************************************************************}
 {                                                                              }
-{  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2025 Paolo Rossi                                         }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
-{******************************************************************************}
-{                                                                              }
-{  Licensed under the Apache License, Version 2.0 (the 'License");             }
-{  you may not use this file except in compliance with the License.            }
-{  You may obtain a copy of the License at                                     }
-{                                                                              }
-{      http://www.apache.org/licenses/LICENSE-2.0                              }
-{                                                                              }
-{  Unless required by applicable law or agreed to in writing, software         }
-{  distributed under the License is distributed on an "AS IS" BASIS,           }
-{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
-{  See the License for the specific language governing permissions and         }
-{  limitations under the License.                                              }
+{  Licensed under the MIT license                                              }
 {                                                                              }
 {******************************************************************************}
 unit OpenAPI.Model.Classes;
@@ -230,6 +218,7 @@ type
   private
     FName: NullString;
     FUrl: NullString;
+    FIdentifier: NullString;
   public
     /// <summary>
     /// REQUIRED. The license name used for the API.
@@ -238,8 +227,14 @@ type
 
     /// <summary>
     /// The Url pointing to the contact information. MUST be in the format of a Url.
+    /// Mutually exclusive with Identifier.
     /// </summary>
     property Url: NullString read FUrl write FUrl;
+
+    /// <summary>
+    /// An SPDX license expression for the API. Mutually exclusive with Url.
+    /// </summary>
+    property Identifier: NullString read FIdentifier write FIdentifier;
   end;
 
   TOpenAPIExamples = class;
@@ -846,6 +841,7 @@ type
   TOpenAPIResponseMap = class(TOpenAPIModelExtensibleMap<TOpenAPIResponse>);
 
   TOpenAPIPathItem = class;
+  TOpenAPIPathMap = class;
 
   TOpenAPICallback = class(TOpenAPIModelReference)
   private
@@ -1144,6 +1140,7 @@ type
     FTermsOfService: NullString;
     FTitle: string;
     FVersion: string;
+    FSummary: NullString;
   public
     constructor Create;
   public
@@ -1151,6 +1148,11 @@ type
     /// REQUIRED. The title of the application.
     /// </summary>
     property Title: string read FTitle write FTitle;
+
+    /// <summary>
+    /// A short summary of the API.
+    /// </summary>
+    property Summary: NullString read FSummary write FSummary;
 
     /// <summary>
     /// A short description of the application.
@@ -1194,6 +1196,7 @@ type
     FSecuritySchemes: TOpenAPISecuritySchemeMap;
     FLinks: TOpenAPILinkMap;
     FCallbacks: TOpenAPICallbackMap;
+    FPathItems: TOpenAPIPathMap;
     function AddSecurityScheme(const AName, ADescription: string; AType: TSecurityScheme): TOpenAPISecurityScheme;
   public
     constructor Create;
@@ -1202,6 +1205,7 @@ type
     function AddSchema(const AKeyName: string): TOpenAPISchema;
     function AddResponse(const AKeyName, ADescription: string): TOpenAPIResponse;
     function AddParameter(const AKeyName, AName, ALocation: string): TOpenAPIparameter;
+    function AddPathItem(const AKeyName: string): TOpenAPIPathItem;
 
     function AddSecurityHttp(const AKeyName, ADescription, AScheme, ABearerFormat: string): TOpenAPISecurityScheme;
     function AddSecurityApiKey(const AKeyName, ADescription, AHeaderName: string; ALocation: TAPIKeyLocation): TOpenAPISecurityScheme;
@@ -1261,12 +1265,18 @@ type
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Callbacks: TOpenAPICallbackMap read FCallbacks write FCallbacks;
+
+    /// <summary>
+    /// An object to hold reusable <see cref="TOpenAPIPathItem"/> Objects.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property PathItems: TOpenAPIPathMap read FPathItems write FPathItems;
   end;
 
   /// <summary>
   /// Path Item Object: to describe the operations available on a single path.
   /// </summary>
-  TOpenAPIPathItem = class(TOpenAPIExtensible)
+  TOpenAPIPathItem = class(TOpenAPIModelReference)
   private
     FSummary: NullString;
     FDescription: NullString;
@@ -1286,6 +1296,7 @@ type
     function AddOperation(const AType: TOperationType): TOpenAPIOperation;
     function AddServer(const AKeyName: string): TOpenAPIServer;
     function AddParameter(const AName, ALocation: string): TOpenAPIParameter;
+    procedure SetPathItemReference(const AReference: string);
   public
     /// <summary>
     /// An optional, string summary, intended to apply to all operations in this path.
@@ -1361,7 +1372,7 @@ type
 
   TOpenAPIPathMap = class(TOpenAPIModelExtensibleMap<TOpenAPIPathItem>);
 
-  TOpenAPIVersion = (v303, v304, v310, v311);
+  TOpenAPIVersion = (v310, v311);
   TOpenAPIVersionHelper = record helper for TOpenAPIVersion
   public
     function ToString: string;
@@ -1375,7 +1386,9 @@ type
   private
     FInfo: TOpenAPIInfo;
     FOpenapi: string;
+    FJsonSchemaDialect: NullString;
     FPaths: TOpenAPIPathMap;
+    FWebhooks: TOpenAPIPathMap;
     FServers: TOpenAPIServers;
     FComponents: TOpenAPIComponents;
     FSecurity: TOpenAPISecurityRequirements;
@@ -1387,6 +1400,7 @@ type
   public
     function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddPath(const AKeyName: string): TOpenAPIPathItem;
+    function AddWebhook(const AKeyName: string): TOpenAPIPathItem;
     function AddTag(const AName, ADescription: string): TOpenAPITag;
     procedure AddSecurity(ASchemeName: string; AParams: TArray<string>);
     procedure SetExternalDocs(const AURL, ADescription: string);
@@ -1396,6 +1410,12 @@ type
     ///   Specification version that the Openapi document uses
     /// </summary>
     property Openapi: string read FOpenapi write FOpenapi;
+
+    /// <summary>
+    ///   The default value for the $schema keyword within Schema Objects contained within this
+    ///   OAS document.
+    /// </summary>
+    property JsonSchemaDialect: NullString read FJsonSchemaDialect write FJsonSchemaDialect;
 
     /// <summary>
     /// REQUIRED. Provides metadata about the API. The metadata MAY be used by tooling as required.
@@ -1412,6 +1432,13 @@ type
     /// REQUIRED. The available paths and operations for the API.
     /// </summary>
     property Paths: TOpenAPIPathMap read FPaths write FPaths;
+
+    /// <summary>
+    /// The incoming webhooks that MAY be received as part of this API and that the API consumer
+    /// MAY choose to implement.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Webhooks: TOpenAPIPathMap read FWebhooks write FWebhooks;
 
     /// <summary>
     /// An element to hold various schemas for the specification.
@@ -1587,6 +1614,16 @@ begin
   FSecuritySchemes := CreateSubObject<TOpenAPISecuritySchemeMap>;
   FLinks := CreateSubObject<TOpenAPILinkMap>;
   FCallbacks := CreateSubObject<TOpenAPICallbackMap>;
+  FPathItems := CreateSubObject<TOpenAPIPathMap>;
+end;
+
+function TOpenAPIComponents.AddPathItem(const AKeyName: string): TOpenAPIPathItem;
+begin
+  if not FPathItems.TryGetValue(AKeyName, Result) then
+  begin
+    Result := TOpenAPIPathItem.Create;
+    FPathItems.Add(AKeyName, Result);
+  end;
 end;
 
 function TOpenAPIComponents.SchemaExists(const AKeyName: string): Boolean;
@@ -1618,6 +1655,15 @@ begin
   begin
     Result := TOpenAPIPathItem.Create;
     FPaths.Add(AKeyName, Result);
+  end;
+end;
+
+function TOpenAPIDocument.AddWebhook(const AKeyName: string): TOpenAPIPathItem;
+begin
+  if not FWebhooks.TryGetValue(AKeyName, Result) then
+  begin
+    Result := TOpenAPIPathItem.Create;
+    FWebhooks.Add(AKeyName, Result);
   end;
 end;
 
@@ -1659,9 +1705,11 @@ begin
   inherited Create;
 
   FOpenapi := AVersion.ToString;
+  FJsonSchemaDialect := 'https://spec.openapis.org/oas/3.1/dialect/base';
 
   FInfo := CreateSubObject<TOpenAPIInfo>;
   FPaths := CreateSubObject<TOpenAPIPathMap>;
+  FWebhooks := CreateSubObject<TOpenAPIPathMap>;
   FServers := CreateSubObject<TOpenAPIServers>;
   FComponents := CreateSubObject<TOpenAPIComponents>;
   FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
@@ -1744,6 +1792,11 @@ begin
 
   FServers := CreateSubObject<TOpenAPIServerMap>;
   FParameters := CreateSubObject<TOpenAPIParameters>;
+end;
+
+procedure TOpenAPIPathItem.SetPathItemReference(const AReference: string);
+begin
+  FReference.SetReference(AReference, TOpenAPIReferenceTarget.PathItems);
 end;
 
 { TOpenAPIOperation }
@@ -2091,8 +2144,6 @@ function TOpenAPIVersionHelper.ToString: string;
 begin
   Result := '';
   case Self of
-    TOpenAPIVersion.v303: Result := '3.0.3';
-    TOpenAPIVersion.v304: Result := '3.0.4';
     TOpenAPIVersion.v310: Result := '3.1.0';
     TOpenAPIVersion.v311: Result := '3.1.1';
   end;

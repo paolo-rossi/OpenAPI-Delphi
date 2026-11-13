@@ -1,3 +1,12 @@
+{******************************************************************************}
+{                                                                              }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
+{  https://github.com/paolo-rossi/delphi-openapi                               }
+{                                                                              }
+{  Licensed under the MIT license                                              }
+{                                                                              }
+{******************************************************************************}
 unit Demo.Form.Main;
 
 interface
@@ -138,6 +147,7 @@ var
   LPath: TOpenAPIPathItem;
   LOperation: TOpenAPIOperation;
   LParameter: TOpenAPIParameter;
+  LWebhook: TOpenAPIPathItem;
 begin
   LPath := FDocument.AddPath('/customers');
   LPath.Description := 'Customers resource';
@@ -163,6 +173,11 @@ begin
       LParameter.Schema.Type_ := 'string';
       LParameter.Schema.Format := 'date-time';
 
+      // JSON Schema 2020-12 "type" array form: a nullable string (replaces OAS 3.0's `nullable: true`)
+      LParameter := LOperation.AddParameter('nickname', 'query');
+      LParameter.Description := 'Nickname (nullable)';
+      LParameter.Schema.Types := ['string', 'null'];
+
       // Uses a JSON schema already existing as a TJSONObject
       LParameter := LOperation.AddParameter('person', 'query');
       LParameter.Description := 'Person Entity';
@@ -171,7 +186,14 @@ begin
       // Uses #ref
       LParameter := LOperation.AddParameter('order', 'query');
       LParameter.Description := 'Order Entity';
-      LParameter.Schema.Reference.Ref := '#components/schemas/order';
+      LParameter.Schema.SetSchemaReference('order');
+
+  // Webhook referencing a reusable Path Item Object from Components (OAS 3.1)
+  FDocument.Components.AddPathItem('newCustomerPing').AddOperation(TOperationType.Post).Summary :=
+    'Information about a new customer';
+
+  LWebhook := FDocument.AddWebhook('newCustomer');
+  LWebhook.SetPathItemReference('newCustomerPing');
 end;
 
 procedure TfrmMain.actCompAddResponsesExecute(Sender: TObject);
@@ -181,7 +203,7 @@ var
 begin
   LResponse := FDocument.Components.AddResponse('200', 'Successful Response');
   LMediaType := LResponse.AddMediaType('application/json');
-  LMediaType.Schema.Reference.Ref := '#components/schemas/country';
+  LMediaType.Schema.SetSchemaReference('country');
 end;
 
 procedure TfrmMain.actCompAddSchemasExecute(Sender: TObject);
@@ -209,6 +231,10 @@ begin
     LProperty.Description := 'Birth Date';
     LProperty.Type_ := 'string';
     LProperty.Format := 'date-time';
+
+    // JSON Schema 2020-12 "const" keyword
+    LProperty := LSchema.AddProperty('kind');
+    LProperty.Const_.ValueFrom<string>('person');
 end;
 
 procedure TfrmMain.actCompAddSecurityDefsExecute(Sender: TObject);
@@ -243,7 +269,7 @@ end;
 
 procedure TfrmMain.actDocumentNewExecute(Sender: TObject);
 begin
-  FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
+  FDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v311);
   pnlSections.Visible := True;
   FDocumentName := 'MyAPI';
 end;
@@ -263,7 +289,7 @@ begin
   if not dlgOpenJSON.Execute() then
     Exit;
 
-  LDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v303);
+  LDocument := TOpenAPIDocument.Create(TOpenAPIVersion.v311);
   try
     LJSON := TJSONObject.ParseJSONValue(TFile.ReadAllText(dlgOpenJSON.FileName)) as TJSONObject;
     try

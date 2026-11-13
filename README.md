@@ -3,7 +3,7 @@
 <br />
 
 <p align="center">
-  <img src="https://github.com/paolo-rossi/OpenAPI-Delphi/blob/master/openapi-delphi.png" alt="OpenAPI Delphi Library" width="400" />
+  <img src="openapi-delphi-square.png" alt="OpenAPI Delphi Library" width="400" />
 </p>
 
 ## What is OpenAPI-Delphi
