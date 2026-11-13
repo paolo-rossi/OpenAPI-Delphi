@@ -103,6 +103,21 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
+  /// <summary>
+  ///   Serializer for the objects that can be a Reference Object (parameters, responses, headers,
+  ///   examples, request bodies, links, callbacks, security schemes): when the reference is set
+  ///   the object is written as {"$ref": "..."} alone, otherwise as a normal object. Schemas and
+  ///   path items have their own (more derived, so preferred) serializers
+  /// </summary>
+  TOpenAPIModelReferenceSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
   TOpenAPIPathItemSerializer = class(TCustomSerializer)
   protected
     class function GetTargetInfo: PTypeInfo; override;
@@ -386,6 +401,7 @@ begin
       .RegisterSerializer(TNullableTDateTimeSerializer)
       // OpenAPI Models
       .RegisterSerializer(TOpenAPIReferenceSerializer)
+      .RegisterSerializer(TOpenAPIModelReferenceSerializer)
       .RegisterSerializer(TOpenAPISchemaSerializer)
       .RegisterSerializer(TOpenAPIAnySerializer)
       .RegisterSerializer(TOpenAPIPathItemSerializer)
@@ -456,26 +472,24 @@ end;
 function TOpenAPIReferenceSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
-  LType: TRttiType;
   LRef: TOpenAPIReference;
-  LJSON: TJSONObject;
+  LRefValue: TJSONValue;
 begin
-  raise Exception.Create('Deserialization not implemented');
-
   Result := AData;
-  LRef := AData.AsObject as TOpenAPIReference;
-  LJSON := AValue as TJSONObject;
 
-  if Assigned(LJSON.Values['$ref']) then
-  begin
-    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
-    AContext.ReadDataMember(AValue, LType, LRef, False);
-  end
-  else
-  begin
-    LType := TRttiUtils.Context.GetType(AData.AsObject.ClassType);
-    AContext.ReadDataMember(AValue, LType, AData, False);
-  end;
+  LRef := AData.AsType<TOpenAPIReference>;
+  if LRef = nil then
+    Exit;
+
+  // A '$ref' member arrives as its string value. Also accept the whole Reference Object
+  // ({"$ref": "..."}), so callers can pass the object that contains the '$ref' key
+  LRefValue := AValue;
+  if LRefValue is TJSONObject then
+    LRefValue := TJSONObject(LRefValue).Values['$ref'];
+
+  // Anything else (e.g. an explicit null) leaves the reference unset
+  if LRefValue is TJSONString then
+    LRef.SetFullReference(LRefValue.Value);
 end;
 
 class function TOpenAPIReferenceSerializer.GetTargetInfo: PTypeInfo;
@@ -494,7 +508,7 @@ begin
   if LRef = nil then
     Exit;
 
-  if not LRef.Id.IsEmpty then
+  if not LRef.IsEmpty then
     Exit(TJSONString.Create(LRef.GetFullReference))
 end;
 
@@ -512,7 +526,6 @@ var
   LType: TRttiType;
   LSchema: TOpenAPISchema;
   LJSONSchema: TJSONObject;
-  LRefPair: TJSONPair;
   LTypeValue: TJSONValue;
   LTypeArray: TJSONArray;
   LTypes: TArray<string>;
@@ -532,23 +545,10 @@ begin
   // The schema is in the document, even if it's {}: keep it when writing it back
   LSchema.Explicit := True;
 
-  LRefPair := nil;
-  if Assigned(LJSONSchema.Values['$ref']) then
-  begin
-    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
-    AContext.ReadDataMember(AValue, LType, LSchema.Reference, False);
-
-    // JSON Schema 2020-12 allows keywords alongside $ref; read them below too, but first remove
-    // the '$ref' pair so the generic member reader doesn't also try it (and hit
-    // TOpenAPIReferenceSerializer.Deserialize, which is unimplemented).
-    LRefPair := LJSONSchema.RemovePair('$ref');
-  end;
-
+  // JSON Schema 2020-12 allows keywords alongside $ref: the generic member reader reads them all,
+  // '$ref' included (through the Reference member and TOpenAPIReferenceSerializer)
   LType := TRttiUtils.Context.GetType(TOpenAPISchema);
   AContext.ReadMembers(LType, LSchema, LJSONSchema);
-
-  if Assigned(LRefPair) then
-    LJSONSchema.AddPair(LRefPair);
 
   // 'type' (2020-12) can be a plain string or an array of strings. Type_/Types are
   // [NeonIgnore]d (mapping both to the same JSON key confuses the generic member reader
@@ -639,6 +639,73 @@ begin
     end;
 end;
 
+{ TOpenAPIModelReferenceSerializer }
+
+class function TOpenAPIModelReferenceSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPIModelReferenceSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+  ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+var
+  LModel: TOpenAPIModelReference;
+  LJSON: TJSONObject;
+begin
+  Result := AData;
+
+  // Only a JSON object can describe the object: anything else (e.g. an explicit null) leaves it untouched
+  if not (AValue is TJSONObject) then
+    Exit;
+
+  LModel := AData.AsObject as TOpenAPIModelReference;
+  LJSON := TJSONObject(AValue);
+
+  // A Reference Object: its siblings aren't part of the referencing object
+  if LJSON.Values['$ref'] is TJSONString then
+  begin
+    LModel.Reference.SetFullReference(LJSON.Values['$ref'].Value);
+    Exit;
+  end;
+
+  AContext.ReadMembers(TRttiUtils.Context.GetType(LModel.ClassType), LModel, LJSON);
+end;
+
+class function TOpenAPIModelReferenceSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPIModelReference.ClassInfo;
+end;
+
+function TOpenAPIModelReferenceSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LModel: TOpenAPIModelReference;
+begin
+  LModel := AValue.AsType<TOpenAPIModelReference>;
+  if LModel = nil then
+    Exit(nil);
+
+  Result := TJSONObject.Create;
+
+  // A Reference Object is written alone: the members a referencing object must have
+  // (e.g. a parameter's name and in) would otherwise be written next to it, empty
+  if LModel.IsReference then
+  begin
+    TJSONObject(Result).AddPair('$ref', AContext.WriteDataMember(LModel.Reference, True));
+    Exit;
+  end;
+
+  AContext.WriteMembers(TRttiUtils.Context.GetType(LModel.ClassType), LModel, Result);
+
+  case ANeonObject.NeonInclude.Value of
+    IncludeIf.NotEmpty, IncludeIf.NotDefault:
+    begin
+      if TJSONObject(Result).Count = 0 then
+        FreeAndNil(Result);
+    end;
+  end;
+end;
+
 { TOpenAPIPathItemSerializer }
 
 class function TOpenAPIPathItemSerializer.CanHandle(AType: PTypeInfo): Boolean;
@@ -653,6 +720,7 @@ var
   LPath: TOpenAPIPathItem;
   LOperation: TOpenAPIOperation;
   LJSONPath: TJSONObject;
+  LJSONOthers: TJSONObject;
   LOpType: TOperationType;
   LType: TRttiType;
   LJSONVal: TJSONValue;
@@ -667,24 +735,34 @@ begin
   LJSONPath := AValue as TJSONObject;
 
   // Path Item $ref is Reference Object semantics (exclusive of siblings), not JSON Schema
-  // vocabulary. Read it directly, bypassing TOpenAPIReferenceSerializer.Deserialize (unimplemented).
-  if Assigned(LJSONPath.Values['$ref']) then
+  // vocabulary: read only the reference
+  if LJSONPath.Values['$ref'] is TJSONString then
   begin
-    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
-    AContext.ReadDataMember(AValue, LType, LPath.Reference, False);
+    LPath.Reference.SetFullReference(LJSONPath.Values['$ref'].Value);
     Exit;
   end;
 
   LType := TRttiUtils.Context.GetType(TOpenAPIOperation);
 
-  for LOpType := Low(TOperationType) to High(TOperationType) do
-  begin
-    LJSONVal := LJSONPath.Values[LOpType.ToString];
-    if Assigned(LJSONVal) then
+  // The operation members are nil until AddOperation creates them, so they're read here, and
+  // the other members (summary, description, parameters, ...) are read from a copy without them
+  LJSONOthers := LJSONPath.Clone as TJSONObject;
+  try
+    for LOpType := Low(TOperationType) to High(TOperationType) do
     begin
-      LOperation := LPath.AddOperation(LOpType);
-      AContext.ReadMembers(LType, LOperation, LJSONVal as TJSONObject);
+      LJSONVal := LJSONPath.Values[LOpType.ToString];
+      if LJSONVal is TJSONObject then
+      begin
+        LOperation := LPath.AddOperation(LOpType);
+        AContext.ReadMembers(LType, LOperation, TJSONObject(LJSONVal));
+      end;
+      LJSONOthers.RemovePair(LOpType.ToString).Free;
     end;
+
+    LType := TRttiUtils.Context.GetType(TOpenAPIPathItem);
+    AContext.ReadMembers(LType, LPath, LJSONOthers);
+  finally
+    LJSONOthers.Free;
   end;
 end;
 
@@ -776,6 +854,7 @@ begin
   ARegistry.RegisterSerializer(TOpenAPIAnySerializer);
   ARegistry.RegisterSerializer(TOpenAPIPathItemSerializer);
   ARegistry.RegisterSerializer(TOpenAPIReferenceSerializer);
+  ARegistry.RegisterSerializer(TOpenAPIModelReferenceSerializer);
   ARegistry.RegisterSerializer(TOpenAPISchemaSerializer);
   ARegistry.RegisterSerializer(TOpenAPIExtensionsSerializer);
 end;

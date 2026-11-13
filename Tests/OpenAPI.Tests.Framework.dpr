@@ -30,7 +30,8 @@ uses
   OpenAPI.Tests.Utils in 'Source\OpenAPI.Tests.Utils.pas',
   OpenAPI.Tests.Schema in 'Source\OpenAPI.Tests.Schema.pas',
   OpenAPI.Tests.Document in 'Source\OpenAPI.Tests.Document.pas',
-  OpenAPI.Tests.Reference in 'Source\OpenAPI.Tests.Reference.pas';
+  OpenAPI.Tests.Reference in 'Source\OpenAPI.Tests.Reference.pas',
+  OpenAPI.Tests.ReferenceIO in 'Source\OpenAPI.Tests.ReferenceIO.pas';
 
 var
   runner : ITestRunner;

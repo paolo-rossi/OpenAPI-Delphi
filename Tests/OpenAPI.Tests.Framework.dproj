@@ -137,6 +137,7 @@
         <DCCReference Include="Source\OpenAPI.Tests.Schema.pas"/>
         <DCCReference Include="Source\OpenAPI.Tests.Document.pas"/>
         <DCCReference Include="Source\OpenAPI.Tests.Reference.pas"/>
+        <DCCReference Include="Source\OpenAPI.Tests.ReferenceIO.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

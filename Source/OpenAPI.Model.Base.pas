@@ -272,7 +272,7 @@ end;
 
 function TOpenAPIModelReference.IsReference: Boolean;
 begin
-  Result := not FReference.Id.IsEmpty;
+  Result := not FReference.IsEmpty;
 end;
 
 { TOpenAPIModelExtensibleMap<T> }

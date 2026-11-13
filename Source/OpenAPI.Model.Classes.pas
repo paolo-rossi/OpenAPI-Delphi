@@ -243,7 +243,7 @@ type
   /// <summary>
   /// Parameter Object
   /// </summary>
-  TOpenAPIParameter = class(TOpenAPIExtensible)
+  TOpenAPIParameter = class(TOpenAPIModelReference)
   private
     FAllowEmptyValue: NullBoolean;
     FDeprecated_: NullBoolean;
@@ -423,7 +423,7 @@ type
   end;
 
   TOpenAPIExamples = class(TOpenAPIModelList<TOpenAPIExample>);
-  TOpenAPIExampleMap = class(TOpenAPIModelMap<TOpenAPIParameter>);
+  TOpenAPIExampleMap = class(TOpenAPIModelMap<TOpenAPIExample>);
 
   TOpenAPIEncoding = class;
   TOpenAPIEncodingMap = class;
@@ -747,7 +747,7 @@ type
   ///   Link Object. The Link Object represents a possible design-time link for
   ///   a response
   /// </summary>
-  TOpenAPILink = class(TOpenAPIExtensible)
+  TOpenAPILink = class(TOpenAPIModelReference)
   private
     FOperationId: NullString;
     FOperationRef: NullString;
@@ -1280,7 +1280,7 @@ type
   private
     FSummary: NullString;
     FDescription: NullString;
-    FServers: TOpenAPIServerMap;
+    FServers: TOpenAPIServers;
     FParameters: TOpenAPIParameters;
     FGet: TOpenAPIOperation;
     FPut: TOpenAPIOperation;
@@ -1294,7 +1294,7 @@ type
     constructor Create;
   public
     function AddOperation(const AType: TOperationType): TOpenAPIOperation;
-    function AddServer(const AKeyName: string): TOpenAPIServer;
+    function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddParameter(const AName, ALocation: string): TOpenAPIParameter;
     procedure SetPathItemReference(const AReference: string);
   public
@@ -1360,7 +1360,7 @@ type
     /// An alternative server array to service all operations in this path.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Servers: TOpenAPIServerMap read FServers write FServers;
+    property Servers: TOpenAPIServers read FServers write FServers;
 
     /// <summary>
     /// A list of parameters that are applicable for all the operations described under this path.
@@ -1777,20 +1777,20 @@ begin
   end;
 end;
 
-function TOpenAPIPathItem.AddServer(const AKeyName: string): TOpenAPIServer;
+function TOpenAPIPathItem.AddServer(const AURL, ADescription: string): TOpenAPIServer;
 begin
-  if not FServers.TryGetValue(AKeyName, Result) then
-  begin
-    Result := TOpenAPIServer.Create;
-    FServers.Add(AKeyName, Result);
-  end;
+  Result := TOpenAPIServer.Create;
+  Result.Url := AURL;
+  if not ADescription.IsEmpty then
+    Result.Description := ADescription;
+  FServers.Add(Result);
 end;
 
 constructor TOpenAPIPathItem.Create;
 begin
   inherited Create;
 
-  FServers := CreateSubObject<TOpenAPIServerMap>;
+  FServers := CreateSubObject<TOpenAPIServers>;
   FParameters := CreateSubObject<TOpenAPIParameters>;
 end;
 
