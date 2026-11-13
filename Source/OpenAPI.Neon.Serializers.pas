@@ -118,6 +118,20 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
+  /// <summary>
+  ///   Serializer for "security" (a list of Security Requirement Objects): writes an empty list
+  ///   as [] when it's Explicit (read from JSON, or set by code), since "security": [] removes the
+  ///   top-level security, which is not the same as no "security" at all
+  /// </summary>
+  TOpenAPISecurityRequirementsSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
   TOpenAPIPathItemSerializer = class(TCustomSerializer)
   protected
     class function GetTargetInfo: PTypeInfo; override;
@@ -402,6 +416,7 @@ begin
       // OpenAPI Models
       .RegisterSerializer(TOpenAPIReferenceSerializer)
       .RegisterSerializer(TOpenAPIModelReferenceSerializer)
+      .RegisterSerializer(TOpenAPISecurityRequirementsSerializer)
       .RegisterSerializer(TOpenAPISchemaSerializer)
       .RegisterSerializer(TOpenAPIAnySerializer)
       .RegisterSerializer(TOpenAPIPathItemSerializer)
@@ -723,6 +738,54 @@ begin
   end;
 end;
 
+{ TOpenAPISecurityRequirementsSerializer }
+
+class function TOpenAPISecurityRequirementsSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPISecurityRequirementsSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+  ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+var
+  LList: TOpenAPISecurityRequirements;
+begin
+  Result := AData;
+
+  // Only a JSON array can describe the requirements: anything else (e.g. null) leaves the list untouched
+  LList := AData.AsType<TOpenAPISecurityRequirements>;
+  if (LList = nil) or not (AValue is TJSONArray) then
+    Exit;
+
+  // The list is in the document, even if it's []: keep it when writing it back
+  LList.Explicit := True;
+  Result := AContext.ReadDataMember(AValue, TRttiUtils.Context.GetType(LList.ClassType), AData, False);
+end;
+
+class function TOpenAPISecurityRequirementsSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPISecurityRequirements.ClassInfo;
+end;
+
+function TOpenAPISecurityRequirementsSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LList: TOpenAPISecurityRequirements;
+begin
+  LList := AValue.AsType<TOpenAPISecurityRequirements>;
+  if LList = nil then
+    Exit(nil);
+
+  if LList.Count = 0 then
+  begin
+    if LList.Explicit then
+      Exit(TJSONArray.Create);
+    Exit(nil);
+  end;
+
+  Result := AContext.WriteDataMember(AValue, False);
+end;
+
 { TOpenAPIPathItemSerializer }
 
 class function TOpenAPIPathItemSerializer.CanHandle(AType: PTypeInfo): Boolean;
@@ -872,6 +935,7 @@ begin
   ARegistry.RegisterSerializer(TOpenAPIPathItemSerializer);
   ARegistry.RegisterSerializer(TOpenAPIReferenceSerializer);
   ARegistry.RegisterSerializer(TOpenAPIModelReferenceSerializer);
+  ARegistry.RegisterSerializer(TOpenAPISecurityRequirementsSerializer);
   ARegistry.RegisterSerializer(TOpenAPISchemaSerializer);
   ARegistry.RegisterSerializer(TOpenAPIExtensionsSerializer);
 end;

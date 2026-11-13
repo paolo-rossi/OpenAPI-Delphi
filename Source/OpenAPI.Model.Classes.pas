@@ -998,9 +998,20 @@ type
   TOpenAPISecurityRequirement = class(TDictionary<string, TArray<string>>);
 
   TOpenAPISecurityRequirements = class(TOpenAPIModelList<TOpenAPISecurityRequirement>)
+  private
+    FExplicit: Boolean;
   public
     procedure AddSecurityRequirement(ASecuritySchemes: TOpenAPISecuritySchemeMap;
         ASchemeName: string; AParams: TArray<string>);
+
+    /// <summary>
+    ///   Marks the list as present even when it's empty, so it's written as [] instead of being
+    ///   omitted. An empty "security" array is meaningful: on an operation it removes the
+    ///   top-level security (the operation needs no authentication). Set automatically when the
+    ///   list is read from JSON
+    /// </summary>
+    [NeonIgnore]
+    property Explicit: Boolean read FExplicit write FExplicit;
   end;
 
   /// <summary>
@@ -1113,7 +1124,8 @@ type
     /// The list of values includes alternative security requirement objects that can be used.
     /// Only one of the security requirement objects need to be satisfied to authorize a request.
     /// This definition overrides any declared top-level security.
-    /// To remove a top-level security declaration, an empty array can be used.
+    /// To remove a top-level security declaration, an empty array can be used: set
+    /// Security.Explicit to True with no requirements.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Security: TOpenAPISecurityRequirements read FSecurity write FSecurity;
