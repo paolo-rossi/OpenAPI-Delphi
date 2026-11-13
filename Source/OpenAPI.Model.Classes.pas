@@ -237,7 +237,7 @@ type
     property Identifier: NullString read FIdentifier write FIdentifier;
   end;
 
-  TOpenAPIExamples = class;
+  TOpenAPIExampleMap = class;
   TOpenAPIMediaTypeMap = class;
 
   /// <summary>
@@ -255,7 +255,7 @@ type
     FExplode: NullBoolean;
     FAllowReserved: NullBoolean;
     FSchema: TOpenAPISchema;
-    FExamples: TOpenApiExamples;
+    FExamples: TOpenAPIExampleMap;
     FContent: TOpenApiMediaTypeMap;
     FExample: TOpenAPIAny;
   public
@@ -345,7 +345,7 @@ type
     /// the examples value SHALL override the example provided by the schema.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Examples: TOpenApiExamples read FExamples write FExamples;
+    property Examples: TOpenAPIExampleMap read FExamples write FExamples;
 
     /// <summary>
     /// Example of the media type. The example SHOULD match the specified schema and encoding properties
@@ -422,7 +422,6 @@ type
     property ExternalValue: NullString read FExternalValue write FExternalValue;
   end;
 
-  TOpenAPIExamples = class(TOpenAPIModelList<TOpenAPIExample>);
   TOpenAPIExampleMap = class(TOpenAPIModelMap<TOpenAPIExample>);
 
   TOpenAPIEncoding = class;
@@ -1973,7 +1972,7 @@ begin
   inherited Create;
 
   FSchema := CreateSubObject<TOpenAPISchema>;
-  FExamples := CreateSubObject<TOpenApiExamples>;
+  FExamples := CreateSubObject<TOpenAPIExampleMap>;
   FContent := CreateSubObject<TOpenApiMediaTypeMap>;
   FExample := CreateSubObject<TOpenAPIAny>;
 end;

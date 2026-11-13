@@ -101,6 +101,9 @@ type
 
     [Test]
     procedure TestSchemaExampleIsNotSupported;
+
+    [Test]
+    procedure TestParameterExamplesMap;
   end;
 
 implementation
@@ -354,6 +357,55 @@ begin
   // the model doesn't have it, so it's ignored on read without errors
   Assert.AreEqual('<missing>', RoundTripMember('example', '"x"'));
   Assert.IsTrue(FSchema.IsEmpty);
+end;
+
+procedure TTestOpenAPIAny.TestParameterExamplesMap;
+var
+  LDocument: TOpenAPIDocument;
+  LIn: TJSONValue;
+  LOut: TJSONObject;
+  LParam: TOpenAPIParameter;
+  LExamples: TJSONObject;
+const
+  DocJSON =
+    '{"openapi":"3.1.1","info":{"title":"t","version":"1"},"paths":{"/a":{"get":{"parameters":[' +
+    '{"name":"id","in":"query","schema":{"type":"integer"},"examples":{"small":{"summary":"S","value":1},' +
+    '"ref":{"$ref":"#/components/examples/Big"}}}],"responses":{"200":{"description":"ok"}}}}},' +
+    '"components":{"parameters":{"P":{"name":"q","in":"header","examples":{"one":{"value":"x"}}}}}}';
+begin
+  // A parameter's "examples" is a map of Example Objects (it used to be a list, which logged
+  // "Invalid class typecast" and dropped it)
+  LDocument := TOpenAPITestUtils.NewDocument;
+  try
+    LIn := TJSONObject.ParseJSONValue(DocJSON);
+    try
+      TNeon.JSONToObject(LDocument, LIn, Config);
+    finally
+      LIn.Free;
+    end;
+    Assert.AreEqual('', FErrors.Text, 'Neon logged errors while reading');
+
+    LParam := LDocument.Paths['/a'].Get.Parameters[0];
+    Assert.AreEqual(2, LParam.Examples.Count);
+    Assert.AreEqual('S', LParam.Examples['small'].Summary.Value);
+    Assert.AreEqual(1, LParam.Examples['small'].Value.Value.AsInteger);
+    Assert.AreEqual('Big', LParam.Examples['ref'].Reference.Id);
+    Assert.AreEqual(1, LDocument.Components.Parameters['P'].Examples.Count);
+
+    LOut := TNeon.ObjectToJSON(LDocument, Config) as TJSONObject;
+    try
+      Assert.AreEqual('', FErrors.Text, 'Neon logged errors while writing');
+      LExamples := LOut.FindValue('paths./a.get.parameters[0].examples') as TJSONObject;
+      Assert.IsNotNull(LExamples);
+      Assert.AreEqual('{"summary":"S","value":1}', LExamples.Values['small'].ToJSON);
+      Assert.AreEqual('{"$ref":"#/components/examples/Big"}', LExamples.Values['ref'].ToJSON);
+      Assert.AreEqual('{"one":{"value":"x"}}', LOut.FindValue('components.parameters.P.examples').ToJSON);
+    finally
+      LOut.Free;
+    end;
+  finally
+    LDocument.Free;
+  end;
 end;
 
 initialization

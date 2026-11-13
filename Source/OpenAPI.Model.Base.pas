@@ -127,12 +127,24 @@ type
   end;
 
   /// <summary>
-  ///   Value-owned Map
+  ///   Value-owned Map. On Delphi 12 and later (RTL 36+) it keeps the insertion order, so a
+  ///   document is written with its paths, schemas, responses... in the order they were read
+  ///   or added. On older versions the order is the dictionary's (hash) order
   /// </summary>
+{$IF RTLVersion >= 36}
+  TOpenAPIOwnedMap<K, V> = class(TOrderedDictionary<K, V>)
+  protected
+    procedure ValueNotify(const Value: V; Action: TCollectionNotification); override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+{$ELSE}
   TOpenAPIOwnedMap<K, V> = class(TObjectDictionary<K, V>)
   public
     constructor Create;
   end;
+{$ENDIF}
 
   /// <summary>
   ///   Base class for the OpenAPI Maps
@@ -303,10 +315,33 @@ end;
 
 { TOpenAPIOwnedMap<K, V> }
 
+{$IF RTLVersion >= 36}
+constructor TOpenAPIOwnedMap<K, V>.Create;
+begin
+  inherited Create;
+end;
+
+destructor TOpenAPIOwnedMap<K, V>.Destroy;
+begin
+  // TOrderedDictionary.Clear empties the key list first: without it, each key removed by the
+  // inherited destructor is searched in the key list (quadratic on large maps)
+  Clear;
+  inherited;
+end;
+
+procedure TOpenAPIOwnedMap<K, V>.ValueNotify(const Value: V; Action: TCollectionNotification);
+begin
+  inherited;
+  // Owns the values, like TObjectDictionary with doOwnsValues (an extracted value isn't freed)
+  if Action = cnRemoved then
+    PObject(@Value)^.Free;
+end;
+{$ELSE}
 constructor TOpenAPIOwnedMap<K, V>.Create;
 begin
   inherited Create([doOwnsValues]);
 end;
+{$ENDIF}
 
 { TOpenAPIModelMap<T> }
 
