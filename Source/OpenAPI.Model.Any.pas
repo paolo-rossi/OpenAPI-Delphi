@@ -12,7 +12,7 @@ unit OpenAPI.Model.Any;
 interface
 
 uses
-  System.Rtti,
+  System.SysUtils, System.Rtti, System.JSON,
 
   Neon.Core.Attributes,
   Neon.Core.Nullables,
@@ -169,16 +169,43 @@ type
   end;
 
   /// <summary>
-  ///   Class for representing... any value
+  ///   Class for representing... any value: a scalar (string, number, boolean) in Value, or
+  ///   any JSON value (object, array, null) in JSONValue. At most one of the two is set
   /// </summary>
   TOpenAPIAny = class
   private
     FValue: TValue;
+    FJSONValue: TJSONValue;
+    procedure SetValue(const AValue: TValue);
   public
+    destructor Destroy; override;
+
     procedure ValueFrom<T>(const Value: T);
 
+    /// <summary>
+    ///   Sets the value to a JSON value (e.g. an object or array example). The instance takes
+    ///   ownership of AValue. Pass nil to clear it
+    /// </summary>
+    procedure SetJSONValue(AValue: TJSONValue);
+
+    /// <summary>
+    ///   Removes the value: the member is then omitted from the JSON
+    /// </summary>
+    procedure Clear;
+
+    /// <summary>
+    ///   True when no value is set. A value that is 0, false, "" or JSON null is not empty
+    /// </summary>
+    function IsEmpty: Boolean;
+
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Value: TValue read FValue write FValue;
+    property Value: TValue read FValue write SetValue;
+
+    /// <summary>
+    ///   The value as JSON, when it isn't a scalar (owned by this instance)
+    /// </summary>
+    [NeonIgnore]
+    property JSONValue: TJSONValue read FJSONValue;
   end;
 
   TOpenAPIAnyValue = TValue;
@@ -236,9 +263,40 @@ end;
 
 { TOpenAPIAny }
 
+procedure TOpenAPIAny.Clear;
+begin
+  FreeAndNil(FJSONValue);
+  FValue := TValue.Empty;
+end;
+
+destructor TOpenAPIAny.Destroy;
+begin
+  FJSONValue.Free;
+  inherited;
+end;
+
+function TOpenAPIAny.IsEmpty: Boolean;
+begin
+  Result := FValue.IsEmpty and not Assigned(FJSONValue);
+end;
+
+procedure TOpenAPIAny.SetJSONValue(AValue: TJSONValue);
+begin
+  if AValue = FJSONValue then
+    Exit;
+  Clear;
+  FJSONValue := AValue;
+end;
+
+procedure TOpenAPIAny.SetValue(const AValue: TValue);
+begin
+  FreeAndNil(FJSONValue);
+  FValue := AValue;
+end;
+
 procedure TOpenAPIAny.ValueFrom<T>(const Value: T);
 begin
-  FValue := TValue.From<T>(Value);
+  SetValue(TValue.From<T>(Value));
 end;
 
 end.

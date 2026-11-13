@@ -437,13 +437,6 @@ type
     property Discriminator: TOpenAPIDiscriminator read FDiscriminator write FDiscriminator;
 
     /// <summary>
-    /// A free-form property to include an example of an instance for this schema.
-    /// To represent examples that cannot be naturally represented in JSON or YAML,
-    /// a string value can be used to contain the example with escaping where necessary.
-    /// </summary>
-    //property Example TOpenApiAny
-
-    /// <summary>
     /// Follow JSON Schema definition: https://tools.ietf.org/html/draft-fge-json-schema-validation-00
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
@@ -567,7 +560,7 @@ begin
     FProperties.IsEmpty and FPatternProperties.IsEmpty and not Assigned(FPropertyNames) and
     FMaxProperties.IsNull and FMinProperties.IsNull and
     FAdditionalPropertiesAllowed.IsNull and not Assigned(FAdditionalProperties) and
-    FConst_.Value.IsEmpty and FDefault_.Value.IsEmpty and FEnum.IsEmpty and FExamples.IsEmpty and
+    FConst_.IsEmpty and FDefault_.IsEmpty and FEnum.IsEmpty and FExamples.IsEmpty and
     (FDiscriminator.Mapping.Count = 0) and FDiscriminator.PropertyName.IsNull and not Assigned(FExternalDocs);
 end;
 

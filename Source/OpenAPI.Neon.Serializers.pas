@@ -423,16 +423,35 @@ function TOpenAPIAnySerializer.Deserialize(AValue: TJSONValue; const AData: TVal
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LAny: TOpenAPIAny;
+  LText: string;
+  LInt64: Int64;
 begin
   Result := AData;
-  LAny := AData.AsObject as TOpenAPIAny;
+  LAny := AData.AsType<TOpenAPIAny>;
+  if (LAny = nil) or (AValue = nil) then
+    Exit;
 
-  if AValue is TJSONNumber then
-    LAny.ValueFrom<Double>((AValue as TJSONNumber).AsDouble)
-  else if AValue is TJSONString then
-    LAny.ValueFrom<string>((AValue as TJSONString).Value)
+  if AValue is TJSONString then
+    LAny.ValueFrom<string>(TJSONString(AValue).Value)
   else if AValue is TJSONBool then
-    LAny.ValueFrom<Boolean>((AValue as TJSONBool).AsBoolean);
+    LAny.ValueFrom<Boolean>(TJSONBool(AValue).AsBoolean)
+  else if AValue is TJSONNumber then
+  begin
+    // Keep integers as integers (a Double loses precision past 2^53 and changes the type)
+    LText := TJSONNumber(AValue).Value;
+    if (LText.IndexOfAny(['.', 'e', 'E']) < 0) and TryStrToInt64(LText, LInt64) then
+    begin
+      if (LInt64 >= Low(Integer)) and (LInt64 <= High(Integer)) then
+        LAny.ValueFrom<Integer>(LInt64)
+      else
+        LAny.ValueFrom<Int64>(LInt64);
+    end
+    else
+      LAny.ValueFrom<Double>(TJSONNumber(AValue).AsDouble);
+  end
+  else
+    // Objects, arrays and null are kept as JSON
+    LAny.SetJSONValue(AValue.Clone as TJSONValue);
 end;
 
 class function TOpenAPIAnySerializer.GetTargetInfo: PTypeInfo;
@@ -449,17 +468,15 @@ begin
   if LValue = nil then
     Exit(nil);
 
-  if LValue.Value.IsEmpty then
+  // An unset value is omitted. A set one is always written, even 0, false, "" or null:
+  // those are valid examples, defaults and consts
+  if LValue.IsEmpty then
     Exit(nil);
 
+  if Assigned(LValue.JSONValue) then
+    Exit(LValue.JSONValue.Clone as TJSONValue);
+
   Result := AContext.WriteDataMember(LValue.Value);
-  case ANeonObject.NeonInclude.Value of
-    IncludeIf.NotEmpty, IncludeIf.NotDefault:
-    begin
-      if not TJSONUtils.IsNotDefault(Result) then
-        FreeAndNil(Result);
-    end;
-  end;
 end;
 
 { TOpenAPIReferenceSerializer }

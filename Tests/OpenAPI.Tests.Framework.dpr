@@ -31,7 +31,8 @@ uses
   OpenAPI.Tests.Schema in 'Source\OpenAPI.Tests.Schema.pas',
   OpenAPI.Tests.Document in 'Source\OpenAPI.Tests.Document.pas',
   OpenAPI.Tests.Reference in 'Source\OpenAPI.Tests.Reference.pas',
-  OpenAPI.Tests.ReferenceIO in 'Source\OpenAPI.Tests.ReferenceIO.pas';
+  OpenAPI.Tests.ReferenceIO in 'Source\OpenAPI.Tests.ReferenceIO.pas',
+  OpenAPI.Tests.Any in 'Source\OpenAPI.Tests.Any.pas';
 
 var
   runner : ITestRunner;
