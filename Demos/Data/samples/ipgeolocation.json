@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.1.0",
   "servers": [
     {
       "url": "https://ipgeolocation.abstractapi.com"
@@ -50,7 +50,9 @@
             "name": "ip_address",
             "required": false,
             "schema": {
-              "example": "195.154.25.40",
+              "examples": [
+                "195.154.25.40"
+              ],
               "type": "string"
             },
             "style": "form"
@@ -61,7 +63,9 @@
             "name": "fields",
             "required": false,
             "schema": {
-              "example": "country,city,timezone",
+              "examples": [
+                "country,city,timezone"
+              ],
               "type": "string"
             },
             "style": "form"

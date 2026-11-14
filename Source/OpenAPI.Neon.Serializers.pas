@@ -1,22 +1,10 @@
 {******************************************************************************}
 {                                                                              }
-{  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2025 Paolo Rossi                                         }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
-{******************************************************************************}
-{                                                                              }
-{  Licensed under the Apache License, Version 2.0 (the 'License");             }
-{  you may not use this file except in compliance with the License.            }
-{  You may obtain a copy of the License at                                     }
-{                                                                              }
-{      http://www.apache.org/licenses/LICENSE-2.0                              }
-{                                                                              }
-{  Unless required by applicable law or agreed to in writing, software         }
-{  distributed under the License is distributed on an "AS IS" BASIS,           }
-{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
-{  See the License for the specific language governing permissions and         }
-{  limitations under the License.                                              }
+{  Licensed under the MIT license                                              }
 {                                                                              }
 {******************************************************************************}
 unit OpenAPI.Neon.Serializers;
@@ -115,6 +103,35 @@ type
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
 
+  /// <summary>
+  ///   Serializer for the objects that can be a Reference Object (parameters, responses, headers,
+  ///   examples, request bodies, links, callbacks, security schemes): when the reference is set
+  ///   the object is written as {"$ref": "..."} alone, otherwise as a normal object. Schemas and
+  ///   path items have their own (more derived, so preferred) serializers
+  /// </summary>
+  TOpenAPIModelReferenceSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
+  /// <summary>
+  ///   Serializer for "security" (a list of Security Requirement Objects): writes an empty list
+  ///   as [] when it's Explicit (read from JSON, or set by code), since "security": [] removes the
+  ///   top-level security, which is not the same as no "security" at all
+  /// </summary>
+  TOpenAPISecurityRequirementsSerializer = class(TCustomSerializer)
+  protected
+    class function GetTargetInfo: PTypeInfo; override;
+    class function CanHandle(AType: PTypeInfo): Boolean; override;
+  public
+    function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
+    function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
+  end;
+
   TOpenAPIPathItemSerializer = class(TCustomSerializer)
   protected
     class function GetTargetInfo: PTypeInfo; override;
@@ -138,6 +155,7 @@ type
     class function GetTargetInfo: PTypeInfo; override;
     class function CanHandle(AType: PTypeInfo): Boolean; override;
   public
+    class function NeedsInstance: Boolean; override;
     function Serialize(const AValue: TValue; ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue; override;
     function Deserialize(AValue: TJSONValue; const AData: TValue; ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue; override;
   end;
@@ -164,7 +182,10 @@ function TNullableStringSerializer.Deserialize(AValue: TJSONValue; const AData:
 var
   LNullValue: NullString;
 begin
-  LNullValue := AValue.Value;
+  if AValue is TJSONNull then
+    LNullValue := nil
+  else
+    LNullValue := AValue.Value;
   Result := TValue.From<NullString>(LNullValue);
 end;
 
@@ -199,7 +220,10 @@ function TNullableBooleanSerializer.Deserialize(AValue: TJSONValue; const
 var
   LNullValue: NullBoolean;
 begin
-  LNullValue := (AValue as TJSONBool).AsBoolean;
+  if AValue is TJSONNull then
+    LNullValue := nil
+  else
+    LNullValue := (AValue as TJSONBool).AsBoolean;
   Result := TValue.From<NullBoolean>(LNullValue);
 end;
 
@@ -234,7 +258,10 @@ function TNullableIntegerSerializer.Deserialize(AValue: TJSONValue; const
 var
   LNullValue: NullInteger;
 begin
-  LNullValue := (AValue as TJSONNumber).AsInt;
+  if AValue is TJSONNull then
+    LNullValue := nil
+  else
+    LNullValue := (AValue as TJSONNumber).AsInt;
   Result := TValue.From<NullInteger>(LNullValue);
 end;
 
@@ -269,7 +296,10 @@ function TNullableInt64Serializer.Deserialize(AValue: TJSONValue; const AData: T
 var
   LNullValue: NullInt64;
 begin
-  LNullValue := (AValue as TJSONNumber).AsInt64;
+  if AValue is TJSONNull then
+    LNullValue := nil
+  else
+    LNullValue := (AValue as TJSONNumber).AsInt64;
   Result := TValue.From<NullInt64>(LNullValue);
 end;
 
@@ -304,7 +334,10 @@ function TNullableDoubleSerializer.Deserialize(AValue: TJSONValue; const AData: 
 var
   LNullValue: NullDouble;
 begin
-  LNullValue := (AValue as TJSONNumber).AsDouble;
+  if AValue is TJSONNull then
+    LNullValue := nil
+  else
+    LNullValue := (AValue as TJSONNumber).AsDouble;
   Result := TValue.From<NullDouble>(LNullValue);
 end;
 
@@ -339,7 +372,10 @@ function TNullableTDateTimeSerializer.Deserialize(AValue: TJSONValue; const ADat
 var
   LNullValue: NullDateTime;
 begin
-  LNullValue := TJSONUtils.JSONToDateTime(AValue.Value, AContext.GetConfiguration.GetUseUTCDate);
+  if AValue is TJSONNull then
+    LNullValue := nil
+  else
+    LNullValue := TJSONUtils.JSONToDateTime(AValue.Value, AContext.GetConfiguration.GetUseUTCDate);
   Result := TValue.From<NullDateTime>(LNullValue);
 end;
 
@@ -379,6 +415,8 @@ begin
       .RegisterSerializer(TNullableTDateTimeSerializer)
       // OpenAPI Models
       .RegisterSerializer(TOpenAPIReferenceSerializer)
+      .RegisterSerializer(TOpenAPIModelReferenceSerializer)
+      .RegisterSerializer(TOpenAPISecurityRequirementsSerializer)
       .RegisterSerializer(TOpenAPISchemaSerializer)
       .RegisterSerializer(TOpenAPIAnySerializer)
       .RegisterSerializer(TOpenAPIPathItemSerializer)
@@ -400,16 +438,35 @@ function TOpenAPIAnySerializer.Deserialize(AValue: TJSONValue; const AData: TVal
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
   LAny: TOpenAPIAny;
+  LText: string;
+  LInt64: Int64;
 begin
   Result := AData;
-  LAny := AData.AsObject as TOpenAPIAny;
+  LAny := AData.AsType<TOpenAPIAny>;
+  if (LAny = nil) or (AValue = nil) then
+    Exit;
 
-  if AValue is TJSONNumber then
-    LAny.ValueFrom<Double>((AValue as TJSONNumber).AsDouble)
-  else if AValue is TJSONString then
-    LAny.ValueFrom<string>((AValue as TJSONString).Value)
+  if AValue is TJSONString then
+    LAny.ValueFrom<string>(TJSONString(AValue).Value)
   else if AValue is TJSONBool then
-    LAny.ValueFrom<Boolean>((AValue as TJSONBool).AsBoolean);
+    LAny.ValueFrom<Boolean>(TJSONBool(AValue).AsBoolean)
+  else if AValue is TJSONNumber then
+  begin
+    // Keep integers as integers (a Double loses precision past 2^53 and changes the type)
+    LText := TJSONNumber(AValue).Value;
+    if (LText.IndexOfAny(['.', 'e', 'E']) < 0) and TryStrToInt64(LText, LInt64) then
+    begin
+      if (LInt64 >= Low(Integer)) and (LInt64 <= High(Integer)) then
+        LAny.ValueFrom<Integer>(LInt64)
+      else
+        LAny.ValueFrom<Int64>(LInt64);
+    end
+    else
+      LAny.ValueFrom<Double>(TJSONNumber(AValue).AsDouble);
+  end
+  else
+    // Objects, arrays and null are kept as JSON
+    LAny.SetJSONValue(AValue.Clone as TJSONValue);
 end;
 
 class function TOpenAPIAnySerializer.GetTargetInfo: PTypeInfo;
@@ -426,17 +483,15 @@ begin
   if LValue = nil then
     Exit(nil);
 
-  if LValue.Value.IsEmpty then
+  // An unset value is omitted. A set one is always written, even 0, false, "" or null:
+  // those are valid examples, defaults and consts
+  if LValue.IsEmpty then
     Exit(nil);
 
+  if Assigned(LValue.JSONValue) then
+    Exit(LValue.JSONValue.Clone as TJSONValue);
+
   Result := AContext.WriteDataMember(LValue.Value);
-  case ANeonObject.NeonInclude.Value of
-    IncludeIf.NotEmpty, IncludeIf.NotDefault:
-    begin
-      if not TJSONUtils.IsNotDefault(Result) then
-        FreeAndNil(Result);
-    end;
-  end;
 end;
 
 { TOpenAPIReferenceSerializer }
@@ -449,26 +504,24 @@ end;
 function TOpenAPIReferenceSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
     ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
 var
-  LType: TRttiType;
   LRef: TOpenAPIReference;
-  LJSON: TJSONObject;
+  LRefValue: TJSONValue;
 begin
-  raise Exception.Create('Deserialization not implemented');
-
   Result := AData;
-  LRef := AData.AsObject as TOpenAPIReference;
-  LJSON := AValue as TJSONObject;
 
-  if Assigned(LJSON.Values['$ref']) then
-  begin
-    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
-    AContext.ReadDataMember(AValue, LType, LRef, False);
-  end
-  else
-  begin
-    LType := TRttiUtils.Context.GetType(AData.AsObject.ClassType);
-    AContext.ReadDataMember(AValue, LType, AData, False);
-  end;
+  LRef := AData.AsType<TOpenAPIReference>;
+  if LRef = nil then
+    Exit;
+
+  // A '$ref' member arrives as its string value. Also accept the whole Reference Object
+  // ({"$ref": "..."}), so callers can pass the object that contains the '$ref' key
+  LRefValue := AValue;
+  if LRefValue is TJSONObject then
+    LRefValue := TJSONObject(LRefValue).Values['$ref'];
+
+  // Anything else (e.g. an explicit null) leaves the reference unset
+  if LRefValue is TJSONString then
+    LRef.SetFullReference(LRefValue.Value);
 end;
 
 class function TOpenAPIReferenceSerializer.GetTargetInfo: PTypeInfo;
@@ -487,7 +540,7 @@ begin
   if LRef = nil then
     Exit;
 
-  if not LRef.Id.IsEmpty then
+  if not LRef.IsEmpty then
     Exit(TJSONString.Create(LRef.GetFullReference))
 end;
 
@@ -505,23 +558,51 @@ var
   LType: TRttiType;
   LSchema: TOpenAPISchema;
   LJSONSchema: TJSONObject;
+  LTypeValue: TJSONValue;
+  LTypeArray: TJSONArray;
+  LTypes: TArray<string>;
+  LIndex: Integer;
 begin
   Result := AData;
+
+  // Only a JSON object can describe a schema: anything else (e.g. an explicit null) leaves it
+  // untouched. Neon calls this even with no target instance (see NeedsInstance), which happens for
+  // an explicit null on a nil member: there's nothing to read into in that case either
+  if not (AValue is TJSONObject) or (Result.AsObject = nil) then
+    Exit;
 
   LSchema := Result.AsObject as TOpenAPISchema;
   LJSONSchema := AValue as TJSONObject;
 
-  if Assigned(LJSONSchema.Values['$ref']) then
+  // The schema is in the document, even if it's {}: keep it when writing it back
+  LSchema.Explicit := True;
+
+  // JSON Schema 2020-12 allows keywords alongside $ref: the generic member reader reads them all,
+  // '$ref' included (through the Reference member and TOpenAPIReferenceSerializer)
+  LType := TRttiUtils.Context.GetType(TOpenAPISchema);
+  AContext.ReadMembers(LType, LSchema, LJSONSchema);
+
+  // 'type' (2020-12) can be a plain string or an array of strings. Type_/Types are
+  // [NeonIgnore]d (mapping both to the same JSON key confuses the generic member reader
+  // above), so read 'type' explicitly here instead.
+  LTypeValue := LJSONSchema.Values['type'];
+  if LTypeValue is TJSONString then
+    LSchema.Type_ := LTypeValue.Value
+  else if LTypeValue is TJSONArray then
   begin
-    LType := TRttiUtils.Context.GetType(TOpenAPIReference);
-    AContext.ReadDataMember(AValue, LType, LSchema.Reference, False);
-  end
-  else
-  begin
-    LType := TRttiUtils.Context.GetType(TOpenAPISchema);
-    //AContext.ReadDataMember(AValue, LType, Result, True);
-    AContext.ReadMembers(LType, LSchema, LJSONSchema);
+    LTypeArray := TJSONArray(LTypeValue);
+    SetLength(LTypes, LTypeArray.Count);
+    for LIndex := 0 to LTypeArray.Count - 1 do
+      LTypes[LIndex] := LTypeArray.Items[LIndex].Value;
+    LSchema.Types := LTypes;
   end;
+end;
+
+class function TOpenAPISchemaSerializer.NeedsInstance: Boolean;
+begin
+  // Deserialize handles a nil target itself, so Neon doesn't need to skip (and log) it: a nil
+  // schema member only arrives here for an explicit null, since NeonAutoCreate creates it otherwise
+  Result := False;
 end;
 
 class function TOpenAPISchemaSerializer.GetTargetInfo: PTypeInfo;
@@ -534,23 +615,30 @@ function TOpenAPISchemaSerializer.Serialize(const AValue: TValue;
 var
   LSchema: TOpenAPISchema;
   LType: TRttiType;
-  LJSON: TJSONObject;
+  LTypeArray: TJSONArray;
+  LTypeName: string;
+  LKeep: Boolean;
 begin
   LSchema := AValue.AsType<TOpenAPISchema>;
 
   if LSchema = nil then
     Exit(nil);
 
-  if LSchema.IsEmpty then
-    Exit(nil);
+  // A schema that is a map value or a list item (components/schemas, properties, allOf, ...) is
+  // always written: Neon would turn an omitted one into null, which is not a valid schema. Neon
+  // passes the member's TNeonRttiMember for a member, and the type's TNeonRttiObject otherwise
+  LKeep := LSchema.Explicit or not (ANeonObject is TNeonRttiMember);
 
-  // The Schema has a reference
-  if LSchema.IsReference then
+  if LSchema.IsEmpty then
   begin
-    LJSON := TJSONObject.Create;
-    LJSON.AddPair('$ref', AContext.WriteDataMember(LSchema.Reference, True));
-    Exit(LJSON);
+    if LKeep then
+      Exit(TJSONObject.Create);
+    Exit(nil);
   end;
+
+  // JSON Schema 2020-12 allows $ref to appear alongside sibling keywords, so (unlike OAS 3.0)
+  // there's no early-exit here: Reference is a normal NotEmpty member and serializes through
+  // WriteMembers below via the registered TOpenAPIReferenceSerializer, together with everything else.
 
   if Assigned(LSchema.JSONObject) then
     Result := LSchema.JSONObject.Clone as TJSONObject
@@ -559,15 +647,154 @@ begin
     LType := TRttiUtils.Context.GetType(AValue.TypeInfo);
     Result := TJSONObject.Create;
     AContext.WriteMembers(LType, AValue.AsObject, Result);
+
+    // Type_/Types are [NeonIgnore]d (see their declarations), so 'type' is written
+    // explicitly here: as an array when Types is used, otherwise as a plain string.
+    if Length(LSchema.Types) > 0 then
+    begin
+      LTypeArray := TJSONArray.Create;
+      for LTypeName in LSchema.Types do
+        LTypeArray.Add(LTypeName);
+      (Result as TJSONObject).AddPair('type', LTypeArray);
+    end
+    else if not LSchema.Type_.IsNull then
+      (Result as TJSONObject).AddPair('type', LSchema.Type_.Value);
   end;
+
+  if not LKeep then
+    case ANeonObject.NeonInclude.Value of
+      IncludeIf.NotEmpty, IncludeIf.NotDefault:
+      begin
+        if (Result as TJSONObject).Count = 0 then
+          FreeAndNil(Result);
+      end;
+    end;
+end;
+
+{ TOpenAPIModelReferenceSerializer }
+
+class function TOpenAPIModelReferenceSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPIModelReferenceSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+  ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+var
+  LModel: TOpenAPIModelReference;
+  LJSON: TJSONObject;
+begin
+  Result := AData;
+
+  // Only a JSON object can describe the object: anything else (e.g. an explicit null) leaves it untouched
+  if not (AValue is TJSONObject) then
+    Exit;
+
+  LModel := AData.AsObject as TOpenAPIModelReference;
+  LJSON := TJSONObject(AValue);
+
+  // A Reference Object: besides "$ref" it can only have "summary" and "description" (OAS 3.1),
+  // which belong to the reference (they override the referenced component's). Other siblings
+  // aren't part of the referencing object, and are ignored
+  if LJSON.Values['$ref'] is TJSONString then
+  begin
+    LModel.Reference.SetFullReference(LJSON.Values['$ref'].Value);
+    if LJSON.Values['summary'] is TJSONString then
+      LModel.Reference.Summary := LJSON.Values['summary'].Value;
+    if LJSON.Values['description'] is TJSONString then
+      LModel.Reference.Description := LJSON.Values['description'].Value;
+    Exit;
+  end;
+
+  AContext.ReadMembers(TRttiUtils.Context.GetType(LModel.ClassType), LModel, LJSON);
+end;
+
+class function TOpenAPIModelReferenceSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPIModelReference.ClassInfo;
+end;
+
+function TOpenAPIModelReferenceSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LModel: TOpenAPIModelReference;
+begin
+  LModel := AValue.AsType<TOpenAPIModelReference>;
+  if LModel = nil then
+    Exit(nil);
+
+  Result := TJSONObject.Create;
+
+  // A Reference Object is written alone, with only its own "summary" and "description": the
+  // members a referencing object must have (e.g. a parameter's name and in) would otherwise be
+  // written next to it, empty
+  if LModel.IsReference then
+  begin
+    TJSONObject(Result).AddPair('$ref', AContext.WriteDataMember(LModel.Reference, True));
+    if not LModel.Reference.Summary.IsNull then
+      TJSONObject(Result).AddPair('summary', LModel.Reference.Summary.Value);
+    if not LModel.Reference.Description.IsNull then
+      TJSONObject(Result).AddPair('description', LModel.Reference.Description.Value);
+    Exit;
+  end;
+
+  AContext.WriteMembers(TRttiUtils.Context.GetType(LModel.ClassType), LModel, Result);
 
   case ANeonObject.NeonInclude.Value of
     IncludeIf.NotEmpty, IncludeIf.NotDefault:
     begin
-      if (Result as TJSONObject).Count = 0 then
+      if TJSONObject(Result).Count = 0 then
         FreeAndNil(Result);
     end;
   end;
+end;
+
+{ TOpenAPISecurityRequirementsSerializer }
+
+class function TOpenAPISecurityRequirementsSerializer.CanHandle(AType: PTypeInfo): Boolean;
+begin
+  Result := TypeInfoIs(AType);
+end;
+
+function TOpenAPISecurityRequirementsSerializer.Deserialize(AValue: TJSONValue; const AData: TValue;
+  ANeonObject: TNeonRttiObject; AContext: IDeserializerContext): TValue;
+var
+  LList: TOpenAPISecurityRequirements;
+begin
+  Result := AData;
+
+  // Only a JSON array can describe the requirements: anything else (e.g. null) leaves the list untouched
+  LList := AData.AsType<TOpenAPISecurityRequirements>;
+  if (LList = nil) or not (AValue is TJSONArray) then
+    Exit;
+
+  // The list is in the document, even if it's []: keep it when writing it back
+  LList.Explicit := True;
+  Result := AContext.ReadDataMember(AValue, TRttiUtils.Context.GetType(LList.ClassType), AData, False);
+end;
+
+class function TOpenAPISecurityRequirementsSerializer.GetTargetInfo: PTypeInfo;
+begin
+  Result := TOpenAPISecurityRequirements.ClassInfo;
+end;
+
+function TOpenAPISecurityRequirementsSerializer.Serialize(const AValue: TValue;
+  ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LList: TOpenAPISecurityRequirements;
+begin
+  LList := AValue.AsType<TOpenAPISecurityRequirements>;
+  if LList = nil then
+    Exit(nil);
+
+  if LList.Count = 0 then
+  begin
+    if LList.Explicit then
+      Exit(TJSONArray.Create);
+    Exit(nil);
+  end;
+
+  Result := AContext.WriteDataMember(AValue, False);
 end;
 
 { TOpenAPIPathItemSerializer }
@@ -584,23 +811,54 @@ var
   LPath: TOpenAPIPathItem;
   LOperation: TOpenAPIOperation;
   LJSONPath: TJSONObject;
+  LJSONOthers: TJSONObject;
   LOpType: TOperationType;
   LType: TRttiType;
   LJSONVal: TJSONValue;
 begin
   Result := AData;
+
+  // Only a JSON object can describe a path item: anything else (e.g. an explicit null) leaves it untouched
+  if not (AValue is TJSONObject) then
+    Exit;
+
   LPath := AData.AsObject as TOpenAPIPathItem;
   LJSONPath := AValue as TJSONObject;
+
+  // A referenced path item: read the reference and the path item's own summary and description
+  // (the spec allows them next to "$ref"). Operations next to "$ref" aren't read: their merge
+  // with the referenced path item is undefined in the spec
+  if LJSONPath.Values['$ref'] is TJSONString then
+  begin
+    LPath.Reference.SetFullReference(LJSONPath.Values['$ref'].Value);
+    if LJSONPath.Values['summary'] is TJSONString then
+      LPath.Summary := LJSONPath.Values['summary'].Value;
+    if LJSONPath.Values['description'] is TJSONString then
+      LPath.Description := LJSONPath.Values['description'].Value;
+    Exit;
+  end;
+
   LType := TRttiUtils.Context.GetType(TOpenAPIOperation);
 
-  for LOpType := Low(TOperationType) to High(TOperationType) do
-  begin
-    LJSONVal := LJSONPath.Values[LOpType.ToString];
-    if Assigned(LJSONVal) then
+  // The operation members are nil until AddOperation creates them, so they're read here, and
+  // the other members (summary, description, parameters, ...) are read from a copy without them
+  LJSONOthers := LJSONPath.Clone as TJSONObject;
+  try
+    for LOpType := Low(TOperationType) to High(TOperationType) do
     begin
-      LOperation := LPath.AddOperation(LOpType);
-      AContext.ReadMembers(LType, LOperation, LJSONVal as TJSONObject);
+      LJSONVal := LJSONPath.Values[LOpType.ToString];
+      if LJSONVal is TJSONObject then
+      begin
+        LOperation := LPath.AddOperation(LOpType);
+        AContext.ReadMembers(LType, LOperation, TJSONObject(LJSONVal));
+      end;
+      LJSONOthers.RemovePair(LOpType.ToString).Free;
     end;
+
+    LType := TRttiUtils.Context.GetType(TOpenAPIPathItem);
+    AContext.ReadMembers(LType, LPath, LJSONOthers);
+  finally
+    LJSONOthers.Free;
   end;
 end;
 
@@ -611,7 +869,23 @@ end;
 
 function TOpenAPIPathItemSerializer.Serialize(const AValue: TValue;
   ANeonObject: TNeonRttiObject; AContext: ISerializerContext): TJSONValue;
+var
+  LPath: TOpenAPIPathItem;
+  LJSON: TJSONObject;
 begin
+  LPath := AValue.AsType<TOpenAPIPathItem>;
+
+  if Assigned(LPath) and LPath.IsReference then
+  begin
+    LJSON := TJSONObject.Create;
+    LJSON.AddPair('$ref', AContext.WriteDataMember(LPath.Reference, True));
+    if not LPath.Summary.IsNull then
+      LJSON.AddPair('summary', LPath.Summary.Value);
+    if not LPath.Description.IsNull then
+      LJSON.AddPair('description', LPath.Description.Value);
+    Exit(LJSON);
+  end;
+
   Result := AContext.WriteDataMember(AValue, False);
 end;
 
@@ -680,6 +954,8 @@ begin
   ARegistry.RegisterSerializer(TOpenAPIAnySerializer);
   ARegistry.RegisterSerializer(TOpenAPIPathItemSerializer);
   ARegistry.RegisterSerializer(TOpenAPIReferenceSerializer);
+  ARegistry.RegisterSerializer(TOpenAPIModelReferenceSerializer);
+  ARegistry.RegisterSerializer(TOpenAPISecurityRequirementsSerializer);
   ARegistry.RegisterSerializer(TOpenAPISchemaSerializer);
   ARegistry.RegisterSerializer(TOpenAPIExtensionsSerializer);
 end;

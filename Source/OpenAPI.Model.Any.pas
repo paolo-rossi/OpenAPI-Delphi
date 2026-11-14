@@ -1,22 +1,10 @@
 {******************************************************************************}
 {                                                                              }
-{  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2023 Paolo Rossi                                         }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
-{******************************************************************************}
-{                                                                              }
-{  Licensed under the Apache License, Version 2.0 (the 'License");             }
-{  you may not use this file except in compliance with the License.            }
-{  You may obtain a copy of the License at                                     }
-{                                                                              }
-{      http://www.apache.org/licenses/LICENSE-2.0                              }
-{                                                                              }
-{  Unless required by applicable law or agreed to in writing, software         }
-{  distributed under the License is distributed on an "AS IS" BASIS,           }
-{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
-{  See the License for the specific language governing permissions and         }
-{  limitations under the License.                                              }
+{  Licensed under the MIT license                                              }
 {                                                                              }
 {******************************************************************************}
 unit OpenAPI.Model.Any;
@@ -24,7 +12,7 @@ unit OpenAPI.Model.Any;
 interface
 
 uses
-  System.Rtti,
+  System.SysUtils, System.Rtti, System.JSON,
 
   Neon.Core.Attributes,
   Neon.Core.Nullables,
@@ -181,16 +169,43 @@ type
   end;
 
   /// <summary>
-  ///   Class for representing... any value
+  ///   Class for representing... any value: a scalar (string, number, boolean) in Value, or
+  ///   any JSON value (object, array, null) in JSONValue. At most one of the two is set
   /// </summary>
   TOpenAPIAny = class
   private
     FValue: TValue;
+    FJSONValue: TJSONValue;
+    procedure SetValue(const AValue: TValue);
   public
+    destructor Destroy; override;
+
     procedure ValueFrom<T>(const Value: T);
 
+    /// <summary>
+    ///   Sets the value to a JSON value (e.g. an object or array example). The instance takes
+    ///   ownership of AValue. Pass nil to clear it
+    /// </summary>
+    procedure SetJSONValue(AValue: TJSONValue);
+
+    /// <summary>
+    ///   Removes the value: the member is then omitted from the JSON
+    /// </summary>
+    procedure Clear;
+
+    /// <summary>
+    ///   True when no value is set. A value that is 0, false, "" or JSON null is not empty
+    /// </summary>
+    function IsEmpty: Boolean;
+
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Value: TValue read FValue write FValue;
+    property Value: TValue read FValue write SetValue;
+
+    /// <summary>
+    ///   The value as JSON, when it isn't a scalar (owned by this instance)
+    /// </summary>
+    [NeonIgnore]
+    property JSONValue: TJSONValue read FJSONValue;
   end;
 
   TOpenAPIAnyValue = TValue;
@@ -248,9 +263,40 @@ end;
 
 { TOpenAPIAny }
 
+procedure TOpenAPIAny.Clear;
+begin
+  FreeAndNil(FJSONValue);
+  FValue := TValue.Empty;
+end;
+
+destructor TOpenAPIAny.Destroy;
+begin
+  FJSONValue.Free;
+  inherited;
+end;
+
+function TOpenAPIAny.IsEmpty: Boolean;
+begin
+  Result := FValue.IsEmpty and not Assigned(FJSONValue);
+end;
+
+procedure TOpenAPIAny.SetJSONValue(AValue: TJSONValue);
+begin
+  if AValue = FJSONValue then
+    Exit;
+  Clear;
+  FJSONValue := AValue;
+end;
+
+procedure TOpenAPIAny.SetValue(const AValue: TValue);
+begin
+  FreeAndNil(FJSONValue);
+  FValue := AValue;
+end;
+
 procedure TOpenAPIAny.ValueFrom<T>(const Value: T);
 begin
-  FValue := TValue.From<T>(Value);
+  SetValue(TValue.From<T>(Value));
 end;
 
 end.

@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.1.0",
   "servers": [
     {
       "url": "https://rest.ably.io"
@@ -1987,12 +1987,14 @@
         "properties": {
           "capability": {
             "description": "The [capabilities](https://www.ably.io/documentation/core-features/authentication#capabilities-explained) (i.e. a set of channel names/namespaces and, for each, a set of operations) which should be a subset of the set of capabilities associated with the key specified in keyName.",
-            "example": {
-              "channel1": [
-                "publish",
-                "subscribe"
-              ]
-            },
+            "examples": [
+              {
+                "channel1": [
+                  "publish",
+                  "subscribe"
+                ]
+              }
+            ],
             "type": "object"
           },
           "clientId": {
@@ -2001,7 +2003,9 @@
           },
           "keyName": {
             "description": "Name of the key used for the TokenRequest. The keyName comprises of the app ID and key ID on an API Key.",
-            "example": "xVLyHw.LMJZxw",
+            "examples": [
+              "xVLyHw.LMJZxw"
+            ],
             "type": "string"
           },
           "nonce": {

@@ -1,22 +1,10 @@
 {******************************************************************************}
 {                                                                              }
-{  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2025 Paolo Rossi                                         }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
-{******************************************************************************}
-{                                                                              }
-{  Licensed under the Apache License, Version 2.0 (the 'License");             }
-{  you may not use this file except in compliance with the License.            }
-{  You may obtain a copy of the License at                                     }
-{                                                                              }
-{      http://www.apache.org/licenses/LICENSE-2.0                              }
-{                                                                              }
-{  Unless required by applicable law or agreed to in writing, software         }
-{  distributed under the License is distributed on an "AS IS" BASIS,           }
-{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
-{  See the License for the specific language governing permissions and         }
-{  limitations under the License.                                              }
+{  Licensed under the MIT license                                              }
 {                                                                              }
 {******************************************************************************}
 unit OpenAPI.Model.Classes;
@@ -82,7 +70,7 @@ type
     DeepObject
   );
 
-  [NeonEnumNames('apiKey,http,oauth2,openIdConnect')]
+  [NeonEnumNames('apiKey,http,oauth2,openIdConnect,mutualTLS')]
   TSecurityScheme = (
     /// <summary>
     /// Use API key
@@ -102,7 +90,12 @@ type
     /// <summary>
     /// Use OAuth2 with OpenId Connect Url to discover OAuth2 configuration value.
     /// </summary>
-    OpenIdConnect
+    OpenIdConnect,
+
+    /// <summary>
+    /// Use mutual TLS (client certificates). OAS 3.1
+    /// </summary>
+    MutualTLS
   );
 
   [NeonEnumNames('query,header,cookie')]
@@ -230,6 +223,7 @@ type
   private
     FName: NullString;
     FUrl: NullString;
+    FIdentifier: NullString;
   public
     /// <summary>
     /// REQUIRED. The license name used for the API.
@@ -238,17 +232,23 @@ type
 
     /// <summary>
     /// The Url pointing to the contact information. MUST be in the format of a Url.
+    /// Mutually exclusive with Identifier.
     /// </summary>
     property Url: NullString read FUrl write FUrl;
+
+    /// <summary>
+    /// An SPDX license expression for the API. Mutually exclusive with Url.
+    /// </summary>
+    property Identifier: NullString read FIdentifier write FIdentifier;
   end;
 
-  TOpenAPIExamples = class;
+  TOpenAPIExampleMap = class;
   TOpenAPIMediaTypeMap = class;
 
   /// <summary>
   /// Parameter Object
   /// </summary>
-  TOpenAPIParameter = class(TOpenAPIExtensible)
+  TOpenAPIParameter = class(TOpenAPIModelReference)
   private
     FAllowEmptyValue: NullBoolean;
     FDeprecated_: NullBoolean;
@@ -260,7 +260,7 @@ type
     FExplode: NullBoolean;
     FAllowReserved: NullBoolean;
     FSchema: TOpenAPISchema;
-    FExamples: TOpenApiExamples;
+    FExamples: TOpenAPIExampleMap;
     FContent: TOpenApiMediaTypeMap;
     FExample: TOpenAPIAny;
   public
@@ -350,7 +350,7 @@ type
     /// the examples value SHALL override the example provided by the schema.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Examples: TOpenApiExamples read FExamples write FExamples;
+    property Examples: TOpenAPIExampleMap read FExamples write FExamples;
 
     /// <summary>
     /// Example of the media type. The example SHOULD match the specified schema and encoding properties
@@ -427,8 +427,7 @@ type
     property ExternalValue: NullString read FExternalValue write FExternalValue;
   end;
 
-  TOpenAPIExamples = class(TOpenAPIModelList<TOpenAPIExample>);
-  TOpenAPIExampleMap = class(TOpenAPIModelMap<TOpenAPIParameter>);
+  TOpenAPIExampleMap = class(TOpenAPIModelMap<TOpenAPIExample>);
 
   TOpenAPIEncoding = class;
   TOpenAPIEncodingMap = class;
@@ -752,7 +751,7 @@ type
   ///   Link Object. The Link Object represents a possible design-time link for
   ///   a response
   /// </summary>
-  TOpenAPILink = class(TOpenAPIExtensible)
+  TOpenAPILink = class(TOpenAPIModelReference)
   private
     FOperationId: NullString;
     FOperationRef: NullString;
@@ -846,6 +845,7 @@ type
   TOpenAPIResponseMap = class(TOpenAPIModelExtensibleMap<TOpenAPIResponse>);
 
   TOpenAPIPathItem = class;
+  TOpenAPIPathMap = class;
 
   TOpenAPICallback = class(TOpenAPIModelReference)
   private
@@ -1002,9 +1002,20 @@ type
   TOpenAPISecurityRequirement = class(TDictionary<string, TArray<string>>);
 
   TOpenAPISecurityRequirements = class(TOpenAPIModelList<TOpenAPISecurityRequirement>)
+  private
+    FExplicit: Boolean;
   public
     procedure AddSecurityRequirement(ASecuritySchemes: TOpenAPISecuritySchemeMap;
         ASchemeName: string; AParams: TArray<string>);
+
+    /// <summary>
+    ///   Marks the list as present even when it's empty, so it's written as [] instead of being
+    ///   omitted. An empty "security" array is meaningful: on an operation it removes the
+    ///   top-level security (the operation needs no authentication). Set automatically when the
+    ///   list is read from JSON
+    /// </summary>
+    [NeonIgnore]
+    property Explicit: Boolean read FExplicit write FExplicit;
   end;
 
   /// <summary>
@@ -1117,7 +1128,8 @@ type
     /// The list of values includes alternative security requirement objects that can be used.
     /// Only one of the security requirement objects need to be satisfied to authorize a request.
     /// This definition overrides any declared top-level security.
-    /// To remove a top-level security declaration, an empty array can be used.
+    /// To remove a top-level security declaration, an empty array can be used: set
+    /// Security.Explicit to True with no requirements.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Security: TOpenAPISecurityRequirements read FSecurity write FSecurity;
@@ -1144,6 +1156,7 @@ type
     FTermsOfService: NullString;
     FTitle: string;
     FVersion: string;
+    FSummary: NullString;
   public
     constructor Create;
   public
@@ -1151,6 +1164,11 @@ type
     /// REQUIRED. The title of the application.
     /// </summary>
     property Title: string read FTitle write FTitle;
+
+    /// <summary>
+    /// A short summary of the API.
+    /// </summary>
+    property Summary: NullString read FSummary write FSummary;
 
     /// <summary>
     /// A short description of the application.
@@ -1194,6 +1212,7 @@ type
     FSecuritySchemes: TOpenAPISecuritySchemeMap;
     FLinks: TOpenAPILinkMap;
     FCallbacks: TOpenAPICallbackMap;
+    FPathItems: TOpenAPIPathMap;
     function AddSecurityScheme(const AName, ADescription: string; AType: TSecurityScheme): TOpenAPISecurityScheme;
   public
     constructor Create;
@@ -1202,10 +1221,12 @@ type
     function AddSchema(const AKeyName: string): TOpenAPISchema;
     function AddResponse(const AKeyName, ADescription: string): TOpenAPIResponse;
     function AddParameter(const AKeyName, AName, ALocation: string): TOpenAPIparameter;
+    function AddPathItem(const AKeyName: string): TOpenAPIPathItem;
 
     function AddSecurityHttp(const AKeyName, ADescription, AScheme, ABearerFormat: string): TOpenAPISecurityScheme;
     function AddSecurityApiKey(const AKeyName, ADescription, AHeaderName: string; ALocation: TAPIKeyLocation): TOpenAPISecurityScheme;
     function AddSecurityOpenID(const AKeyName, ADescription, AURL: string): TOpenAPISecurityScheme;
+    function AddSecurityMutualTLS(const AKeyName, ADescription: string): TOpenAPISecurityScheme;
     function AddSecurityOAuth2(const AKeyName, ADescription: string; AFlow: TOpenAPIOAuthFlows): TOpenAPISecurityScheme;
   public
     /// <summary>
@@ -1261,16 +1282,22 @@ type
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
     property Callbacks: TOpenAPICallbackMap read FCallbacks write FCallbacks;
+
+    /// <summary>
+    /// An object to hold reusable <see cref="TOpenAPIPathItem"/> Objects.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property PathItems: TOpenAPIPathMap read FPathItems write FPathItems;
   end;
 
   /// <summary>
   /// Path Item Object: to describe the operations available on a single path.
   /// </summary>
-  TOpenAPIPathItem = class(TOpenAPIExtensible)
+  TOpenAPIPathItem = class(TOpenAPIModelReference)
   private
     FSummary: NullString;
     FDescription: NullString;
-    FServers: TOpenAPIServerMap;
+    FServers: TOpenAPIServers;
     FParameters: TOpenAPIParameters;
     FGet: TOpenAPIOperation;
     FPut: TOpenAPIOperation;
@@ -1284,8 +1311,9 @@ type
     constructor Create;
   public
     function AddOperation(const AType: TOperationType): TOpenAPIOperation;
-    function AddServer(const AKeyName: string): TOpenAPIServer;
+    function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddParameter(const AName, ALocation: string): TOpenAPIParameter;
+    procedure SetPathItemReference(const AReference: string);
   public
     /// <summary>
     /// An optional, string summary, intended to apply to all operations in this path.
@@ -1349,7 +1377,7 @@ type
     /// An alternative server array to service all operations in this path.
     /// </summary>
     [NeonInclude(IncludeIf.NotEmpty)]
-    property Servers: TOpenAPIServerMap read FServers write FServers;
+    property Servers: TOpenAPIServers read FServers write FServers;
 
     /// <summary>
     /// A list of parameters that are applicable for all the operations described under this path.
@@ -1361,7 +1389,7 @@ type
 
   TOpenAPIPathMap = class(TOpenAPIModelExtensibleMap<TOpenAPIPathItem>);
 
-  TOpenAPIVersion = (v303, v304, v310, v311);
+  TOpenAPIVersion = (v310, v311);
   TOpenAPIVersionHelper = record helper for TOpenAPIVersion
   public
     function ToString: string;
@@ -1372,10 +1400,17 @@ type
   ///   definition uses and conforms to the Openapi Specification
   /// </summary>
   TOpenAPIDocument = class(TOpenAPIExtensible)
+  public const
+    /// <summary>
+    ///   The dialect Schema Objects use when "jsonSchemaDialect" is not set (OAS 3.1)
+    /// </summary>
+    DefaultJsonSchemaDialect = 'https://spec.openapis.org/oas/3.1/dialect/base';
   private
     FInfo: TOpenAPIInfo;
     FOpenapi: string;
+    FJsonSchemaDialect: NullString;
     FPaths: TOpenAPIPathMap;
+    FWebhooks: TOpenAPIPathMap;
     FServers: TOpenAPIServers;
     FComponents: TOpenAPIComponents;
     FSecurity: TOpenAPISecurityRequirements;
@@ -1387,15 +1422,30 @@ type
   public
     function AddServer(const AURL, ADescription: string): TOpenAPIServer;
     function AddPath(const AKeyName: string): TOpenAPIPathItem;
+    function AddWebhook(const AKeyName: string): TOpenAPIPathItem;
     function AddTag(const AName, ADescription: string): TOpenAPITag;
     procedure AddSecurity(ASchemeName: string; AParams: TArray<string>);
     procedure SetExternalDocs(const AURL, ADescription: string);
+
+    /// <summary>
+    ///   The dialect that applies to the Schema Objects: JsonSchemaDialect when set, otherwise
+    ///   DefaultJsonSchemaDialect
+    /// </summary>
+    function EffectiveJsonSchemaDialect: string;
   public
     /// <summary>
     ///   REQUIRED. This string MUST be the semantic version number of the Openapi
     ///   Specification version that the Openapi document uses
     /// </summary>
     property Openapi: string read FOpenapi write FOpenapi;
+
+    /// <summary>
+    ///   The default value for the $schema keyword within Schema Objects contained within this
+    ///   OAS document. Optional: not set by default, so it's written only when read from a
+    ///   document or set by code. When not set, DefaultJsonSchemaDialect applies (see
+    ///   EffectiveJsonSchemaDialect).
+    /// </summary>
+    property JsonSchemaDialect: NullString read FJsonSchemaDialect write FJsonSchemaDialect;
 
     /// <summary>
     /// REQUIRED. Provides metadata about the API. The metadata MAY be used by tooling as required.
@@ -1412,6 +1462,13 @@ type
     /// REQUIRED. The available paths and operations for the API.
     /// </summary>
     property Paths: TOpenAPIPathMap read FPaths write FPaths;
+
+    /// <summary>
+    /// The incoming webhooks that MAY be received as part of this API and that the API consumer
+    /// MAY choose to implement.
+    /// </summary>
+    [NeonInclude(IncludeIf.NotEmpty)]
+    property Webhooks: TOpenAPIPathMap read FWebhooks write FWebhooks;
 
     /// <summary>
     /// An element to hold various schemas for the specification.
@@ -1555,6 +1612,11 @@ begin
   Result.Flows := AFlow;
 end;
 
+function TOpenAPIComponents.AddSecurityMutualTLS(const AKeyName, ADescription: string): TOpenAPISecurityScheme;
+begin
+  Result := AddSecurityScheme(AKeyName, ADescription, TSecurityScheme.MutualTLS);
+end;
+
 function TOpenAPIComponents.AddSecurityOpenID(const AKeyName, ADescription,
   AURL: string): TOpenAPISecurityScheme;
 begin
@@ -1587,6 +1649,16 @@ begin
   FSecuritySchemes := CreateSubObject<TOpenAPISecuritySchemeMap>;
   FLinks := CreateSubObject<TOpenAPILinkMap>;
   FCallbacks := CreateSubObject<TOpenAPICallbackMap>;
+  FPathItems := CreateSubObject<TOpenAPIPathMap>;
+end;
+
+function TOpenAPIComponents.AddPathItem(const AKeyName: string): TOpenAPIPathItem;
+begin
+  if not FPathItems.TryGetValue(AKeyName, Result) then
+  begin
+    Result := TOpenAPIPathItem.Create;
+    FPathItems.Add(AKeyName, Result);
+  end;
 end;
 
 function TOpenAPIComponents.SchemaExists(const AKeyName: string): Boolean;
@@ -1618,6 +1690,15 @@ begin
   begin
     Result := TOpenAPIPathItem.Create;
     FPaths.Add(AKeyName, Result);
+  end;
+end;
+
+function TOpenAPIDocument.AddWebhook(const AKeyName: string): TOpenAPIPathItem;
+begin
+  if not FWebhooks.TryGetValue(AKeyName, Result) then
+  begin
+    Result := TOpenAPIPathItem.Create;
+    FWebhooks.Add(AKeyName, Result);
   end;
 end;
 
@@ -1654,6 +1735,14 @@ begin
   FTags.Add(Result);
 end;
 
+function TOpenAPIDocument.EffectiveJsonSchemaDialect: string;
+begin
+  if FJsonSchemaDialect.IsNull or FJsonSchemaDialect.Value.IsEmpty then
+    Result := DefaultJsonSchemaDialect
+  else
+    Result := FJsonSchemaDialect.Value;
+end;
+
 constructor TOpenAPIDocument.Create(AVersion: TOpenAPIVersion);
 begin
   inherited Create;
@@ -1662,6 +1751,7 @@ begin
 
   FInfo := CreateSubObject<TOpenAPIInfo>;
   FPaths := CreateSubObject<TOpenAPIPathMap>;
+  FWebhooks := CreateSubObject<TOpenAPIPathMap>;
   FServers := CreateSubObject<TOpenAPIServers>;
   FComponents := CreateSubObject<TOpenAPIComponents>;
   FSecurity := CreateSubObject<TOpenAPISecurityRequirements>;
@@ -1729,21 +1819,26 @@ begin
   end;
 end;
 
-function TOpenAPIPathItem.AddServer(const AKeyName: string): TOpenAPIServer;
+function TOpenAPIPathItem.AddServer(const AURL, ADescription: string): TOpenAPIServer;
 begin
-  if not FServers.TryGetValue(AKeyName, Result) then
-  begin
-    Result := TOpenAPIServer.Create;
-    FServers.Add(AKeyName, Result);
-  end;
+  Result := TOpenAPIServer.Create;
+  Result.Url := AURL;
+  if not ADescription.IsEmpty then
+    Result.Description := ADescription;
+  FServers.Add(Result);
 end;
 
 constructor TOpenAPIPathItem.Create;
 begin
   inherited Create;
 
-  FServers := CreateSubObject<TOpenAPIServerMap>;
+  FServers := CreateSubObject<TOpenAPIServers>;
   FParameters := CreateSubObject<TOpenAPIParameters>;
+end;
+
+procedure TOpenAPIPathItem.SetPathItemReference(const AReference: string);
+begin
+  FReference.SetReference(AReference, TOpenAPIReferenceTarget.PathItems);
 end;
 
 { TOpenAPIOperation }
@@ -1908,7 +2003,7 @@ begin
   inherited Create;
 
   FSchema := CreateSubObject<TOpenAPISchema>;
-  FExamples := CreateSubObject<TOpenApiExamples>;
+  FExamples := CreateSubObject<TOpenAPIExampleMap>;
   FContent := CreateSubObject<TOpenApiMediaTypeMap>;
   FExample := CreateSubObject<TOpenAPIAny>;
 end;
@@ -2091,8 +2186,6 @@ function TOpenAPIVersionHelper.ToString: string;
 begin
   Result := '';
   case Self of
-    TOpenAPIVersion.v303: Result := '3.0.3';
-    TOpenAPIVersion.v304: Result := '3.0.4';
     TOpenAPIVersion.v310: Result := '3.1.0';
     TOpenAPIVersion.v311: Result := '3.1.1';
   end;

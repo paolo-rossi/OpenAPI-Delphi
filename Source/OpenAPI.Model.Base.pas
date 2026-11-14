@@ -1,22 +1,10 @@
 {******************************************************************************}
 {                                                                              }
-{  Delphi OpenAPI 3.0 Generator                                                }
-{  Copyright (c) 2018-2025 Paolo Rossi                                         }
+{  Delphi OpenAPI 3 Generator                                                  }
+{  Copyright (c) 2018 Paolo Rossi                                              }
 {  https://github.com/paolo-rossi/delphi-openapi                               }
 {                                                                              }
-{******************************************************************************}
-{                                                                              }
-{  Licensed under the Apache License, Version 2.0 (the 'License");             }
-{  you may not use this file except in compliance with the License.            }
-{  You may obtain a copy of the License at                                     }
-{                                                                              }
-{      http://www.apache.org/licenses/LICENSE-2.0                              }
-{                                                                              }
-{  Unless required by applicable law or agreed to in writing, software         }
-{  distributed under the License is distributed on an "AS IS" BASIS,           }
-{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
-{  See the License for the specific language governing permissions and         }
-{  limitations under the License.                                              }
+{  Licensed under the MIT license                                              }
 {                                                                              }
 {******************************************************************************}
 unit OpenAPI.Model.Base;
@@ -139,12 +127,24 @@ type
   end;
 
   /// <summary>
-  ///   Value-owned Map
+  ///   Value-owned Map. On Delphi 12 and later (RTL 36+) it keeps the insertion order, so a
+  ///   document is written with its paths, schemas, responses... in the order they were read
+  ///   or added. On older versions the order is the dictionary's (hash) order
   /// </summary>
+{$IF RTLVersion >= 36}
+  TOpenAPIOwnedMap<K, V> = class(TOrderedDictionary<K, V>)
+  protected
+    procedure ValueNotify(const Value: V; Action: TCollectionNotification); override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+{$ELSE}
   TOpenAPIOwnedMap<K, V> = class(TObjectDictionary<K, V>)
   public
     constructor Create;
   end;
+{$ENDIF}
 
   /// <summary>
   ///   Base class for the OpenAPI Maps
@@ -284,7 +284,7 @@ end;
 
 function TOpenAPIModelReference.IsReference: Boolean;
 begin
-  Result := not FReference.Id.IsEmpty;
+  Result := not FReference.IsEmpty;
 end;
 
 { TOpenAPIModelExtensibleMap<T> }
@@ -315,10 +315,33 @@ end;
 
 { TOpenAPIOwnedMap<K, V> }
 
+{$IF RTLVersion >= 36}
+constructor TOpenAPIOwnedMap<K, V>.Create;
+begin
+  inherited Create;
+end;
+
+destructor TOpenAPIOwnedMap<K, V>.Destroy;
+begin
+  // TOrderedDictionary.Clear empties the key list first: without it, each key removed by the
+  // inherited destructor is searched in the key list (quadratic on large maps)
+  Clear;
+  inherited;
+end;
+
+procedure TOpenAPIOwnedMap<K, V>.ValueNotify(const Value: V; Action: TCollectionNotification);
+begin
+  inherited;
+  // Owns the values, like TObjectDictionary with doOwnsValues (an extracted value isn't freed)
+  if Action = cnRemoved then
+    PObject(@Value)^.Free;
+end;
+{$ELSE}
 constructor TOpenAPIOwnedMap<K, V>.Create;
 begin
   inherited Create([doOwnsValues]);
 end;
+{$ENDIF}
 
 { TOpenAPIModelMap<T> }
 

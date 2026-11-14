@@ -1,0 +1,103 @@
+{
+  "openapi": "3.1.1",
+  "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "info": {
+    "title": "OpenAPI 3.1 Sample",
+    "summary": "A minimal document exercising JSON Schema 2020-12 keywords",
+    "version": "1.0.0",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    }
+  },
+  "paths": {
+    "/pets": {
+      "get": {
+        "operationId": "listPets",
+        "summary": "List pets",
+        "responses": {
+          "200": {
+            "description": "A page of pets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pet"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "newPet": {
+      "$ref": "#/components/pathItems/newPetNotification"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nickname": {
+            "type": ["string", "null"],
+            "description": "Nickname, may be null"
+          },
+          "weightKg": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "kind": {
+            "const": "pet"
+          },
+          "tags": {
+            "type": "array",
+            "prefixItems": [
+              { "type": "string" }
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "patternProperties": {
+          "^x-": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "pathItems": {
+      "newPetNotification": {
+        "post": {
+          "operationId": "newPetNotification",
+          "summary": "Information about a new pet",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A pet, referenced with a sibling keyword alongside $ref",
+                  "$ref": "#/components/schemas/Pet"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}
